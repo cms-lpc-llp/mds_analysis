@@ -82,7 +82,10 @@ def create_TH1D(x,
     h.SetTitle(title)
     h.Reset()
 
-  h.Fill(x, weights)
+  for i in range(len(x)):
+    h.Fill(x[i])
+
+  # h.Fill(x, weights)
   # rtnp.fill_hist(h, x, weights=weights)
   h.SetXTitle(axis_title[0])
   h.SetYTitle(axis_title[1])
@@ -200,15 +203,15 @@ def create_TH2D(sample,
     h = rt.TH2D(name, title, binning[-2] - 1, array('f', binning[:binning[-2]]), binning[-1] - 1,
                 array('f', binning[binning[-2]:-2]))
 
-  #for i in range(len(sample)):
+  for i in range(len(sample)):
+    h.Fill(sample[i, 0], sample[i, 1])
+  # if weights is None:
+  #   h.Fill(sample[i, 0], sample[i, 1])
+  # else:
+  #   h.Fill(sample[i, 0], sample[i, 1], weights[i])
 
-
-#	if weights is None:
-#	    h.Fill(sample[i,0],sample[i,1])
-#	else:
-#	    h.Fill(sample[i,0],sample[i,1],weights[i])
-# rtnp.fill_hist(h, sample, weights=weights)
-  h.Fill(sample, weights)
+  # rtnp.fill_hist(h, sample, weights=weights)
+  # h.Fill(sample, weights)
   h.SetXTitle(axis_title[0])
   h.SetYTitle(axis_title[1])
   h.SetZTitle(axis_title[2])

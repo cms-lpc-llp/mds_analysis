@@ -11,7 +11,9 @@ import numpy as np
 # from src import CMS_lumi, tdrstyle
 # import numba as nb
 
-bad_cols = ('cscRechitCluster2ZLep1LooseIso', 'dtRechitCluster2ZLep1LooseIso', 'dtRechitCluster22ZLep1LooseIso', 'dtRechitClusterJetVetoPtJESDown', 'dtRechitClusterTightJetVetoPtJESDown')
+bad_cols = ('cscRechitCluster2ZLep1LooseIso', 'dtRechitCluster2ZLep1LooseIso', 'dtRechitCluster22ZLep1LooseIso',
+            'dtRechitClusterJetVetoPtJESDown', 'dtRechitClusterTightJetVetoPtJESDown')
+
 
 @rt.Numba.Declare(['RVec<bool>'], 'int')
 def _fix_n_col(cut_col):
@@ -33,7 +35,7 @@ def _fix_vector_col_b(col, cut_col):
   return col[cut_col]
 
 
-def update_cols(targ_rdf, cut: str, cut_col: str, col_type: str, n_cluster: int=0):
+def update_cols(targ_rdf, cut: str, cut_col: str, col_type: str, n_cluster: int = 0):
   if cut_col in targ_rdf.GetColumnNames():
     targ_rdf = targ_rdf.Redefine(cut_col, cut)
   else:
@@ -51,8 +53,8 @@ def update_cols(targ_rdf, cut: str, cut_col: str, col_type: str, n_cluster: int=
   for col in targ_rdf.GetColumnNames():
     isvec = 'RVec' in targ_rdf.GetColumnType(col)
     ctype = targ_rdf.GetColumnType(col).split('<')[-1].split('>')[0]
-    if str(col)[:len(cut_prefix)] == cut_prefix and isvec and ctype in (
-        'Float_t', 'Int_t', 'Bool_t') and col not in bad_cols:
+    if str(col)[:len(cut_prefix)] == cut_prefix and isvec and ctype in ('Float_t', 'Int_t',
+                                                                        'Bool_t') and col not in bad_cols:
       targ_rdf = targ_rdf.Redefine(col, f'Numba::_fix_vector_col_{ctype[0].lower()}({col}, {cut_col})')
 
   # print(cut, cut_col, col_type, cut_prefix, n_col_name, targ_rdf.Sum(n_col_name).GetValue())
@@ -60,15 +62,15 @@ def update_cols(targ_rdf, cut: str, cut_col: str, col_type: str, n_cluster: int=
   # print('\t', targ_rdf.Sum(n_col_name).GetValue())
   # print('')
 
-
   if n_cluster:
     targ_rdf = targ_rdf.Filter(f'(nCscRechitClusters + nDtRechitClusters) == {n_cluster}')
 
   return targ_rdf
 
 
-def apply_ML_cut(targ_rdf, pass_val: int=1):
+def apply_ML_cut(targ_rdf, pass_val: int = 1):
   return targ_rdf.Filter(f'ML_cut == {pass_val}')
+
 
 def apply_met_cut(targ_rdf, min_met: float = 200):
   return targ_rdf.Filter(f'{min_met} <= met')
@@ -109,11 +111,14 @@ def _cbid_cut(csc_eta, csc_avgstation, csc_nstation):
                       (a == 1) * (e < 1.1))
 
 
-def apply_cbid_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int=0):
+def apply_cbid_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
   targ_rdf = update_cols(
-      targ_rdf, 'Numba::_cbid_cut(cscRechitClusterEta, cscRechitClusterAvgStation10, cscRechitClusterNStation10)',
-      cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+      targ_rdf,
+      'Numba::_cbid_cut(cscRechitClusterEta, cscRechitClusterAvgStation10, cscRechitClusterNStation10)',
+      cut_col,
+      'csc',
+      n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<int>', 'int', 'int'], 'RVec<bool>')
@@ -121,11 +126,19 @@ def _size_cut(size, min_size, max_size):
   return (min_size <= size) & (size < max_size)
 
 
-def apply_size_cut(targ_rdf, min_size: int = 50, max_size: int = 100000, col_type: str='csc', cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  targ_rdf = update_cols(targ_rdf, f'Numba::_size_cut({col_type}RechitClusterSize, {min_size}, {max_size})', cut_col,
-                         col_type, n_cluster=2)
+def apply_size_cut(targ_rdf,
+                   min_size: int = 50,
+                   max_size: int = 100000,
+                   col_type: str = 'csc',
+                   cut_col: str = 'temp_cut_col',
+                   n_cluster: int = 0):
+  targ_rdf = update_cols(targ_rdf,
+                         f'Numba::_size_cut({col_type}RechitClusterSize, {min_size}, {max_size})',
+                         cut_col,
+                         col_type,
+                         n_cluster=n_cluster)
   #
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'float'], 'RVec<bool>')
@@ -133,9 +146,13 @@ def _csc_eta_cut(csc_eta, max_eta):
   return csc_eta < max_eta
 
 
-def apply_csc_eta_cut(targ_rdf, max_eta: float = 2, cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  targ_rdf = update_cols(targ_rdf, f'Numba::_csc_eta_cut(cscRechitClusterEta, {max_eta})', cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+def apply_csc_eta_cut(targ_rdf, max_eta: float = 2, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
+  targ_rdf = update_cols(targ_rdf,
+                         f'Numba::_csc_eta_cut(cscRechitClusterEta, {max_eta})',
+                         cut_col,
+                         'csc',
+                         n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'float', 'float'], 'RVec<bool>')
@@ -143,30 +160,50 @@ def _time_cut(csc_time, min_t, max_t):
   return (min_t < csc_time) & (csc_time < max_t)
 
 
-def apply_time_cut(targ_rdf, min_t: float = -5, max_t: float = 12.5, col_type: str='csc', cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  # targ_rdf = update_cols(targ_rdf, f'Numba::_time_cut({col_type}RechitClusterTime, {min_t}, {max_t})', cut_col, col_type, n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+def apply_time_cut(targ_rdf,
+                   min_t: float = -5,
+                   max_t: float = 12.5,
+                   col_type: str = 'csc',
+                   cut_col: str = 'temp_cut_col',
+                   n_cluster: int = 0):
+  targ_rdf = update_cols(targ_rdf,
+                         f'Numba::_time_cut({col_type}RechitClusterTimeWeighted, {min_t}, {max_t})',
+                         cut_col,
+                         col_type,
+                         n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'float'], 'RVec<bool>')
-def _csc_time_spread_cut(csc_time_spread, max_spread):
-  return np.abs(csc_time_spread) < max_spread
+def _time_spread_cut(time_spread, max_spread):
+  return np.abs(time_spread) < max_spread
 
 
-def apply_csc_time_spread_cut(targ_rdf, max_spread: float = 20, cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  targ_rdf = update_cols(targ_rdf, f'Numba::_csc_time_spread_cut(cscRechitClusterTimeSpread, {max_spread})', cut_col,
-                         'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+def apply_time_spread_cut(targ_rdf,
+                          max_spread: float = 20,
+                          col_type: str = 'csc',
+                          cut_col: str = 'temp_cut_col',
+                          n_cluster: int = 0):
+  targ_rdf = update_cols(targ_rdf,
+                         f'Numba::_time_spread_cut({col_type}RechitClusterTimeSpreadWeightedAll, {max_spread})',
+                         cut_col,
+                         col_type,
+                         n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'float'], 'RVec<bool>')
-def _csc_oot_cut(csc_time, max_t):
+def _oot_cut(csc_time, max_t):
   return csc_time < max_t
 
 
-def apply_csc_oot_cut(targ_rdf, max_t: float = -12.5, cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  targ_rdf = update_cols(targ_rdf, f'Numba::_csc_oot_cut(cscRechitClusterTime, {max_t})', cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+def apply_oot_cut(targ_rdf,
+                  max_t: float = -12.5,
+                  col_type: str = 'csc',
+                  cut_col: str = 'temp_cut_col',
+                  n_cluster: int = 0):
+  # targ_rdf = update_cols(targ_rdf, f'Numba::_oot_cut({col_type}RechitClusterTime, {max_t})', cut_col, col_type, n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'RVec<float>', 'RVec<float>', 'RVec<float>', 'float'], 'RVec<bool>')
@@ -178,11 +215,13 @@ def _csc_jet_cut(csc_eta, csc_phi, jet_eta, jet_phi, min_dr):
   return cut
 
 
-def apply_csc_jet_cut(targ_rdf, min_dr: float = 0.4, cut_col: str = 'temp_cut_col', n_cluster: int=0):
+def apply_csc_jet_cut(targ_rdf, min_dr: float = 0.4, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
   targ_rdf = update_cols(targ_rdf,
                          f'Numba::_csc_jet_cut(cscRechitClusterEta, cscRechitClusterPhi, jetEta, jetPhi, {min_dr})',
-                         cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+                         cut_col,
+                         'csc',
+                         n_cluster=n_cluster)
+  return targ_rdf
 
 
 @rt.Numba.Declare(['RVec<float>', 'RVec<float>', 'RVec<float>', 'RVec<float>', 'RVec<int>', 'float'], 'RVec<bool>')
@@ -195,39 +234,83 @@ def _csc_muon_cut(csc_eta, csc_phi, lep_eta, lep_phi, lep_pid, min_dr):
   return cut
 
 
-def apply_csc_muon_cut(targ_rdf, min_dr: float = 0.4, cut_col: str = 'temp_cut_col', n_cluster: int=0):
-  targ_rdf = update_cols(
-      targ_rdf, f'Numba::_csc_muon_cut(cscRechitClusterEta, cscRechitClusterPhi, lepEta, lepPhi, lepPdgId, {min_dr})',
-      cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
-
-
-@rt.Numba.Declare(['RVec<int>', 'RVec<int>', 'RVec<int>', 'RVec<int>', 'RVec<int>', 'RVec<int>', 'RVec<int>'],
-                  'RVec<bool>')
-def _endcap_nrechit_cut(me11, me12, p11, p12, re12, mb1, rb1):
-  return (me11 + me12 + p11 + p12 + re12 + mb1 + rb1) == 0
-
-
-def apply_endcap_nrechit_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int=0):
+def apply_csc_muon_cut(targ_rdf, min_dr: float = 0.4, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
   targ_rdf = update_cols(
       targ_rdf,
-      'Numba::_endcap_nrechit_cut(cscRechitClusterNRechitChamberMinus11, cscRechitClusterNRechitChamberMinus12, cscRechitClusterNRechitChamberPlus11, cscRechitClusterNRechitChamberPlus12, cscRechitCluster_match_RE12_0p4, cscRechitCluster_match_MB1Seg_0p4, cscRechitCluster_match_RB1_0p4)',
-      cut_col, 'csc', n_cluster=2)
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+      f'Numba::_csc_muon_cut(cscRechitClusterEta, cscRechitClusterPhi, lepEta, lepPhi, lepPdgId, {min_dr})',
+      cut_col,
+      'csc',
+      n_cluster=n_cluster)
+  return targ_rdf
 
 
-def apply_match_cut(targ_rdf, inverse: bool=False, cut_col: str = 'temp_cut_col', n_cluster: int=0):
+@rt.Numba.Declare(['RVec<int>', 'RVec<int>', 'RVec<int>', 'RVec<int>'], 'RVec<bool>')
+def _endcap_nrechit_cut(me11, me12, p11, p12):
+  return (me11 + me12 + p11 + p12) == 0
+
+
+def apply_endcap_nrechit_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
+  targ_rdf = update_cols(
+      targ_rdf,
+      'Numba::_endcap_nrechit_cut(cscRechitClusterNRechitChamberMinus11, cscRechitClusterNRechitChamberMinus12, cscRechitClusterNRechitChamberPlus11, cscRechitClusterNRechitChamberPlus12)',
+      cut_col,
+      'csc',
+      n_cluster=n_cluster)
+  return targ_rdf
+
+
+@rt.Numba.Declare(['RVec<int>', 'RVec<int>'], 'RVec<bool>')
+def _barrel_nrechit_cut(pseg1, mseg1):
+  return (pseg1 + mseg1) == 0
+
+
+def apply_barrel_nrechit_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
+  targ_rdf = update_cols(targ_rdf,
+                         'Numba::_barrel_nrechit_cut(dtRechitClusterNSegStation1, dtRechitClusterNOppositeSegStation1)',
+                         cut_col,
+                         'dt',
+                         n_cluster=n_cluster)
+  return targ_rdf
+
+
+@rt.Numba.Declare(['RVec<float>', 'RVec<float>'], 'RVec<bool>')
+def _csc_vertex_cut(r, z):
+  return (np.abs(r) < 800) & (np.abs(z) < 1200) & (np.abs(z) > 400)
+
+
+@rt.Numba.Declare(['RVec<float>', 'RVec<float>'], 'RVec<bool>')
+def _dt_vertex_cut(r, z):
+  return (np.abs(r) < 800) & (np.abs(z) < 700) & (np.abs(r) > 200)
+
+
+def apply_vertex_cut(targ_rdf, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
+  targ_rdf = update_cols(
+      targ_rdf,
+      'Numba::_csc_vertex_cut(cscRechitCluster_match_gLLP_decay_r, cscRechitCluster_match_gLLP_decay_z)',
+      cut_col,
+      'csc',
+      n_cluster=n_cluster)
+  targ_rdf = update_cols(
+      targ_rdf,
+      'Numba::_dt_vertex_cut(dtRechitCluster_match_gLLP_decay_r, dtRechitCluster_match_gLLP_decay_z)',
+      cut_col,
+      'dt',
+      n_cluster=n_cluster)
+  return targ_rdf
+
+
+def apply_match_cut(targ_rdf, inverse: bool = False, cut_col: str = 'temp_cut_col', n_cluster: int = 0):
   if inverse:
-    targ_rdf = update_cols(targ_rdf, '!cscRechitCluster_match_gLLP', cut_col, 'csc', n_cluster=2)
-    targ_rdf = update_cols(targ_rdf, '!dtRechitCluster_match_gLLP', cut_col, 'dt', n_cluster=2)
+    targ_rdf = update_cols(targ_rdf, '!cscRechitCluster_match_gLLP', cut_col, 'csc', n_cluster=n_cluster)
+    targ_rdf = update_cols(targ_rdf, '!dtRechitCluster_match_gLLP', cut_col, 'dt', n_cluster=n_cluster)
   else:
-    targ_rdf = update_cols(targ_rdf, 'cscRechitCluster_match_gLLP', cut_col, 'csc', n_cluster=2)
-    targ_rdf = update_cols(targ_rdf, 'dtRechitCluster_match_gLLP', cut_col, 'dt', n_cluster=2)
+    targ_rdf = update_cols(targ_rdf, 'cscRechitCluster_match_gLLP', cut_col, 'csc', n_cluster=n_cluster)
+    targ_rdf = update_cols(targ_rdf, 'dtRechitCluster_match_gLLP', cut_col, 'dt', n_cluster=n_cluster)
 
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+  return targ_rdf
 
 
-def apply_all_cuts(targ_rdf, met=200, only_event_level=False, require_2_clusters=False, oot=False, n_cluster=2):
+def apply_all_cuts(targ_rdf, met=200, only_event_level=False, require_2_clusters=False, oot=False, n_cluster=0):
   # Event Level
   targ_rdf = apply_met_cut(targ_rdf, met)
   targ_rdf = apply_lepton_cut(targ_rdf)
@@ -241,17 +324,17 @@ def apply_all_cuts(targ_rdf, met=200, only_event_level=False, require_2_clusters
     targ_rdf = apply_size_cut(targ_rdf)
     targ_rdf = apply_cbid_cut(targ_rdf)
     targ_rdf = apply_csc_eta_cut(targ_rdf)
-    targ_rdf = apply_csc_time_spread_cut(targ_rdf)
+    targ_rdf = apply_time_spread_cut(targ_rdf)
 
     if require_2_clusters:
       targ_rdf = targ_rdf.Filter('nCscRechitClusters == 2')
 
     if oot:  #Out of time
-      targ_rdf = apply_csc_oot_cut(targ_rdf, n_cluster=n_cluster)
+      targ_rdf = apply_oot_cut(targ_rdf, n_cluster=n_cluster)
     else:
       targ_rdf = apply_time_cut(targ_rdf, n_cluster=n_cluster)
 
-  return targ_rdf#.Filter('nCscRechitClusters + nDtRechitClusters > 0')
+  return targ_rdf
 
 
 #########################################################
@@ -321,8 +404,8 @@ if __name__ == '__main__':
   rdfs['csc_size'] = {'rdf': apply_size_cut(rdfs['raw']['rdf']), 'line_color': rt.kMagenta}
   rdfs['csc_eta'] = {'rdf': apply_csc_eta_cut(rdfs['raw']['rdf']), 'line_color': rt.kBlack}
   rdfs['csc_time'] = {'rdf': apply_time_cut(rdfs['raw']['rdf']), 'line_color': rt.kBlack}
-  rdfs['csc_time_spread'] = {'rdf': apply_csc_time_spread_cut(rdfs['raw']['rdf']), 'line_color': rt.kBlack}
-  rdfs['csc_oot'] = {'rdf': apply_csc_oot_cut(rdfs['raw']['rdf']), 'line_color': rt.kPink}
+  rdfs['csc_time_spread'] = {'rdf': apply_time_spread_cut(rdfs['raw']['rdf']), 'line_color': rt.kBlack}
+  rdfs['csc_oot'] = {'rdf': apply_oot_cut(rdfs['raw']['rdf']), 'line_color': rt.kPink}
   rdfs['matched'] = {'rdf': apply_match_cut(rdfs['raw']['rdf']), 'line_color': rt.kPink}
 
   # rdfs['pass_ML'] = {'rdf': apply_ML_cut(rdfs['raw']['rdf'], 1), 'line_color': rt.kPink}
@@ -400,7 +483,7 @@ if __name__ == '__main__':
     print('APPLYING 2 CLUSTER CUT (DT + CSC)')
     rdf_info['rdf'] = rdf_info['rdf'].Filter('(nCscRechitClusters + nDtRechitClusters) >= 2')
     # rdf_info['rdf'] = rdf_info['rdf'].Filter('nCscRechitClusters == 2')
-    
+
     print(f'{"2 cluster":>20} - {rdf_info["rdf"].Count().GetValue():,}')
     print(f'{"weight":>20} - {rdf_info["rdf"].Sum("weight").GetValue()*25/59:,.0f}')
     print('')
@@ -436,20 +519,21 @@ if __name__ == '__main__':
 
   #     c1.Print('test.pdf')
 
-
   # Cluster vs Cluster
   c1 = rt.TCanvas('c1', 'c1', 800, 400)
   c1.Divide(2, 1)
   c1.Draw()
-  
+
   c1.cd(1).SetLogz()
   c1.cd(1).SetGrid()
-  h1 = rdfs['raw']['rdf'].Histo2D(('',';csc;dt',7, -0.5, 6.5, 7, -0.5, 6.5),'nCscRechitClusters','nDtRechitClusters')
+  h1 = rdfs['raw']['rdf'].Histo2D(('', ';csc;dt', 7, -0.5, 6.5, 7, -0.5, 6.5), 'nCscRechitClusters',
+                                  'nDtRechitClusters')
   h1.Draw('coltext')
 
   c1.cd(2).SetLogz()
   c1.cd(2).SetGrid()
-  h2 = rdfs['matched']['rdf'].Histo2D(('',';csc;dt',7, -0.5, 6.5, 7, -0.5, 6.5),'nCscRechitClusters','nDtRechitClusters')
+  h2 = rdfs['matched']['rdf'].Histo2D(('', ';csc;dt', 7, -0.5, 6.5, 7, -0.5, 6.5), 'nCscRechitClusters',
+                                      'nDtRechitClusters')
   h2.Draw('coltext')
 
   c1.Print(f'reports/weekly/{date}/{file_prefix}_ncscclusters_ndtclusters.png')
@@ -460,50 +544,53 @@ if __name__ == '__main__':
   c1.cd(1).SetLogy()
   c1.cd(1).SetGrid()
 
-  template = (('delta_metPhi_cscRechitClusterPhi', 'delta_metPhi_cscRechitClusterPhi;\phi_{ME_{t}} - \phi_{CSC}', 100, -np.pi, np.pi),
-              'delta_metPhi_cscRechitClusterPhi')
+  template = (('delta_metPhi_cscRechitClusterPhi', 'delta_metPhi_cscRechitClusterPhi;\phi_{ME_{t}} - \phi_{CSC}', 100,
+               -np.pi, np.pi), 'delta_metPhi_cscRechitClusterPhi')
 
-  hhs = [ rdfs['raw']['rdf'].Histo1D(*template),
-          rdfs['met50']['rdf'].Histo1D(*template),
-          rdfs['met100']['rdf'].Histo1D(*template),
-          rdfs['met150']['rdf'].Histo1D(*template),
-          rdfs['met200']['rdf'].Histo1D(*template),
-          rdfs['met250']['rdf'].Histo1D(*template),
-          # rdfs['pass_ML']['rdf'].Histo1D(*template),
-          # rdfs['fail_ML']['rdf'].Histo1D(*template)
-          ]
+  hhs = [
+      rdfs['raw']['rdf'].Histo1D(*template),
+      rdfs['met50']['rdf'].Histo1D(*template),
+      rdfs['met100']['rdf'].Histo1D(*template),
+      rdfs['met150']['rdf'].Histo1D(*template),
+      rdfs['met200']['rdf'].Histo1D(*template),
+      rdfs['met250']['rdf'].Histo1D(*template),
+      # rdfs['pass_ML']['rdf'].Histo1D(*template),
+      # rdfs['fail_ML']['rdf'].Histo1D(*template)
+  ]
 
-  hms = [  apply_match_cut(rdfs['raw']['rdf']).Histo1D(*template),
-            apply_match_cut(rdfs['met50']['rdf']).Histo1D(*template),
-            apply_match_cut(rdfs['met100']['rdf']).Histo1D(*template),
-            apply_match_cut(rdfs['met150']['rdf']).Histo1D(*template),
-            apply_match_cut(rdfs['met200']['rdf']).Histo1D(*template),
-            apply_match_cut(rdfs['met250']['rdf']).Histo1D(*template),
-            # apply_match_cut(rdfs['pass_ML']['rdf']).Histo1D(*template),
-            # apply_match_cut(rdfs['fail_ML']['rdf']).Histo1D(*template) 
-            ]
+  hms = [
+      apply_match_cut(rdfs['raw']['rdf']).Histo1D(*template),
+      apply_match_cut(rdfs['met50']['rdf']).Histo1D(*template),
+      apply_match_cut(rdfs['met100']['rdf']).Histo1D(*template),
+      apply_match_cut(rdfs['met150']['rdf']).Histo1D(*template),
+      apply_match_cut(rdfs['met200']['rdf']).Histo1D(*template),
+      apply_match_cut(rdfs['met250']['rdf']).Histo1D(*template),
+      # apply_match_cut(rdfs['pass_ML']['rdf']).Histo1D(*template),
+      # apply_match_cut(rdfs['fail_ML']['rdf']).Histo1D(*template)
+  ]
 
-  ccs = [ rt.kBlack,
-          rt.kRed,
-          rt.kBlue,
-          rt.kGreen,
-          rt.kCyan,
-          rt.kMagenta,
-          # rt.kRed+3,
-          # rt.kRed-5 
-          ]
+  ccs = [
+      rt.kBlack,
+      rt.kRed,
+      rt.kBlue,
+      rt.kGreen,
+      rt.kCyan,
+      rt.kMagenta,
+      # rt.kRed+3,
+      # rt.kRed-5
+  ]
 
   tts = [
-    'Signal (No cuts)',
-    'MET >  50 GeV',
-    'MET > 100 GeV',
-    'MET > 150 GeV',
-    'MET > 200 GeV',
-    'MET > 250 GeV',
-    # 'Pass ML',
-    # 'Fail ML'
+      'Signal (No cuts)',
+      'MET >  50 GeV',
+      'MET > 100 GeV',
+      'MET > 150 GeV',
+      'MET > 200 GeV',
+      'MET > 250 GeV',
+      # 'Pass ML',
+      # 'Fail ML'
   ]
-  
+
   lat.SetTextAlign(33)
   for ih, (hh, hm, cc, tt) in enumerate(zip(hhs, hms, ccs, tts)):
     hh.SetMinimum(1)
@@ -520,7 +607,6 @@ if __name__ == '__main__':
     lat.DrawLatexNDC(0.95, 0.9 - ih * 0.05, tt)
 
   c1.Print(f'reports/weekly/{date}/{file_prefix}_delta_metPhi_cscRechitClusterPhi_met_scan.png')
-
 
   ### deltaE
   c1 = rt.TCanvas('c1', 'c1', 800, 800)
