@@ -199,5 +199,3 @@ for l in ff.split('\n'):
             print(l.split(':')[2].split(' ')[1])
         elif '|' in l:
             print(l.split('|')[1].split(' ')[1])
-
-
