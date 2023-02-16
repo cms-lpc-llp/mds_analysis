@@ -13,6 +13,7 @@ contact: Paul Simmerling - psimmerl@caltech.edu
 ---
 ## Tasks
 - ctau is empty
+- Using gLLP_ctau
 - dt match gllp decay z is empty
 ### Week of 1/30/23
 - [X] Blind signal data (Extract all clusters with nRechits > 100)

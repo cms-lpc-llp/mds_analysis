@@ -135,10 +135,6 @@ def setTDRStyle():
   tdrStyle.SetOptLogy(0)
   tdrStyle.SetOptLogz(0)
 
-  # Change for grid:
-  tdrStyle.SetPadGridX(1)
-  tdrStyle.SetPadGridY(1)
-
   # Postscript options:
   tdrStyle.SetPaperSize(20., 20.)
   # tdrStyle.SetLineScalePS(Float_t scale = 3)

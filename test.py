@@ -1,201 +1,119 @@
-ff = """
-runNum/i
-MC_condition/i
-lumiSec/i
-evtNum/i
-mH/I
-mX/I
-ctau/I
-npv/i
-npu/i
-weight/F
-pileupWeight/F
-Flag_HBHENoiseFilter/O
-Flag_BadPFMuonFilter/O
-Flag_HBHEIsoNoiseFilter/O
-Flag_CSCTightHaloFilter/O
-Flag_globalSuperTightHalo2016Filter/O
-Flag_goodVertices/O
-Flag_ecalBadCalibFilter/O
-Flag_BadChargedCandidateFilter/O
-Flag_eeBadScFilter/O
-Flag_all/O
-Flag2_HBHENoiseFilter/O
-Flag2_HBHEIsoNoiseFilter/O
-Flag2_BadPFMuonFilter/O
-Flag2_globalSuperTightHalo2016Filter/O
-Flag2_globalTightHalo2016Filter/O*
-Flag2_BadChargedCandidateFilter/O*
-Flag2_EcalDeadCellTriggerPrimitiveFilter/O
-Flag2_ecalBadCalibFilter/O
-Flag2_eeBadScFilter/O
-Flag2_all/O
-rho/F
-met/F
-metPhi/F
-gHiggsPt/F
-gHiggsE/F
-gHiggsEta/F
-gHiggsPhi/F
-nCscRings/I
-nDtRings/I
-nCscRechitClusters/I
-cscRechitCluster_match_gLLP[nCscRechitClusters]/O
-cscRechitCluster_match_gLLP_minDeltaR[nCscRechitClusters]/F
-cscRechitCluster_match_gLLP_index[nCscRechitClusters]/I
-cscRechitCluster_match_gLLP_eta[nCscRechitClusters]/F
-cscRechitCluster_match_gLLP_phi[nCscRechitClusters]/F
-cscRechitCluster_match_gLLP_decay_r[nCscRechitClusters]/F
-cscRechitCluster_match_gLLP_decay_z[nCscRechitClusters]/F
-cscRechitCluster_match_gLLP_csc[nCscRechitClusters]/O
-cscRechitCluster_match_gLLP_dt[nCscRechitClusters]/O
-cscRechitCluster_match_gLLP_e[nCscRechitClusters]/F
-cscRechitClusterX[nCscRechitClusters]/F
-cscRechitClusterY[nCscRechitClusters]/F
-cscRechitClusterZ[nCscRechitClusters]/F
-cscRechitClusterTimeWeighted[nCscRechitClusters]/F
-cscRechitClusterTimeSpreadWeightedAll[nCscRechitClusters]/F
-cscRechitClusterPhi[nCscRechitClusters]/F
-cscRechitClusterEta[nCscRechitClusters]/F
-cscRechitClusterJetVetoPt[nCscRechitClusters]/F
-cscRechitClusterJetVetoLooseId[nCscRechitClusters]/O
-cscRechitClusterJetVetoTightId[nCscRechitClusters]/O
-cscRechitClusterJetVetoE[nCscRechitClusters]/F
-cscRechitClusterMuonVetoPt[nCscRechitClusters]/F
-cscRechitClusterMuonVetoE[nCscRechitClusters]/F
-cscRechitClusterMuonVetoLooseId[nCscRechitClusters]/O
-cscRechitClusterMuonVetoGlobal[nCscRechitClusters]/O
-cscRechitCluster_match_dtSeg_0p4[nCscRechitClusters]/I
-cscRechitCluster_match_MB1Seg_0p4[nCscRechitClusters]/I
-cscRechitCluster_match_RE12_0p4[nCscRechitClusters]/I
-cscRechitCluster_match_RB1_0p4[nCscRechitClusters]/I
-cscRechitClusterSize[nCscRechitClusters]/I
-cscRechitClusterNStation10[nCscRechitClusters]/I
-cscRechitClusterAvgStation10[nCscRechitClusters]/F
-cscRechitClusterMaxStation[nCscRechitClusters]/I
-cscRechitClusterMaxStationRatio[nCscRechitClusters]/F
-cscRechitClusterNChamber[nCscRechitClusters]/I
-cscRechitClusterMaxChamber[nCscRechitClusters]/I
-cscRechitClusterMaxChamberRatio[nCscRechitClusters]/F
-cscRechitClusterNRechitChamberPlus11[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus12[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus13[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus21[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus22[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus31[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus32[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus41[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberPlus42[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus11[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus12[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus13[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus21[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus22[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus31[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus32[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus41[nCscRechitClusters]/I
-cscRechitClusterNRechitChamberMinus42[nCscRechitClusters]/I
-cscRechitClusterMet_dPhi[nCscRechitClusters]/F
-nDtRechitClusters/I
-dtRechitClusterNSegStation1[nDtRechitClusters]/I
-dtRechitClusterNSegStation2[nDtRechitClusters]/I
-dtRechitClusterNSegStation3[nDtRechitClusters]/I
-dtRechitClusterNSegStation4[nDtRechitClusters]/I
-dtRechitClusterNOppositeSegStation1[nDtRechitClusters]/I
-dtRechitClusterNOppositeSegStation2[nDtRechitClusters]/I
-dtRechitClusterNOppositeSegStation3[nDtRechitClusters]/I
-dtRechitClusterNOppositeSegStation4[nDtRechitClusters]/I
-dtRechitCluster_match_gLLP[nDtRechitClusters]/O
-dtRechitCluster_match_gLLP_minDeltaR[nDtRechitClusters]/F
-dtRechitCluster_match_gLLP_index[nDtRechitClusters]/I
-dtRechitCluster_match_gLLP_eta[nDtRechitClusters]/F
-dtRechitCluster_match_gLLP_phi[nDtRechitClusters]/F
-dtRechitCluster_match_gLLP_decay_r[nDtRechitClusters]/F
-dtRechitCluster_match_gLLP_decay_z[nDtRechitClusters]/F
-dtRechitCluster_match_gLLP_csc[nDtRechitClusters]/O
-dtRechitCluster_match_gLLP_dt[nDtRechitClusters]/O
-dtRechitCluster_match_gLLP_e[nDtRechitClusters]/F
-dtRechitClusterX[nDtRechitClusters]/F
-dtRechitClusterY[nDtRechitClusters]/F
-dtRechitClusterZ[nDtRechitClusters]/F
-dtRechitClusterWheel[nDtRechitClusters]/I
-dtRechitClusterPhi[nDtRechitClusters]/F
-dtRechitClusterEta[nDtRechitClusters]/F
-dtRechitClusterJetVetoPt[nDtRechitClusters]/F
-dtRechitClusterJetVetoLooseId[nDtRechitClusters]/O
-dtRechitClusterJetVetoTightId[nDtRechitClusters]/O
-dtRechitClusterJetVetoE[nDtRechitClusters]/F
-dtRechitClusterMuonVetoPt[nDtRechitClusters]/F
-dtRechitClusterMuonVetoE[nDtRechitClusters]/F
-dtRechitClusterMuonVetoTightId[nDtRechitClusters]/O
-dtRechitClusterMuonVetoLooseId[nDtRechitClusters]/O
-dtRechitClusterMuonVetoGlobal[nDtRechitClusters]/O
-dtRechitClusterOverlap[nDtRechitClusters]/O
-dtRechitClusterSize[nDtRechitClusters]/I
-dtRechitClusterNoiseHit[nDtRechitClusters]/I
-dtRechitClusterNoiseHitStation1[nDtRechitClusters]/I
-dtRechitClusterNoiseHitStation2[nDtRechitClusters]/I
-dtRechitClusterNoiseHitStation3[nDtRechitClusters]/I
-dtRechitClusterNoiseHitStation4[nDtRechitClusters]/I
-dtRechitClusterNStation10[nDtRechitClusters]/I
-dtRechitClusterAvgStation10[nDtRechitClusters]/F
-dtRechitClusterMaxStation[nDtRechitClusters]/I
-dtRechitClusterMaxStationRatio[nDtRechitClusters]/F
-dtRechitClusterNChamber[nDtRechitClusters]/I
-dtRechitClusterMaxChamber[nDtRechitClusters]/I
-dtRechitClusterMaxChamberRatio[nDtRechitClusters]/F
-dtRechitClusterNHitStation1[nDtRechitClusters]/I
-dtRechitClusterNHitStation2[nDtRechitClusters]/I
-dtRechitClusterNHitStation3[nDtRechitClusters]/I
-dtRechitClusterNHitStation4[nDtRechitClusters]/I
-dtRechitClusterMet_dPhi[nDtRechitClusters]/F
-dtRechitCluster_match_RPChits_dPhi0p5[nDtRechitClusters]/I
-dtRechitCluster_match_RPCBx_dPhi0p5[nDtRechitClusters]/I
-dtRechitCluster_match_RB1_0p4[nDtRechitClusters]/I
-dtRechitCluster_match_RB1_dPhi0p5[nDtRechitClusters]/I
-dtRechitCluster_match_MB1Seg_0p4[nDtRechitClusters]/I
-dtRechitCluster_match_MB1Seg_0p5[nDtRechitClusters]/I
-dtRechitCluster_match_MB1hits_0p4[nDtRechitClusters]/I
-dtRechitCluster_match_MB1hits_0p5[nDtRechitClusters]/I
-dtRechitCluster_match_MB1hits_cosmics_plus[nDtRechitClusters]/I
-dtRechitCluster_match_MB1hits_cosmics_minus[nDtRechitClusters]/I
-nGLLP/I
-gLLP_eta[nGLLP]/F
-gLLP_phi[nGLLP]/F
-gLLP_csc[nGLLP]/F
-gLLP_dt[nGLLP]/F
-gLLP_beta[nGLLP]/F
-gLLP_e[nGLLP]/F
-gLLP_pt[nGLLP]/F
-gLLP_ctau[nGLLP]/F
-gLLP_decay_vertex_r[nGLLP]/F
-gLLP_decay_vertex_x[nGLLP]/F
-gLLP_decay_vertex_y[nGLLP]/F
-gLLP_decay_vertex_z[nGLLP]/F
-nLeptons/I
-lepE[nLeptons]/F
-lepPt[nLeptons]/F
-lepEta[nLeptons]/F
-lepPhi[nLeptons]/F
-lepPdgId[nLeptons]/I
-lepDZ[nLeptons]/F
-lepTightId[nLeptons]/O
-lepPassLooseIso[nLeptons]/O
-lepPassTightIso[nLeptons]/O
-lepPassVTightIso[nLeptons]/O
-lepPassVVTightIso[nLeptons]/O
-nJets/I
-jetE[nJets]/F
-jetPt[nJets]/F
-jetEta[nJets]/F
-jetPhi[nJets]/F
-jetTightPassId[nJets]/O
-HLTDecision[1201]/O
-"""
+mc = [
+    'runNum', 'MC_condition', 'lumiSec', 'evtNum', 'mH', 'mX', 'ctau', 'npv', 'npu', 'weight', 'pileupWeight',
+    'Flag_HBHENoiseFilter', 'Flag_BadPFMuonFilter', 'Flag_HBHEIsoNoiseFilter', 'Flag_CSCTightHaloFilter',
+    'Flag_globalSuperTightHalo2016Filter', 'Flag_goodVertices', 'Flag_ecalBadCalibFilter',
+    'Flag_BadChargedCandidateFilter', 'Flag_eeBadScFilter', 'Flag_all', 'Flag2_HBHENoiseFilter',
+    'Flag2_HBHEIsoNoiseFilter', 'Flag2_BadPFMuonFilter', 'Flag2_globalSuperTightHalo2016Filter',
+    'Flag2_globalTightHalo2016Filter', 'Flag2_BadChargedCandidateFilter', 'Flag2_EcalDeadCellTriggerPrimitiveFilter',
+    'Flag2_ecalBadCalibFilter', 'Flag2_eeBadScFilter', 'Flag2_all', 'rho', 'met', 'metPhi', 'gHiggsPt', 'gHiggsE',
+    'gHiggsEta', 'gHiggsPhi', 'nCscRings', 'nDtRings', 'nCscRechitClusters', 'cscRechitCluster_match_gLLP',
+    'cscRechitCluster_match_gLLP_minDeltaR', 'cscRechitCluster_match_gLLP_index', 'cscRechitCluster_match_gLLP_eta',
+    'cscRechitCluster_match_gLLP_phi', 'cscRechitCluster_match_gLLP_decay_r', 'cscRechitCluster_match_gLLP_decay_z',
+    'cscRechitCluster_match_gLLP_csc', 'cscRechitCluster_match_gLLP_dt', 'cscRechitCluster_match_gLLP_e',
+    'cscRechitClusterX', 'cscRechitClusterY', 'cscRechitClusterZ', 'cscRechitClusterTimeWeighted',
+    'cscRechitClusterTimeSpreadWeightedAll', 'cscRechitClusterPhi', 'cscRechitClusterEta', 'cscRechitClusterJetVetoPt',
+    'cscRechitClusterJetVetoLooseId', 'cscRechitClusterJetVetoTightId', 'cscRechitClusterJetVetoE',
+    'cscRechitClusterMuonVetoPt', 'cscRechitClusterMuonVetoE', 'cscRechitClusterMuonVetoLooseId',
+    'cscRechitClusterMuonVetoGlobal', 'cscRechitCluster_match_dtSeg_0p4', 'cscRechitCluster_match_MB1Seg_0p4',
+    'cscRechitCluster_match_RE12_0p4', 'cscRechitCluster_match_RB1_0p4', 'cscRechitClusterSize',
+    'cscRechitClusterNStation10', 'cscRechitClusterAvgStation10', 'cscRechitClusterMaxStation',
+    'cscRechitClusterMaxStationRatio', 'cscRechitClusterNChamber', 'cscRechitClusterMaxChamber',
+    'cscRechitClusterMaxChamberRatio', 'cscRechitClusterNRechitChamberPlus11', 'cscRechitClusterNRechitChamberPlus12',
+    'cscRechitClusterNRechitChamberPlus13', 'cscRechitClusterNRechitChamberPlus21',
+    'cscRechitClusterNRechitChamberPlus22', 'cscRechitClusterNRechitChamberPlus31',
+    'cscRechitClusterNRechitChamberPlus32', 'cscRechitClusterNRechitChamberPlus41',
+    'cscRechitClusterNRechitChamberPlus42', 'cscRechitClusterNRechitChamberMinus11',
+    'cscRechitClusterNRechitChamberMinus12', 'cscRechitClusterNRechitChamberMinus13',
+    'cscRechitClusterNRechitChamberMinus21', 'cscRechitClusterNRechitChamberMinus22',
+    'cscRechitClusterNRechitChamberMinus31', 'cscRechitClusterNRechitChamberMinus32',
+    'cscRechitClusterNRechitChamberMinus41', 'cscRechitClusterNRechitChamberMinus42', 'cscRechitClusterMet_dPhi',
+    'nDtRechitClusters', 'dtRechitClusterNSegStation1', 'dtRechitClusterNSegStation2', 'dtRechitClusterNSegStation3',
+    'dtRechitClusterNSegStation4', 'dtRechitClusterNOppositeSegStation1', 'dtRechitClusterNOppositeSegStation2',
+    'dtRechitClusterNOppositeSegStation3', 'dtRechitClusterNOppositeSegStation4', 'dtRechitCluster_match_gLLP',
+    'dtRechitCluster_match_gLLP_minDeltaR', 'dtRechitCluster_match_gLLP_index', 'dtRechitCluster_match_gLLP_eta',
+    'dtRechitCluster_match_gLLP_phi', 'dtRechitCluster_match_gLLP_decay_r', 'dtRechitCluster_match_gLLP_decay_z',
+    'dtRechitCluster_match_gLLP_csc', 'dtRechitCluster_match_gLLP_dt', 'dtRechitCluster_match_gLLP_e',
+    'dtRechitClusterX', 'dtRechitClusterY', 'dtRechitClusterZ', 'dtRechitClusterWheel', 'dtRechitClusterPhi',
+    'dtRechitClusterEta', 'dtRechitClusterJetVetoPt', 'dtRechitClusterJetVetoLooseId', 'dtRechitClusterJetVetoTightId',
+    'dtRechitClusterJetVetoE', 'dtRechitClusterMuonVetoPt', 'dtRechitClusterMuonVetoE',
+    'dtRechitClusterMuonVetoTightId', 'dtRechitClusterMuonVetoLooseId', 'dtRechitClusterMuonVetoGlobal',
+    'dtRechitClusterOverlap', 'dtRechitClusterSize', 'dtRechitClusterNoiseHit', 'dtRechitClusterNoiseHitStation1',
+    'dtRechitClusterNoiseHitStation2', 'dtRechitClusterNoiseHitStation3', 'dtRechitClusterNoiseHitStation4',
+    'dtRechitClusterNStation10', 'dtRechitClusterAvgStation10', 'dtRechitClusterMaxStation',
+    'dtRechitClusterMaxStationRatio', 'dtRechitClusterNChamber', 'dtRechitClusterMaxChamber',
+    'dtRechitClusterMaxChamberRatio', 'dtRechitClusterNHitStation1', 'dtRechitClusterNHitStation2',
+    'dtRechitClusterNHitStation3', 'dtRechitClusterNHitStation4', 'dtRechitClusterMet_dPhi',
+    'dtRechitCluster_match_RPChits_dPhi0p5', 'dtRechitCluster_match_RPCBx_dPhi0p5', 'dtRechitCluster_match_RB1_0p4',
+    'dtRechitCluster_match_RB1_dPhi0p5', 'dtRechitCluster_match_MB1Seg_0p4', 'dtRechitCluster_match_MB1Seg_0p5',
+    'dtRechitCluster_match_MB1hits_0p4', 'dtRechitCluster_match_MB1hits_0p5',
+    'dtRechitCluster_match_MB1hits_cosmics_plus', 'dtRechitCluster_match_MB1hits_cosmics_minus', 'nGLLP', 'gLLP_eta',
+    'gLLP_phi', 'gLLP_csc', 'gLLP_dt', 'gLLP_beta', 'gLLP_e', 'gLLP_pt', 'gLLP_ctau', 'gLLP_decay_vertex_r',
+    'gLLP_decay_vertex_x', 'gLLP_decay_vertex_y', 'gLLP_decay_vertex_z', 'nLeptons', 'lepE', 'lepPt', 'lepEta',
+    'lepPhi', 'lepPdgId', 'lepDZ', 'lepTightId', 'lepPassLooseIso', 'lepPassTightIso', 'lepPassVTightIso',
+    'lepPassVVTightIso', 'nJets', 'jetE', 'jetPt', 'jetEta', 'jetPhi', 'jetTightPassId', 'HLTDecision'
+]
 
-for l in ff.split('\n'):
-    if '/' in l:
-        if ':' in l:
-            print(l.split(':')[2].split(' ')[1])
-        elif '|' in l:
-            print(l.split('|')[1].split(' ')[1])
+# run3 = [
+#     'runNum', 'MC_condition', 'lumiSec', 'evtNum', 'mH', 'mX', 'ctau', 'npv', 'npu', 'weight', 'pileupWeight',
+#     'Flag_HBHENoiseFilter', 'Flag_BadPFMuonFilter', 'Flag_HBHEIsoNoiseFilter', 'Flag_CSCTightHaloFilter',
+#     'Flag_globalSuperTightHalo2016Filter', 'Flag_goodVertices', 'Flag_ecalBadCalibFilter',
+#     'Flag_BadChargedCandidateFilter', 'Flag_eeBadScFilter', 'Flag_all', 'Flag2_HBHENoiseFilter',
+#     'Flag2_HBHEIsoNoiseFilter', 'Flag2_BadPFMuonFilter', 'Flag2_globalSuperTightHalo2016Filter',
+#     'Flag2_globalTightHalo2016Filter', 'Flag2_BadChargedCandidateFilter', 'Flag2_EcalDeadCellTriggerPrimitiveFilter',
+#     'Flag2_ecalBadCalibFilter', 'Flag2_eeBadScFilter', 'Flag2_all', 'rho', 'met', 'metPhi', 'gHiggsPt', 'gHiggsE',
+#     'gHiggsEta', 'gHiggsPhi', 'nCscRings', 'nDtRings', 'nCscRechitClusters', 'cscRechitCluster_match_gLLP',
+#     'cscRechitCluster_match_gLLP_minDeltaR', 'cscRechitCluster_match_gLLP_index', 'cscRechitCluster_match_gLLP_eta',
+#     'cscRechitCluster_match_gLLP_phi', 'cscRechitCluster_match_gLLP_decay_r', 'cscRechitCluster_match_gLLP_decay_z',
+#     'cscRechitCluster_match_gLLP_csc', 'cscRechitCluster_match_gLLP_dt', 'cscRechitCluster_match_gLLP_e',
+#     'cscRechitClusterX', 'cscRechitClusterY', 'cscRechitClusterZ', 'cscRechitClusterTimeWeighted',
+#     'cscRechitClusterTimeSpreadWeightedAll', 'cscRechitClusterPhi', 'cscRechitClusterEta', 'cscRechitClusterJetVetoPt',
+#     'cscRechitClusterJetVetoLooseId', 'cscRechitClusterJetVetoTightId', 'cscRechitClusterJetVetoE',
+#     'cscRechitClusterMuonVetoPt', 'cscRechitClusterMuonVetoE', 'cscRechitClusterMuonVetoLooseId',
+#     'cscRechitClusterMuonVetoGlobal', 'cscRechitCluster_match_dtSeg_0p4', 'cscRechitCluster_match_MB1Seg_0p4',
+#     'cscRechitCluster_match_RE12_0p4', 'cscRechitCluster_match_RB1_0p4', 'cscRechitClusterSize',
+#     'cscRechitClusterNStation10', 'cscRechitClusterAvgStation10', 'cscRechitClusterMaxStation',
+#     'cscRechitClusterMaxStationRatio', 'cscRechitClusterNChamber', 'cscRechitClusterMaxChamber',
+#     'cscRechitClusterMaxChamberRatio', 'cscRechitClusterNRechitChamberPlus11', 'cscRechitClusterNRechitChamberPlus12',
+#     'cscRechitClusterNRechitChamberPlus13', 'cscRechitClusterNRechitChamberPlus21',
+#     'cscRechitClusterNRechitChamberPlus22', 'cscRechitClusterNRechitChamberPlus31',
+#     'cscRechitClusterNRechitChamberPlus32', 'cscRechitClusterNRechitChamberPlus41',
+#     'cscRechitClusterNRechitChamberPlus42', 'cscRechitClusterNRechitChamberMinus11',
+#     'cscRechitClusterNRechitChamberMinus12', 'cscRechitClusterNRechitChamberMinus13',
+#     'cscRechitClusterNRechitChamberMinus21', 'cscRechitClusterNRechitChamberMinus22',
+#     'cscRechitClusterNRechitChamberMinus31', 'cscRechitClusterNRechitChamberMinus32',
+#     'cscRechitClusterNRechitChamberMinus41', 'cscRechitClusterNRechitChamberMinus42', 'cscRechitClusterMet_dPhi',
+#     'nDtRechitClusters', 'dtRechitClusterNSegStation1', 'dtRechitClusterNSegStation2', 'dtRechitClusterNSegStation3',
+#     'dtRechitClusterNSegStation4', 'dtRechitClusterNOppositeSegStation1', 'dtRechitClusterNOppositeSegStation2',
+#     'dtRechitClusterNOppositeSegStation3', 'dtRechitClusterNOppositeSegStation4', 'dtRechitCluster_match_gLLP',
+#     'dtRechitCluster_match_gLLP_minDeltaR', 'dtRechitCluster_match_gLLP_index', 'dtRechitCluster_match_gLLP_eta',
+#     'dtRechitCluster_match_gLLP_phi', 'dtRechitCluster_match_gLLP_decay_r', 'dtRechitCluster_match_gLLP_decay_z',
+#     'dtRechitCluster_match_gLLP_csc', 'dtRechitCluster_match_gLLP_dt', 'dtRechitCluster_match_gLLP_e',
+#     'dtRechitClusterX', 'dtRechitClusterY', 'dtRechitClusterZ', 'dtRechitClusterWheel', 'dtRechitClusterPhi',
+#     'dtRechitClusterEta', 'dtRechitClusterJetVetoPt', 'dtRechitClusterJetVetoLooseId', 'dtRechitClusterJetVetoTightId',
+#     'dtRechitClusterJetVetoE', 'dtRechitClusterMuonVetoPt', 'dtRechitClusterMuonVetoE',
+#     'dtRechitClusterMuonVetoTightId', 'dtRechitClusterMuonVetoLooseId', 'dtRechitClusterMuonVetoGlobal',
+#     'dtRechitClusterOverlap', 'dtRechitClusterSize', 'dtRechitClusterNoiseHit', 'dtRechitClusterNoiseHitStation1',
+#     'dtRechitClusterNoiseHitStation2', 'dtRechitClusterNoiseHitStation3', 'dtRechitClusterNoiseHitStation4',
+#     'dtRechitClusterNStation10', 'dtRechitClusterAvgStation10', 'dtRechitClusterMaxStation',
+#     'dtRechitClusterMaxStationRatio', 'dtRechitClusterNChamber', 'dtRechitClusterMaxChamber',
+#     'dtRechitClusterMaxChamberRatio', 'dtRechitClusterNHitStation1', 'dtRechitClusterNHitStation2',
+#     'dtRechitClusterNHitStation3', 'dtRechitClusterNHitStation4', 'dtRechitClusterMet_dPhi',
+#     'dtRechitCluster_match_RPChits_dPhi0p5', 'dtRechitCluster_match_RPCBx_dPhi0p5', 'dtRechitCluster_match_RB1_0p4',
+#     'dtRechitCluster_match_RB1_dPhi0p5', 'dtRechitCluster_match_MB1Seg_0p4', 'dtRechitCluster_match_MB1Seg_0p5',
+#     'dtRechitCluster_match_MB1hits_0p4', 'dtRechitCluster_match_MB1hits_0p5',
+#     'dtRechitCluster_match_MB1hits_cosmics_plus', 'dtRechitCluster_match_MB1hits_cosmics_minus', 'nGLLP', 'gLLP_eta',
+#     'gLLP_phi', 'gLLP_csc', 'gLLP_dt', 'gLLP_beta', 'gLLP_e', 'gLLP_pt', 'gLLP_ctau', 'gLLP_decay_vertex_r',
+#     'gLLP_decay_vertex_x', 'gLLP_decay_vertex_y', 'gLLP_decay_vertex_z', 'nLeptons', 'lepE', 'lepPt', 'lepEta',
+#     'lepPhi', 'lepPdgId', 'lepDZ', 'lepTightId', 'lepPassLooseIso', 'lepPassTightIso', 'lepPassVTightIso',
+#     'lepPassVVTightIso', 'nJets', 'jetE', 'jetPt', 'jetEta', 'jetPhi', 'jetTightPassId', 'HLTDecision'
+# ]
+
+# for k in run3:
+#   if k not in mc:
+#     print(k)
+
+# print('')
+
+# for k in mc:
+#   if k not in run3:
+#     print(k)

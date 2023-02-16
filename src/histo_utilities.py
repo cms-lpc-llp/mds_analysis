@@ -1,6 +1,6 @@
 import numpy as np
 import ROOT as rt
-# import root_numpy as rtnp
+import root_numpy as rtnp
 import matplotlib.pyplot as plt
 from array import array
 
@@ -53,7 +53,7 @@ def create_TH1D(x,
                 binning=[None, None, None],
                 weights=None,
                 h2clone=None,
-                axis_title=['', ''],
+                axis_title=None,
                 bin_list=False):
   if title is None:
     title = name
@@ -82,13 +82,10 @@ def create_TH1D(x,
     h.SetTitle(title)
     h.Reset()
 
-  for i in range(len(x)):
-    h.Fill(x[i])
-
-  # h.Fill(x, weights)
-  # rtnp.fill_hist(h, x, weights=weights)
-  h.SetXTitle(axis_title[0])
-  h.SetYTitle(axis_title[1])
+  rtnp.fill_hist(h, x, weights=weights)
+  if axis_title is not None:
+    h.SetXTitle(axis_title[0])
+    h.SetYTitle(axis_title[1])
   h.binning = binning
   return h
 
@@ -165,7 +162,7 @@ def create_TH2D(sample,
                 title=None,
                 binning=[None, None, None, None, None, None],
                 weights=None,
-                axis_title=['', '', '']):
+                axis_title=None):
   if title is None:
     title = name
   if (sample.shape[0] == 0):
@@ -203,18 +200,18 @@ def create_TH2D(sample,
     h = rt.TH2D(name, title, binning[-2] - 1, array('f', binning[:binning[-2]]), binning[-1] - 1,
                 array('f', binning[binning[-2]:-2]))
 
-  for i in range(len(sample)):
-    h.Fill(sample[i, 0], sample[i, 1])
-  # if weights is None:
-  #   h.Fill(sample[i, 0], sample[i, 1])
-  # else:
-  #   h.Fill(sample[i, 0], sample[i, 1], weights[i])
+  #for i in range(len(sample)):
 
-  # rtnp.fill_hist(h, sample, weights=weights)
-  # h.Fill(sample, weights)
-  h.SetXTitle(axis_title[0])
-  h.SetYTitle(axis_title[1])
-  h.SetZTitle(axis_title[2])
+
+#	if weights is None:
+#	    h.Fill(sample[i,0],sample[i,1])
+#	else:
+#	    h.Fill(sample[i,0],sample[i,1],weights[i])
+  rtnp.fill_hist(h, sample, weights=weights)
+  if axis_title is not None:
+    h.SetXTitle(axis_title[0])
+    h.SetYTitle(axis_title[1])
+    h.SetZTitle(axis_title[2])
   h.binning = binning
   return h
 
@@ -644,16 +641,16 @@ def histo2D_projectionFit(histo2D, bins, gaus_thr, rebin,
 
 
 def create_TGraph(x, y, ex=[], ey=[], axis_title=['', '']):
-  x = array("d", x)
-  y = array("d", y)
-  ex = array("d", ex)
-  ey = array("d", ey)
-  if not len(x) == len(y):
-    print("length of x and y are not equal!")
-  if not len(ex) == len(ey):
-    print("length of ex and ey are not equal!")
-  if len(ex) > 0 and not len(x) == len(ex):
-    print("leng of ex and x are not equal!")
+  # x = array("d", x)
+  # y = array("d", y)
+  # ex = array("d", ex)
+  # ey = array("d", ey)
+  # if not len(x) == len(y):
+  #   print("length of x and y are not equal!")
+  # if not len(ex) == len(ey):
+  #   print("length of ex and ey are not equal!")
+  # if len(ex) > 0 and not len(x) == len(ex):
+  #   print("leng of ex and x are not equal!")
 
   if len(ex) == 0:
     gr = rt.TGraph(len(x), x, y)
