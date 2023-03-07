@@ -25,6 +25,7 @@ relExtraDY = 1.3
 
 extraOverCmsTextSize = 0.95
 
+lumi_13p6TeV = "1 pb^{-1}"
 lumi_13TeV = "137 fb^{-1}"
 lumi_8TeV = "19.7 fb^{-1}"
 lumi_7TeV = "5.1 fb^{-1}"
@@ -69,6 +70,9 @@ def CMS_lumi(pad, iPeriod, iPosX):
   elif (iPeriod == 2):
     lumiText += lumi_8TeV
     lumiText += " (8 TeV)"
+  elif (iPeriod == 9999):  # my addition
+    lumiText += lumi_13p6TeV
+    lumiText += " (13.6 TeV)"
 
   elif (iPeriod == 3):
     lumiText = lumi_8TeV

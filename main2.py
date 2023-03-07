@@ -271,8 +271,13 @@ if __name__ == '__main__':
   ms['csc_pass_jet_veto'] = lnot(land(ms['cscRechitClusterJetVetoLooseId'], ms['cscRechitClusterJetVetoPt'] > 50))
   ms['dt_pass_jet_veto'] = lnot(land(ms['dtRechitClusterJetVetoLooseId'], ms['dtRechitClusterJetVetoPt'] > 50))
 
-  ms['csc_pass_muon_veto'] = lnot(ms['cscRechitClusterMuonVetoLooseId'])
-  ms['dt_pass_muon_veto'] = lnot(ms['dtRechitClusterMuonVetoLooseId'])
+  ms['csc_pass_muon_veto'] = lnot(
+      lor(
+          ms['cscRechitClusterMuonVetoLooseId'],
+          ms['cscRechitClusterNRechitChamberMinus11'] + ms['cscRechitClusterNRechitChamberMinus12'] +
+          ms['cscRechitClusterNRechitChamberPlus11'] + ms['cscRechitClusterNRechitChamberPlus12'] > 0,
+          np.abs(ms['cscRechitClusterEta']) > 2))
+  ms['dt_pass_muon_veto'] = lnot(lor(ms['dtRechitClusterMuonVetoLooseId'], ms['dtRechitClusterNSegStation1'] > 0))
 
   ms['csc_pass_jet_muon_veto'] = land(ms['csc_pass_jet_veto'], ms['csc_pass_muon_veto'])
   ms['dt_pass_jet_muon_veto'] = land(ms['dt_pass_jet_veto'], ms['dt_pass_muon_veto'])
@@ -291,7 +296,11 @@ if __name__ == '__main__':
   ms['csc_fail_jet_muon_veto_cscdt_cscL1'] = land(ms['csc_fail_jet_muon_veto'], ms['evt_cscdt_cscL1'])
   ms['dt_fail_jet_muon_veto_cscdt_cscL1'] = land(ms['dt_fail_jet_muon_veto'], ms['evt_cscdt_cscL1'])
 
+  ms['csc_int'] = land(-5 < ms['cscRechitClusterTimeWeighted'], ms['cscRechitClusterTimeWeighted'] < 12.5)
+  ms['dt_int'] = ms['dtRechitCluster_match_RPCBx_dPhi0p5'] == 0
+
   ms['csc_oot'] = ms['cscRechitClusterTimeWeighted'] < -12.5
+  ms['dt_oot'] = ms['dtRechitCluster_match_RPCBx_dPhi0p5'] < 0
 
   ms['csc_sig'] = land(ms['csc_pass_jet_muon_veto'], lnot(ms['csc_oot']))
   ms['dt_sig'] = ms['dt_pass_jet_muon_veto']  #lor(ms['dt_pass_jet_muon_veto'], lnot(ms['dt_oot']))
@@ -555,9 +564,8 @@ if __name__ == '__main__':
 
   ###############
   # Cluster size with exponential fits CSC-DT
-  # c.SetLogy()
 
-  cut_comment = 'CSC: Size < 100, DT: 50 #leq Size < 60, Require 1 CSC + 1 DT'
+  cut_comment = 'CSC: Size #geq 100, DT: 50 #leq Size < 60, Require 1 CSC + 1 DT'
   file_comment = '_limited' + ('_MC' if is_mc else '') + '.png'
 
   c = canvas()
@@ -584,18 +592,19 @@ if __name__ == '__main__':
   csc_pass_jet_muon = land(csc_pass, ms['csc_pass_jet_muon_veto'])
   dt_pass_jet_muon = land(dt_pass, ms['dt_pass_jet_muon_veto'])
 
-  evt_pass = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass, axis=1))
+  evt_pass = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
 
-  evt_pass_csc_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1), ak.sum(dt_pass, axis=1))
-  evt_pass_csc_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1), ak.sum(dt_pass, axis=1))
-  evt_pass_csc_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1), ak.sum(dt_pass, axis=1))
-  evt_pass_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_jet, axis=1))
-  evt_pass_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_muon, axis=1))
-  evt_pass_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_jet_muon, axis=1))
-  evt_pass_csc_jet_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1), ak.sum(dt_pass_jet, axis=1))
-  evt_pass_csc_muon_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1), ak.sum(dt_pass_muon, axis=1))
-  evt_pass_csc_jet_muon_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1),
-                                           ak.sum(dt_pass_jet_muon, axis=1))
+  evt_pass_csc_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  evt_pass_csc_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  evt_pass_csc_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  evt_pass_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_jet, axis=1) == 1)
+  evt_pass_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_muon, axis=1) == 1)
+  evt_pass_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_jet_muon, axis=1) == 1)
+  evt_pass_csc_jet_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1) == 1, ak.sum(dt_pass_jet, axis=1) == 1)
+  evt_pass_csc_muon_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1) == 1, ak.sum(dt_pass_muon, axis=1) == 1)
+  evt_pass_csc_jet_muon_dt_jet_muon = land(sel_1csc1dt,
+                                           ak.sum(csc_pass_jet_muon, axis=1) == 1,
+                                           ak.sum(dt_pass_jet_muon, axis=1) == 1)
 
   sel_evts = [
       evt_pass,
@@ -612,10 +621,10 @@ if __name__ == '__main__':
   labels = [
       '1 CSC + 1 DT',
       'After CSC Jet Veto',
-      'After CSC Muon Veto',
+      'After CSC Muon Veto (includes |#eta|<2, No ME11/12)',
       'After CSC Jet & Muon Vetoes',
       'After DT Jet Veto',
-      'After DT Muon Veto',
+      'After DT Muon Veto (includes No MB1)',
       'After DT Jet & Muon Vetoes',
       'After CSC/DT Jet Veto',
       'After CSC/DT Muon Veto',
@@ -628,6 +637,7 @@ if __name__ == '__main__':
   bins = (10, 50, 60)
   for i, (sel_evt, ll) in enumerate(zip(sel_evts, labels)):
     hh = ms.Histo1D('', title=';DT Cluster Size;Count', bins=bins, c=std_color_list[i], x=dt_size[sel_evt])
+    hh.SetLineWidth(3)
     leg.AddEntry(hh, ll, 'L')
 
     ff = TF1('exp_fit_dt_limited', 'expo', 50, 60)
@@ -665,6 +675,173 @@ if __name__ == '__main__':
   c.Print(out_dir + 'size_1csc1dt_multi_wout_hists' + file_comment)
 
   ###############
+  # Cluster size with exponential fits CSC-DT, in time
+
+  c = canvas()
+
+  if is_mc:
+    sel_1csc1dt = land(ak.sum(ms['csc_match'], axis=1) == 1, ak.sum(ms['dt_match'], axis=1) == 1)
+    cut_comment = 'Signal, ' + cut_comment
+
+  lat, leg = get_lat_leg(leg_coords=(0.35, 0.78, 0.45, 0.94))
+
+  csc_pass_int = land(csc_pass, ms['csc_int'])
+  dt_pass_int = land(dt_pass, ms['dt_int'])
+
+  csc_pass_jet_muon_int = land(csc_pass, ms['csc_pass_jet_muon_veto'], ms['csc_int'])
+  dt_pass_jet_muon_int = land(dt_pass, ms['dt_pass_jet_muon_veto'], ms['dt_int'])
+
+  evt_pass = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+
+  evt_pass_csc_int = land(sel_1csc1dt, ak.sum(csc_pass_int, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  evt_pass_dt_int = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_int, axis=1) == 1)
+  evt_pass_csc_int_dt_int = land(sel_1csc1dt, ak.sum(csc_pass_int, axis=1) == 1, ak.sum(dt_pass_int, axis=1) == 1)
+  evt_pass_csc_jet_muon_int_dt_jet_muon_int = land(sel_1csc1dt,
+                                                   ak.sum(csc_pass_jet_muon_int, axis=1) == 1,
+                                                   ak.sum(dt_pass_jet_muon_int, axis=1) == 1)
+
+  sel_evts = [
+      evt_pass,
+      evt_pass_csc_int,
+      evt_pass_dt_int,
+      evt_pass_csc_int_dt_int,
+      evt_pass_csc_jet_muon_dt_jet_muon,
+      evt_pass_csc_jet_muon_int_dt_jet_muon_int,
+  ]
+  labels = [
+      '1 CSC + 1 DT',
+      'After CSC In-time',
+      'After DT In-time',
+      'After CSC/DT In-time',
+      'After CSC/DT Jet & Muon Vetoes (Includes ME11/12, MB1, |#eta|<2)',
+      'After CSC/DT Jet & Muon Vetoes & In-time',
+  ]
+
+  a, b = 100, 250
+  print(f'Integrating fit from {a} to {b}')
+  hfs = []
+  bins = (10, 50, 60)
+  for i, (sel_evt, ll) in enumerate(zip(sel_evts, labels)):
+    hh = ms.Histo1D('', title=';DT Cluster Size;Count', bins=bins, c=std_color_list[i], x=dt_size[sel_evt])
+    hh.SetLineWidth(3)
+    leg.AddEntry(hh, ll, 'L')
+
+    ff = TF1('exp_fit_dt_limited', 'expo', 50, 60)
+    # ff.SetTitle(hh.GetTitle())
+    # ff.GetHistogram().GetXaxis().SetTitle('DT Cluster Size')
+    # ff.GetHistogram().GetYaxis().SetTitle('Count')
+    ff.SetLineColor(hh.GetLineColor())
+    ff.SetLineStyle(hh.GetLineStyle())
+    ff.SetLineWidth(3)
+
+    hh.Fit(ff, 'QR')
+    # leg.AddEntry(ff, ll, 'L')
+
+    intgrl, interr = ff.Integral(a, b), ff.IntegralError(a, b)
+    print(f'{ll} \t {intgrl:.0f} \pm {interr:.0f}')
+
+    hfs.append((hh, ff))
+
+  ymax = 500  #max([hh.GetMaximum() for hh, ff in hfs])
+  for i, (hh, ff) in enumerate(hfs):
+    hh.SetMinimum(0)
+    hh.SetMaximum(ymax * 1.05)
+    hh.Draw('same')
+  leg.Draw()
+  lat.DrawLatexNDC(1, 1, cut_comment)
+  c.Print(out_dir + 'size_1csc1dt_multi_int_with_hists' + file_comment)
+
+  c = canvas()
+  for i, (hh, ff) in enumerate(hfs):
+    ff.SetMinimum(0)  #ymax * 1.05)
+    ff.SetMaximum(ymax * 1.05)
+    ff.Draw('same' if i else '')  #'Lsame')
+  leg.Draw()
+  lat.DrawLatexNDC(1, 1, cut_comment)
+  c.Print(out_dir + 'size_1csc1dt_multi_int_wout_hists' + file_comment)
+
+  ###############
+  # Cluster size with exponential fits CSC-DT, in time, L1
+
+  c = canvas()
+
+  if is_mc:
+    sel_1csc1dt = land(ak.sum(ms['csc_match'], axis=1) == 1, ak.sum(ms['dt_match'], axis=1) == 1)
+    cut_comment = 'Signal, ' + cut_comment
+
+  lat, leg = get_lat_leg(leg_coords=(0.2, 0.2, 0.35, 0.5))
+
+  evt_pass_HLT = land(evt_pass, ms['HLTDecision'][:, 569])
+  evt_pass_csc_int_dt_int_HLT = land(evt_pass_csc_int_dt_int, ms['HLTDecision'][:, 569])
+  evt_pass_csc_jet_muon_dt_jet_muon_HLT = land(evt_pass_csc_jet_muon_dt_jet_muon, ms['HLTDecision'][:, 569])
+  evt_pass_csc_jet_muon_int_dt_jet_muon_int_HLT = land(evt_pass_csc_jet_muon_int_dt_jet_muon_int,
+                                                       ms['HLTDecision'][:, 569])
+
+  sel_evts = [
+      evt_pass,
+      evt_pass_HLT,
+      evt_pass_csc_int_dt_int,
+      evt_pass_csc_int_dt_int_HLT,
+      evt_pass_csc_jet_muon_dt_jet_muon,
+      evt_pass_csc_jet_muon_dt_jet_muon_HLT,
+      evt_pass_csc_jet_muon_int_dt_jet_muon_int,
+      evt_pass_csc_jet_muon_int_dt_jet_muon_int_HLT,
+  ]
+  labels = [
+      '1 CSC + 1 DT',
+      'After CSC HLT',
+      'After CSC/DT In-time',
+      'After CSC/DT In-time, HLT',
+      'After CSC/DT Jet & Muon Vetoes (Includes ME11/12, MB1, |#eta|<2)',
+      'After CSC/DT Jet & Muon Vetoes & HLT',
+      'After CSC/DT Jet & Muon Vetoes & In-time',
+      'After CSC/DT Jet & Muon Vetoes & In-time & HLT',
+  ]
+
+  a, b = 100, 250
+  print(f'Integrating fit from {a} to {b}')
+  hfs = []
+  bins = (10, 50, 60)
+  for i, (sel_evt, ll) in enumerate(zip(sel_evts, labels)):
+    hh = ms.Histo1D('', title=';DT Cluster Size;Count', bins=bins, c=std_color_list[i], x=dt_size[sel_evt])
+    hh.SetLineWidth(3)
+    leg.AddEntry(hh, ll, 'L')
+
+    ff = TF1('exp_fit_dt_limited', 'expo', 50, 60)
+    # ff.SetTitle(hh.GetTitle())
+    # ff.GetHistogram().GetXaxis().SetTitle('DT Cluster Size')
+    # ff.GetHistogram().GetYaxis().SetTitle('Count')
+    ff.SetLineColor(hh.GetLineColor())
+    ff.SetLineStyle(hh.GetLineStyle())
+    ff.SetLineWidth(3)
+
+    hh.Fit(ff, 'R')
+    # leg.AddEntry(ff, ll, 'L')
+
+    intgrl, interr = ff.Integral(a, b), ff.IntegralError(a, b)
+    print(f'{ll} \t {intgrl:.0f} \pm {interr:.0f}')
+
+    hfs.append((hh, ff))
+
+  ymax = max([hh.GetMaximum() for hh, ff in hfs])
+  for i, (hh, ff) in enumerate(hfs):
+    hh.SetMinimum(0)  #ymax * 1.05)
+    hh.SetMaximum(ymax * 1.05)
+    hh.Draw('same')
+  leg.Draw()
+  lat.DrawLatexNDC(1, 1, cut_comment)
+  c.Print(out_dir + 'size_1csc1dt_multi_int_HLT_with_hists' + file_comment)
+
+  c = canvas()
+  for i, (hh, ff) in enumerate(hfs):
+    ff.SetMinimum(0)  #ymax * 1.05)
+    ff.SetMaximum(ymax * 1.05)
+    ff.Draw('same' if i else '')  #'Lsame')
+  leg.Draw()
+  lat.DrawLatexNDC(1, 1, cut_comment)
+  c.Print(out_dir + 'size_1csc1dt_multi_int_HLT_wout_hists' + file_comment)
+
+  ###############
   # Cluster size with exponential fits CSC-CSC
   # c = canvas()
   # # c.SetLogy()
@@ -688,18 +865,18 @@ if __name__ == '__main__':
   # csc_pass_jet_muon = land(csc_size > 100, ms['csc_pass_jet_muon_veto'])
   # dt_pass_jet_muon = land(50 <= dt_size, dt_size < 100, ms['dt_pass_jet_muon_veto'])
 
-  # evt_pass = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass, axis=1))
+  # evt_pass = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
 
-  # evt_pass_csc_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1), ak.sum(dt_pass, axis=1))
-  # evt_pass_csc_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1), ak.sum(dt_pass, axis=1))
-  # evt_pass_csc_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1), ak.sum(dt_pass, axis=1))
-  # evt_pass_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_jet, axis=1))
-  # evt_pass_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_muon, axis=1))
-  # evt_pass_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1), ak.sum(dt_pass_jet_muon, axis=1))
-  # evt_pass_csc_jet_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1), ak.sum(dt_pass_jet, axis=1))
-  # evt_pass_csc_muon_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1), ak.sum(dt_pass_muon, axis=1))
-  # evt_pass_csc_jet_muon_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1),
-  #                                          ak.sum(dt_pass_jet_muon, axis=1))
+  # evt_pass_csc_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  # evt_pass_csc_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  # evt_pass_csc_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1) == 1, ak.sum(dt_pass, axis=1) == 1)
+  # evt_pass_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_jet, axis=1) == 1)
+  # evt_pass_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_muon, axis=1) == 1)
+  # evt_pass_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass, axis=1) == 1, ak.sum(dt_pass_jet_muon, axis=1) == 1)
+  # evt_pass_csc_jet_dt_jet = land(sel_1csc1dt, ak.sum(csc_pass_jet, axis=1) == 1, ak.sum(dt_pass_jet, axis=1) == 1)
+  # evt_pass_csc_muon_dt_muon = land(sel_1csc1dt, ak.sum(csc_pass_muon, axis=1) == 1, ak.sum(dt_pass_muon, axis=1) == 1)
+  # evt_pass_csc_jet_muon_dt_jet_muon = land(sel_1csc1dt, ak.sum(csc_pass_jet_muon, axis=1) == 1,
+  #                                          ak.sum(dt_pass_jet_muon, axis=1) == 1)
 
   # lat, leg = get_lat_leg(leg_coords=(0.50, 0.65, 0.9, 0.90))
 

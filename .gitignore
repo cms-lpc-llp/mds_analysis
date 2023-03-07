@@ -4,3 +4,5 @@ venv/
 *.pkl
 *.csv
 *.npy
+*.tar.gz
+*.tar.xz

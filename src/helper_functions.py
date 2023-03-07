@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import ROOT
+import awkward as ak
 
 
 def getRecoTime(algorithm, rechit_cut, rechit_time, rechit_energy):
@@ -75,6 +76,10 @@ def lxor(*args):
 
 def lnot(arg):
   return np.logical_not(arg)
+
+
+def asum(arg):
+  return ak.sum(arg, axis=1)
 
 
 def canvas(nrows=1, ncols=1, width=None, height=None, name=None, grid=True):
