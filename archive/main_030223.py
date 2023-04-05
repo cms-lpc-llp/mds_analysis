@@ -97,10 +97,23 @@ def match_clusters(ms, csc=True, dt=True):
   return ms
 
 
-def pass_NCSC_NDT(ms, ncsc=1, ndt=1):
+def pass_NCSC_NDT(ms, ncsc=1, ndt=1, op='&', csc_op='==', dt_op='=='):
   ms = ak.copy(ms)
   ms = fix_nbranch(ms)
-  return ms[land(ms['nCscRechitClusters'] == 1, ms['nDtRechitClusters'] == 1)]
+  sel_csc = {
+      '==': ms['nCscRechitClusters'] == ncsc,
+      '>': ms['nCscRechitClusters'] > ncsc,
+      '<': ms['nCscRechitClusters'] < ncsc,
+  }[csc_op]
+  sel_dt = {
+      '==': ms['nDtRechitClusters'] == ndt,
+      '>': ms['nDtRechitClusters'] > ndt,
+      '<': ms['nDtRechitClusters'] < ndt,
+  }[dt_op]
+  if op == '&':
+    return ms[land(sel_csc, sel_dt)]
+  if op == '|':
+    return ms[lor(sel_csc, sel_dt)]
 
 
 def pass_jet_veto(ms, csc=True, dt=True):
@@ -178,7 +191,7 @@ def pass_L1(ms):
 def pass_in_det(ms, system=None):
   ms = ak.copy(ms)
   max_csc_eta, max_csc_r, min_csc_z, max_csc_z = 3, 800, 400, 1200
-  min_dt_r, max_dt_r, max_dt_z = 3, 800, 400, 1200
+  min_dt_r, max_dt_r, max_dt_z = 200, 800, 700
 
   sel_gLLP_csc = land(
       np.abs(ms['gLLP_eta']) < max_csc_eta,
@@ -192,20 +205,25 @@ def pass_in_det(ms, system=None):
 
   sel_rechit_csc = land(
       np.abs(ms['cscRechitCluster_match_gLLP_eta']) < max_csc_eta,
-      np.abs(ms['cscRechitCluster_match_gLLP_decay_vertex_r']) < max_csc_r,
-      np.abs(ms['cscRechitCluster_match_gLLP_decay_vertex_z']) > min_csc_z,
-      np.abs(ms['cscRechitCluster_match_gLLP_decay_vertex_z']) < max_csc_z)
+      np.abs(ms['cscRechitCluster_match_gLLP_decay_r']) < max_csc_r,
+      np.abs(ms['cscRechitCluster_match_gLLP_decay_z']) > min_csc_z,
+      np.abs(ms['cscRechitCluster_match_gLLP_decay_z']) < max_csc_z)
   sel_rechit_dt = land(
-      np.abs(ms['dtRechitCluster_match_gLLP_decay_vertex_r']) > min_dt_r,
-      np.abs(ms['dtRechitCluster_match_gLLP_decay_vertex_r']) < max_dt_r,
-      np.abs(ms['dtRechitCluster_match_gLLP_decay_vertex_z']) < max_dt_z)
+      np.abs(ms['dtRechitCluster_match_gLLP_decay_r']) > min_dt_r,
+      np.abs(ms['dtRechitCluster_match_gLLP_decay_r']) < max_dt_r,
+      np.abs(ms['dtRechitCluster_match_gLLP_decay_z']) < max_dt_z)
 
-  if system is None or system is 'csc':
-    ms = apply_branch_cut(ms, sel_gLLP_csc, 'csc')
+  sel_gLLP = sel_gLLP_csc
+  if system is None or system == 'csc':
     ms = apply_branch_cut(ms, sel_rechit_csc, 'csc')
-  if system is None or system is 'dt':
-    ms = apply_branch_cut(ms, sel_gLLP_dt, 'dt')
+  if system is None or system == 'dt':
+    if system == 'dt':
+      sel_gLLP = sel_gLLP_dt
+    else:
+      sel_gLLP = lor(sel_gLLP, sel_gLLP_dt)
     ms = apply_branch_cut(ms, sel_rechit_dt, 'dt')
+  ms = apply_branch_cut(ms, sel_gLLP, 'gllp')
+  # ms = ms[lor(asum(sel_gLLP_csc) > 0, asum(sel_gLLP_dt) > 0)]
 
   return fix_nbranch(ms)
 
