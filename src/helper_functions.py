@@ -81,7 +81,8 @@ def lnot(arg):
 def asum(arg):
   return ak.sum(arg, axis=1)
 
-
+def aabs(arg):
+    return np.abs(arg)
 def canvas(nrows=1, ncols=1, width=None, height=None, name=None, grid=True):
   if width is None:
     width = ncols * 1000

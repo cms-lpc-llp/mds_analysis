@@ -3,7 +3,8 @@ import numpy as np
 
 import ROOT as rt
 import uproot as upr
-from src.helper_functions import lnot, land, lor, lxor, asum
+from itertools import product as combs
+from src.helper_functions import lnot, land, lor, lxor, asum, aabs
 
 ############
 from src.histo_utilities import std_color_list
@@ -25,11 +26,15 @@ def get_lat_leg(leg_coords=(0.6, 0.7, 0.9, 0.85)):
 
 
 def H1D(x, title, bins, **kwargs):
-    hh = rt.TH1F(str(np.random.randint(0, 10000)), title, *bins)
+    name = title.split(";")[0]
+    if name == "":
+        name = str(np.random.randint(0, 10000))
+
+    hh = rt.TH1F(name, title, *bins)
     hh.SetLineWidth(4)
 
     if isinstance(x, ak.Array):
-        x = ak.flatten(x)
+        x = ak.flatten(x, -1)
     for xx in x:
         hh.Fill(xx, 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
 
@@ -45,6 +50,61 @@ def H1D(x, title, bins, **kwargs):
     return hh
 
 
+def H2D(x, y, title, bins, method="c", **kwargs):
+    name = title.split(";")[0]
+    if name == "":
+        name = str(np.random.randint(0, 10000))
+
+    hh = rt.TH2F(name, title, *bins)
+
+    if method == "s":  # SEQUENTIAL
+        if isinstance(x, ak.Array):
+            x = ak.flatten(x, -1)
+        if isinstance(y, ak.Array):
+            y = ak.flatten(y, -1)
+
+        for xx, yy in zip(x, y):
+            hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+    elif method == "c":  # COMBINATORIAL
+        if len(x) != len(y):
+            raise ValueError(f"x and y don't have the same length! ({len(x):=}, {len(y):=}")
+
+        for xr, yr in zip(x, y):
+            # print(xr, yr)
+            if isinstance(xr, ak.Array):
+                xr = ak.to_list(xr)
+            else:
+                xr = [xr]
+            if isinstance(yr, ak.Array):
+                yr = ak.to_list(yr)
+            else:
+                yr = [yr]
+
+            if len(xr) < 1 or len(yr) < 1:
+                continue
+            # if isinstance(xr, ak.Array):
+            #     if len(xr) == 0:
+            #         continue
+            #     xr = ak.flatten(xr, -1)
+            #     print("here1")
+            # else:
+            #     xr = np.array(xr)
+            #     print("here2")
+
+            # if isinstance(yr, ak.Array):
+            #     if len(yr) == 0:
+            #         continue
+            #     yr = ak.flatten(yr, -1)
+            # else:
+            #     yr = np.array(yr)
+
+            # print('\t', xr, yr)
+            for xx, yy in combs(xr, yr):
+                hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+
+    return hh
+
+
 def multi_plot(hhs, tts, **kwargs):
     ccs = std_color_list
     if "ccs" in kwargs:
@@ -54,6 +114,8 @@ def multi_plot(hhs, tts, **kwargs):
     ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
+        if "ymin" in kwargs:
+            hh.SetMinimum(kwargs["ymin"])
         hh.SetLineColor(cc)
         hh.Draw("same")
 
@@ -128,8 +190,8 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
         sel_time = ms.time_cut(det)
         sel_match = land(sel_match, sel_jets, sel_muon, sel_time)
 
-    hnum = H1D(np.abs(ms[lcltr + xl])[sel_match][sel_num], title, bins=bins)
-    hden = H1D(np.abs(ms[lgllp + xl])[sel_gllp_in_det], title, bins=bins)
+    hnum = H1D(aabs(ms[lcltr + xl])[sel_match][sel_num], title, bins=bins)
+    hden = H1D(aabs(ms[lgllp + xl])[sel_gllp_in_det], title, bins=bins)
 
     hnum.Divide(hden)
 
@@ -147,7 +209,7 @@ class MuonSystem:
         self.file_name = file_name
         self.tree_name = tree_name
         self.fuproot = upr.open(file_name + ":" + tree_name)
-        self.ms = self.fuproot.arrays(entry_stop=100_001)
+        self.ms = self.fuproot.arrays()  # entry_stop=10_000)
 
     def __getitem__(self, key):
         return self.ms[key]
@@ -221,18 +283,18 @@ class MuonSystem:
             if "csc" == det:
                 cuts.append(
                     land(
-                        np.abs(self[pree + "eta"]) < max_csc_eta,
-                        np.abs(self[prev + "r"]) < max_csc_r,
-                        np.abs(self[prev + "z"]) > min_csc_z,
-                        np.abs(self[prev + "z"]) < max_csc_z,
+                        aabs(self[pree + "eta"]) < max_csc_eta,
+                        aabs(self[prev + "r"]) < max_csc_r,
+                        aabs(self[prev + "z"]) > min_csc_z,
+                        aabs(self[prev + "z"]) < max_csc_z,
                     )
                 )
             if "dt" == det:
                 cuts.append(
                     land(
-                        np.abs(self[prev + "r"]) > min_dt_r,
-                        np.abs(self[prev + "r"]) < max_dt_r,
-                        np.abs(self[prev + "z"]) < max_dt_z,
+                        aabs(self[prev + "r"]) > min_dt_r,
+                        aabs(self[prev + "r"]) < max_dt_r,
+                        aabs(self[prev + "z"]) < max_dt_z,
                     )
                 )
 
@@ -296,7 +358,7 @@ class MuonSystem:
                             land(
                                 self["cscRechitClusterMuonVetoLooseId"],
                                 self["cscRechitClusterMuonVetoPt"] > 30,
-                                np.abs(self["cscRechitClusterEta"]) < 2.4,
+                                aabs(self["cscRechitClusterEta"]) < 2.4,
                             ),
                             self["cscRechitClusterNRechitChamberMinus11"]
                             + self["cscRechitClusterNRechitChamberMinus12"]
@@ -313,7 +375,7 @@ class MuonSystem:
                             land(
                                 self["dtRechitClusterMuonVetoLooseId"],
                                 self["dtRechitClusterMuonVetoPt"] > 10,
-                                np.abs(self["dtRechitClusterEta"]) < 2.4,
+                                aabs(self["dtRechitClusterEta"]) < 2.4,
                             ),
                             self["dtRechitClusterNSegStation1"] > 0,
                         )
@@ -333,7 +395,7 @@ class MuonSystem:
                         land(
                             self["cscRechitClusterJetVetoLooseId"],
                             self["cscRechitClusterJetVetoPt"] > 30,
-                            np.abs(self["cscRechitClusterEta"]) < 2.4,
+                            aabs(self["cscRechitClusterEta"]) < 2.4,
                         )
                     )
                 )  # AN-21-124
@@ -343,7 +405,7 @@ class MuonSystem:
                         land(
                             self["dtRechitClusterJetVetoLooseId"],
                             self["dtRechitClusterJetVetoPt"] > 50,
-                            np.abs(self["dtRechitClusterEta"]) < 2.4,
+                            aabs(self["dtRechitClusterEta"]) < 2.4,
                         )
                     )
                 )  # AN-21-124

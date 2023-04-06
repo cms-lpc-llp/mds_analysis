@@ -72,6 +72,30 @@ scp psimmerl@login-1.hep.caltech.edu:llp_roots.tar.xz .
 tar -xvzf llp_roots.tar.xz
 rm -f llp_roots.tar.xz
 
+
+OR IF WORKING ON TIER2
+
+mcdir="/storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie"
+r3dir="/storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022"
+fmc="ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted"
+fr3="DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi"
+
+ln -s $mcdir/v4/normalized/${fmc}.root  ${fmc}_v4.root
+ln -s $mcdir/v5/normalized/${fmc}.root  ${fmc}_v5.root
+ln -s $mcdir/v6/normalized/${fmc}.root  ${fmc}_v6.root
+ln -s $mcdir/v7/normalized/${fmc}.root  ${fmc}_v7.root
+ln -s $mcdir/v8/normalized/${fmc}.root  ${fmc}_v8.root
+ln -s $mcdir/v9/normalized/${fmc}.root  ${fmc}_v9.root
+ln -s $r3dir/v4/normalized/${fr3}.root  ${fr3}_v4.root
+ln -s $r3dir/v5/normalized/${fr3}.root  ${fr3}_v5.root
+ln -s $r3dir/v6/normalized/${fr3}.root  ${fr3}_v6.root
+ln -s $r3dir/v7/normalized/${fr3}.root  ${fr3}_v7.root
+ln -s $r3dir/v8/normalized/${fr3}.root  ${fr3}_v8.root
+ln -s $r3dir/v9/normalized/${fr3}.root  ${fr3}_v9.root
+
+
+
+
 ---
 02/06/2023:
 

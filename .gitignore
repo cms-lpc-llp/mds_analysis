@@ -1,3 +1,4 @@
+llp_env/
 venv/
 .vscode/
 *.root
