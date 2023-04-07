@@ -94,15 +94,14 @@ if __name__ == "__main__":
     out_dir = cur_dir + "/reports/weekly/apr10/"
     in_data_dir = cur_dir + "/data/raw/"
     out_data_dir = cur_dir + "/data/processed/"
-    # out_dir = "/home/psimmerl/Documents/CMS/LLP/reports/weekly/apr3/"
-    # data_dir = "/home/psimmerl/Documents/CMS/LLP/data/raw/"
     ending = ".png"
 
     isCut = True
     save_dstat = "ca_0p6"
-    nev = 10_000
+    nev = 2_000_000
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
+    pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
     print(f"Using output directory '{out_dir}'")
 
     mc_db_0p4 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root"
