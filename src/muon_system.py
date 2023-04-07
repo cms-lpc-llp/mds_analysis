@@ -3,6 +3,8 @@ import numpy as np
 
 import ROOT as rt
 import uproot as upr
+from root_numpy import fill_hist
+
 from itertools import product as combs
 from src.helper_functions import lnot, land, lor, lxor, asum, aabs
 
@@ -11,7 +13,7 @@ from src.histo_utilities import std_color_list
 import awkward as ak
 
 
-def get_lat_leg(leg_coords=(0.6, 0.7, 0.9, 0.85)):
+def get_lat_leg(leg_coords=(0.6, 0.7, 0.95, 0.8)):
     lat = rt.TLatex()
     lat.SetTextColor(rt.kRed)
     lat.SetTextSize(0.03)
@@ -35,6 +37,11 @@ def H1D(x, title, bins, **kwargs):
 
     if isinstance(x, ak.Array):
         x = ak.flatten(x, -1)
+
+    #weights = None
+    #if "norm" in kwargs and kwargs['norm']:
+    #    weights = np.ones_like(x) / len(x)
+    #fill_hist(hh, x, weights)
     for xx in x:
         hh.Fill(xx, 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
 
@@ -110,14 +117,17 @@ def multi_plot(hhs, tts, **kwargs):
     if "ccs" in kwargs:
         ccs = kwargs["ccs"]
 
-    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.9, 0.85))
+    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.85, 0.95))
+    if 'norm' in kwargs and kwargs['norm']:
+        for hh in hhs:
+            hh.Scale(1/(hh.Integral() if hh.Integral() else 1))
     ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
         if "ymin" in kwargs:
             hh.SetMinimum(kwargs["ymin"])
         hh.SetLineColor(cc)
-        hh.Draw("same")
+        hh.Draw("same hist")
 
         leg.AddEntry(hh, tt, "L")
 
@@ -209,7 +219,7 @@ class MuonSystem:
         self.file_name = file_name
         self.tree_name = tree_name
         self.fuproot = upr.open(file_name + ":" + tree_name)
-        self.ms = self.fuproot.arrays()  # entry_stop=10_000)
+        self.ms = self.fuproot.arrays(entry_stop=5_000_000)#5_000_000)
 
     def __getitem__(self, key):
         return self.ms[key]
@@ -225,22 +235,23 @@ class MuonSystem:
 
         if system == "event":
             self.ms = self.ms[idxs]
-            return
+        else:
+            pre = {
+                "csc": "cscRechitCluster",
+                "dt": "dtRechitCluster",
+                "gllp": "gLLP",
+                "lep": "lep",
+                "jet": "jet",
+            }
 
-        if system not in pre:
-            raise ValueError(f"Invaid system {system}.")
-
-        pre = {
-            "csc": "cscRechitCluster",
-            "dt": "dtRechitCluster",
-            "gllp": "gLLP",
-            "lep": "lep",
-            "jet": "jet",
-        }[system]
-
-        for k in self.ms.fields:
-            if pre == k[: len(pre)]:
-                self.ms[k] = self.ms[k][idxs]
+            if system not in pre:
+                raise ValueError(f"Invaid system {system}.")
+            
+            pre = pre[system]
+            for k in self.ms.fields:
+                if pre == k[: len(pre)]:
+                    self.ms[k] = self.ms[k][idxs]
+        self.fix_nbranch()
 
     def fix_nbranch(self):
         self.ms["nCscRechitClusters"] = asum(self["cscRechitClusterSize"] > 0)

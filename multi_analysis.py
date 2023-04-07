@@ -35,7 +35,7 @@ bins = {
     #
     "dtN": (11, -0.5, 10.5),
     "dtSize": (100, 0, 500),
-    "dtTime": (100, -10, 10),
+    "dtTime": (6, -3.5, 3.5),
     #'dtTimeSpread' : (100, -100, 100),
     #'dtE' : (100, -100, 100),
     #'dtPt' : (100, -100, 100),
@@ -55,7 +55,7 @@ bins = {
     "lepN": (6, -0.5, 5.5),
     "lepE": (100, 0, 200),
     "lepPt": (100, 0, 150),
-    "lepEta": (100, -5, 5),
+    "lepEta": (100, -3, 3),
     "lepPhi": (100, -pi, pi),
     #
     "jetN": (11, -0.5, 10.5),
@@ -64,9 +64,9 @@ bins = {
     "jetEta": (100, -5, 5),
     "jetPhi": (100, -pi, pi),
     #
-    "dEta": (100, -10, 10),
+    "dEta": (100, -4, 4),
     "dPhi": (100, -pi, pi),
-    "dR": (100, -20, 20),
+    "dR": (100, 0, 5),
 }
 
 bins2D = {
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     rt.gStyle.SetOptFit(0)  # 1011)
 
     cur_dir = os.getcwd()
-    out_dir = cur_dir + "/reports/weekly/apr3/"
+    out_dir = cur_dir + "/reports/weekly/apr6/"
     data_dir = cur_dir + "/data/raw/"
     # out_dir = "/home/psimmerl/Documents/CMS/LLP/reports/weekly/apr3/"
     # data_dir = "/home/psimmerl/Documents/CMS/LLP/data/raw/"
@@ -161,44 +161,59 @@ if __name__ == "__main__":
     hhs = defaultdict(list)
 
     for ff, label, stat in zip(files, labels, stats):
-        print("\n\n", stat)#ms.file_name)
+        print("\n", stat)#ms.file_name)
         isMC = "mc" in stat
         ms = MuonSystem(ff, isMC=isMC)
         print(f"Loaded {len(ms['met']):,} events.")
-        ###################################
-        ## BLINDING DATA (N CLUSTER > 2) ##
-        ###################################
+        
+        #=======================================#
+        # Making time plots before cuts on time #
+        #=======================================#
 
-        if isBlind:
+        hhs["cscAllTime"].append(H1D(ms["cscRechitClusterTimeWeighted"], ";CSC Time [ns];count", bins["cscTime"]))
+        hhs["cscAllTimeSpread"].append(
+            H1D(ms["cscRechitClusterTimeSpreadWeightedAll"], ";CSC Time Spread [ns];count", bins["cscTimeSpread"])
+        )
+        hhs["dtAllTime"].append(
+            H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"])
+        )        
+
+        #########################
+        ## BLIND OR MATCH DATA ##
+        #########################
+        if isMC:
+            print("!!!!!!!!!!!!!!!!!!!")
+            print("!! MATCHING DATA !!")
+            print("!!!!!!!!!!!!!!!!!!!")
+            idx_csc_match, idx_dt_match = ms.match_cut()
+            ms.apply_cut(idx_csc_match, system='csc')
+            ms.apply_cut(idx_dt_match, system='dt')
+
+        elif isBlind:
             print("!!!!!!!!!!!!!!!!!!!")
             print("!! BLINDING DATA !!")
             print("!!!!!!!!!!!!!!!!!!!")
 
-            hhs["cscAllTime"].append(H1D(ms["cscRechitClusterTimeWeighted"], ";CSC Time [ns];count", bins["cscTime"]))
-            hhs["cscAllTimeSpread"].append(
-                H1D(ms["cscRechitClusterTimeSpreadWeightedAll"], ";CSC Time Spread [ns];count", bins["cscTimeSpread"])
+            #sel_csc_oot = aabs(ms["cscRechitClusterTimeWeighted"]) > 50
+            sel_csc_oot = ms["cscRechitClusterTimeWeighted"] < -12.5
+            sel_dt_oot = ms["dtRechitCluster_match_RPCBx_dPhi0p5"] != 0
+
+            sel_bkg = lor(
+                land(ms["nCscRechitClusters"] == 1, asum(sel_csc_oot) == 1),
+                land(
+                    ms["nCscRechitClusters"] == 2, asum(sel_csc_oot) == 1
+                ),  # NOTE: change to req only 2nd clstr oot
+                land(ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
+                land(ms["nDtRechitClusters"] == 2, asum(sel_dt_oot) == 1),
+                land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
             )
-            hhs["dtAllTime"].append(
-                H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"])
-            )
-            if isMC:
-                sel_csc_oot = aabs(ms["cscRechitClusterTimeWeighted"]) > 50
-                sel_dt_oot = ms["dtRechitCluster_match_RPCBx_dPhi0p5"] != 0
 
-                sel_bkg = lor(
-                    land(ms["nCscRechitClusters"] == 1, asum(sel_csc_oot) == 1),
-                    land(
-                        ms["nCscRechitClusters"] == 2, asum(sel_csc_oot) >= 1
-                    ),  # NOTE: change to req only 2nd clstr oot
-                    land(ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
-                    land(ms["nDtRechitClusters"] == 2, asum(sel_dt_oot) >= 1),
-                    land(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] == 2, asum(sel_dt_oot) == 1),
-                )
+            ms.apply_cut(sel_bkg)
 
-                ms.apply_cut(sel_bkg)
+        #=================================#
+        # NOTE: Using convention "x vs y" #
+        #=================================#
 
-
-        # NOTE: Using convention "x vs y"
         #################################
         ## System & Cluster Kinematics ##
         #################################
@@ -264,7 +279,7 @@ if __name__ == "__main__":
         hhs["lepPhi"].append(H1D(ms["lepPhi"], ";Lepton #phi;count", bins["lepPhi"]))
 
         # MET vs (csc, dt) MET dPhi
-        hhs["met_cscMetDPhi_" + stat].append(
+        hhs["2D_met_cscMetDPhi_" + stat].append(
             H2D(
                 ms["met"],
                 ms["cscRechitClusterMet_dPhi"],
@@ -272,7 +287,7 @@ if __name__ == "__main__":
                 bins["met_cscMetDPhi"],
             )
         )
-        hhs["met_dtMetDPhi_" + stat].append(
+        hhs["2D_met_dtMetDPhi_" + stat].append(
             H2D(
                 ms["met"],
                 ms["dtRechitClusterMet_dPhi"],
@@ -286,62 +301,71 @@ if __name__ == "__main__":
         ##################################
         print("Generating CSC-DT kinematics plots")
         sel_hlt = ms["HLTDecision"][:, 569]  # HLT_L1CSCCluster_DTCluster50
-        sel_1csc1dt = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
-        sel = land(sel_hlt, sel_1csc1dt)
+        sel_1csc1dt_orig = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
+        sel_1csc1dt = land(asum(ms['cscRechitClusterSize']>0) == 1, asum(ms['dtRechitClusterSize']>0) == 1)
+        if np.sum(sel_1csc1dt_orig ^ sel_1csc1dt) != 0:
+            print('UH OH SOMETHING BAD HAPPENED!')
+            exit()
+        if not isMC:
+            sel = land(sel_hlt, sel_1csc1dt)
+        else:
+            sel = sel_1csc1dt
+        
         # dEta, dPhi, dR
         dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
-        dPhi = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
+        dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
         dPhi = dPhi - (dPhi > pi) * 2 * pi
         dR = np.sqrt(dEta * dEta + dPhi * dPhi)
 
         hhs["dEta"].append(H1D(dEta, ";#Delta#eta(CSC,DT_{OOT});count", bins["dEta"]))
         hhs["dPhi"].append(H1D(dPhi, ";#Delta#phi(CSC,DT_{OOT});count", bins["dPhi"]))
-        hhs["dR"].append(H1D(dR, ";{#Delta}R(CSC,DT_{OOT});count", bins["dR"]))
+        hhs["dR"].append(H1D(dR, ";#DeltaR(CSC,DT_{OOT});count", bins["dR"]))
 
         # d__ vs d__
-        hhs["dPhi_dEta"].append(
+        hhs["2D_dPhi_dEta_"+stat].append(
             H2D(dPhi, dEta, ";#Delta#phi(CSC,DT_{OOT});#Delta#eta(CSC,DT_{OOT});count", bins["dPhi_dEta"])
         )
-        hhs["dPhi_dR"].append(H2D(dPhi, dR, ";#Delta#phi(CSC,DT_{OOT});{#Delta}R(CSC,DT_{OOT});count", bins["dPhi_dR"]))
-        hhs["dEta_dR"].append(H2D(dEta, dR, ";#Delta#eta(CSC,DT_{OOT});{#Delta}R(CSC,DT_{OOT});count", bins["dEta_dR"]))
+        hhs["2D_dPhi_dR_"+stat].append(H2D(dPhi, dR, ";#Delta#phi(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dPhi_dR"]))
+        hhs["2D_dEta_dR_"+stat].append(H2D(dEta, dR, ";#Delta#eta(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dEta_dR"]))
 
-    print("Saving plots to disk.")
-    for k, hs in hhs.items():
-        c = canvas(1, 1)
-        if "2D" in k:
-            c.cd(1).SetLogz()
-            hs[0].Draw("colz")
-        else:
-            _ll = multi_plot(hs, labels, ymin=0)
-        c.Print(out_dir + k + ending)
+        print("Saving plots to disk.")
+        for k, hs in hhs.items():
+            c = canvas(1, 1)
+            if "2D" in k:
+                c.cd(1).SetLogz()
+                hs[0].Draw("colz")
+            else:
+                _ll = multi_plot(hs, labels, ymin=0, norm=True)
+            c.Print(out_dir + k + ending)
+    
     #########################
     ## 1D Efficiency Plots ##
     #########################
     print("Generating efficiency plots")
 
-    for ff in files_mc:
-        ms = MuonSystem(ff, isMC=True)
-        for isCut in [False, True]:
-            c = canvas(2, 2)
-            for i, det in enumerate(["csc", "dt"]):
-                for j, xl in enumerate(["z", "r"]):
-                    c.cd(2 * i + j + 1)
-                    _hhs = []
+    for isCut in [False, True]:
+        c = canvas(2, 2)
+        for i, det in enumerate(["csc", "dt"]):
+            for j, xl in enumerate(["z", "r"]):
+                c.cd(2 * i + j + 1)
+                _hhs = []
+                for ff in files_mc:
+                    ms = MuonSystem(ff, isMC=True)
                     _hhs.append(make_cluster_eff_1D(ms, det, xl, cuts=isCut))
-                    if isCut:
-                        legxy = (0.3, 0.7, 0.5, 0.85)
-                    else:
-                        legxy = (0.5, 0.25, 0.7, 0.4)
-                    _ll = multi_plot(_hhs, labels_mc, legxy=legxy)
-                    for h in _hhs:
-                        h.SetMinimum(0.0)
-                        h.SetMaximum(1.0)
+                if isCut:
+                    legxy = (0.3, 0.7, 0.5, 0.85)
+                else:
+                    legxy = (0.5, 0.15, 0.7, 0.4)
+                _ll = multi_plot(_hhs, labels_mc, legxy=legxy)
+                for h in _hhs:
+                    h.SetMinimum(0.0)
+                    h.SetMaximum(1.0)
 
-                    if det == "csc" and xl == "z":
-                        boxes = draw_csc_z_boxes(_hhs[-1])
-                        gc.extend(boxes)
-                    gc.extend(_hhs + list(_ll))
+                if det == "csc" and xl == "z":
+                    boxes = draw_csc_z_boxes(_hhs[-1])
+                    gc.extend(boxes)
+                gc.extend(_hhs + list(_ll))
 
-            c.Print(out_dir + "eff_compare_DBSCAN-CA" + ("_CUT" if isCut else "") + ending)
+        c.Print(out_dir + "eff_compare_DBSCAN-CA" + ("_CUT" if isCut else "") + ending)
 
     print("Finished!")
