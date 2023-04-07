@@ -91,67 +91,86 @@ if __name__ == "__main__":
     rt.gStyle.SetOptFit(0)  # 1011)
 
     cur_dir = os.getcwd()
-    out_dir = cur_dir + "/reports/weekly/apr6/"
-    data_dir = cur_dir + "/data/raw/"
+    out_dir = cur_dir + "/reports/weekly/apr10/"
+    in_data_dir = cur_dir + "/data/raw/"
+    out_data_dir = cur_dir + "/data/processed/"
     # out_dir = "/home/psimmerl/Documents/CMS/LLP/reports/weekly/apr3/"
     # data_dir = "/home/psimmerl/Documents/CMS/LLP/data/raw/"
     ending = ".png"
 
+    isCut = True
+    save_dstat = "ca_0p6"
+    nev = 10_000
+
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
     print(f"Using output directory '{out_dir}'")
 
-    mc_db_0p4 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root"
-    mc_ca_0p4 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v5.root"
-    mc_ca_0p5 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v7.root"
-    mc_ca_0p6 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root"
-    mc_ca_0p8 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v8.root"
-    mc_ca_1p0 = data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v9.root"
+    mc_db_0p4 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root"
+    mc_ca_0p4 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v5.root"
+    mc_ca_0p5 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v7.root"
+    mc_ca_0p6 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root"
+    mc_ca_0p8 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v8.root"
+    mc_ca_1p0 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v9.root"
 
-    r3_db_0p4 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v4.root"
-    r3_ca_0p4 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v5.root"
-    r3_ca_0p5 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v7.root"
-    r3_ca_0p6 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root"
-    r3_ca_0p8 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v8.root"
-    r3_ca_1p0 = data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v9.root"
+    r3_db_0p4 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v4.root"
+    r3_ca_0p4 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v5.root"
+    r3_ca_0p5 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v7.root"
+    r3_ca_0p6 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root"
+    r3_ca_0p8 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v8.root"
+    r3_ca_1p0 = in_data_dir + "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v9.root"
 
-    files_mc = [mc_db_0p4, mc_ca_0p4, mc_ca_0p5, mc_ca_0p6, mc_ca_0p8, mc_ca_1p0]
-    files_r3 = [r3_db_0p4, r3_ca_0p4, r3_ca_0p5, r3_ca_0p6, r3_ca_0p8, r3_ca_1p0]
+    files_mc = [
+        # mc_db_0p4,
+        # mc_ca_0p4,
+        # mc_ca_0p5,
+        mc_ca_0p6,
+        # mc_ca_0p8,
+        # mc_ca_1p0,
+    ]
+    files_r3 = [
+        # r3_db_0p4,
+        # r3_ca_0p4,
+        # r3_ca_0p5,
+        r3_ca_0p6,
+        # r3_ca_0p8,
+        # r3_ca_1p0,
+    ]
 
     labels_mc = [
-        "Signal: DBSCAN 0.4",
-        "Signal: CA 0.4",
-        "Signal: CA 0.5",
+        # "Signal: DBSCAN 0.4",
+        # "Signal: CA 0.4",
+        # "Signal: CA 0.5",
         "Signal: CA 0.6",
-        "Signal: CA 0.8",
-        "Signal: CA 1.0",
+        # "Signal: CA 0.8",
+        # "Signal: CA 1.0",
     ]
     labels_r3 = [
-        "Data: DBSCAN 0.4",
-        "Data: CA 0.4",
-        "Data: CA 0.5",
+        # "Data: DBSCAN 0.4",
+        # "Data: CA 0.4",
+        # "Data: CA 0.5",
         "Data: CA 0.6",
-        "Data: CA 0.8",
-        "Data: CA 1.0",
+        # "Data: CA 0.8",
+        # "Data: CA 1.0",
     ]
 
     stats_mc = [
-        "mc_db_0p4",
-        "mc_ca_0p4",
-        "mc_ca_0p5",
+        # "mc_db_0p4",
+        # "mc_ca_0p4",
+        # "mc_ca_0p5",
         "mc_ca_0p6",
-        "mc_ca_0p8",
-        "mc_ca_1p0",
+        # "mc_ca_0p8",
+        # "mc_ca_1p0",
     ]
     stats_r3 = [
-        "r3_db_0p4",
-        "r3_ca_0p4",
-        "r3_ca_0p5",
+        # "r3_db_0p4",
+        # "r3_ca_0p4",
+        # "r3_ca_0p5",
         "r3_ca_0p6",
-        "r3_ca_0p8",
-        "r3_ca_1p0",
+        # "r3_ca_0p8",
+        # "r3_ca_1p0",
     ]
-    # muon_systems_mc = [MuonSystem(ff, isMC=True) for ff in files_mc]
-    # muon_systems_r3 = [MuonSystem(ff, isMC=False) for ff in files_r3]
+    # muon_systems_mc = [MuonSystem(ff, isMC=True, nev=nev) for ff in files_mc]
+    # muon_systems_r3 = [MuonSystem(ff, isMC=False, nev=nev) for ff in files_r3]
 
     # muon_systems = muon_systems_mc + muon_systems_r3
     files = files_mc + files_r3
@@ -161,48 +180,56 @@ if __name__ == "__main__":
     hhs = defaultdict(list)
 
     for ff, label, stat in zip(files, labels, stats):
-        print("\n", stat)#ms.file_name)
+        print("\n", stat)  # ms.file_name)
         isMC = "mc" in stat
-        ms = MuonSystem(ff, isMC=isMC)
+        ms = MuonSystem(ff, isMC=isMC, nev=nev)
         print(f"Loaded {len(ms['met']):,} events.")
-        
-        #=======================================#
+
+        # =======================================#
         # Making time plots before cuts on time #
-        #=======================================#
+        # =======================================#
 
         hhs["cscAllTime"].append(H1D(ms["cscRechitClusterTimeWeighted"], ";CSC Time [ns];count", bins["cscTime"]))
         hhs["cscAllTimeSpread"].append(
             H1D(ms["cscRechitClusterTimeSpreadWeightedAll"], ";CSC Time Spread [ns];count", bins["cscTimeSpread"])
         )
-        hhs["dtAllTime"].append(
-            H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"])
-        )        
+        hhs["dtAllTime"].append(H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"]))
 
-        #########################
-        ## BLIND OR MATCH DATA ##
-        #########################
+        ##############################
+        ## CUT, BLIND, & MATCH DATA ##
+        ##############################
+
+        # if isCut:
+        #     sel_csc_jet, sel_dt_jet = ms.jet_veto_cut()
+        #     ms.apply_cut(sel_csc_jet, system="csc")
+        #     ms.apply_cut(sel_dt_jet, system="dt")
+        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
+
+        #     sel_csc_muon, sel_dt_muon = ms.muon_veto_cut()
+        #     ms.apply_cut(sel_csc_muon, system="csc")
+        #     ms.apply_cut(sel_dt_muon, system="dt")
+        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
+
         if isMC:
             print("!!!!!!!!!!!!!!!!!!!")
             print("!! MATCHING DATA !!")
             print("!!!!!!!!!!!!!!!!!!!")
             idx_csc_match, idx_dt_match = ms.match_cut()
-            ms.apply_cut(idx_csc_match, system='csc')
-            ms.apply_cut(idx_dt_match, system='dt')
+            ms.apply_cut(idx_csc_match, system="csc")
+            ms.apply_cut(idx_dt_match, system="dt")
 
         elif isBlind:
             print("!!!!!!!!!!!!!!!!!!!")
             print("!! BLINDING DATA !!")
             print("!!!!!!!!!!!!!!!!!!!")
 
-            #sel_csc_oot = aabs(ms["cscRechitClusterTimeWeighted"]) > 50
+            # sel_csc_oot = aabs(ms["cscRechitClusterTimeWeighted"]) > 50
             sel_csc_oot = ms["cscRechitClusterTimeWeighted"] < -12.5
             sel_dt_oot = ms["dtRechitCluster_match_RPCBx_dPhi0p5"] != 0
 
             sel_bkg = lor(
                 land(ms["nCscRechitClusters"] == 1, asum(sel_csc_oot) == 1),
-                land(
-                    ms["nCscRechitClusters"] == 2, asum(sel_csc_oot) == 1
-                ),  # NOTE: change to req only 2nd clstr oot
+                land(ms["nCscRechitClusters"] == 2, asum(sel_csc_oot) == 1),  # NOTE: change to req only 2nd clstr oot
                 land(ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
                 land(ms["nDtRechitClusters"] == 2, asum(sel_dt_oot) == 1),
                 land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
@@ -210,9 +237,9 @@ if __name__ == "__main__":
 
             ms.apply_cut(sel_bkg)
 
-        #=================================#
+        # =================================#
         # NOTE: Using convention "x vs y" #
-        #=================================#
+        # =================================#
 
         #################################
         ## System & Cluster Kinematics ##
@@ -296,21 +323,21 @@ if __name__ == "__main__":
             )
         )
 
-        ##################################
-        # Single Pair CSC-DT Kinematics ##
-        ##################################
+        ###################################
+        ## Single Pair CSC-DT Kinematics ##
+        ###################################
         print("Generating CSC-DT kinematics plots")
         sel_hlt = ms["HLTDecision"][:, 569]  # HLT_L1CSCCluster_DTCluster50
         sel_1csc1dt_orig = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
-        sel_1csc1dt = land(asum(ms['cscRechitClusterSize']>0) == 1, asum(ms['dtRechitClusterSize']>0) == 1)
+        sel_1csc1dt = land(asum(ms["cscRechitClusterSize"] > 0) == 1, asum(ms["dtRechitClusterSize"] > 0) == 1)
         if np.sum(sel_1csc1dt_orig ^ sel_1csc1dt) != 0:
-            print('UH OH SOMETHING BAD HAPPENED!')
+            print("UH OH SOMETHING BAD HAPPENED!")
             exit()
         if not isMC:
             sel = land(sel_hlt, sel_1csc1dt)
         else:
             sel = sel_1csc1dt
-        
+
         # dEta, dPhi, dR
         dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
         dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
@@ -322,12 +349,29 @@ if __name__ == "__main__":
         hhs["dR"].append(H1D(dR, ";#DeltaR(CSC,DT_{OOT});count", bins["dR"]))
 
         # d__ vs d__
-        hhs["2D_dPhi_dEta_"+stat].append(
+        hhs["2D_dPhi_dEta_" + stat].append(
             H2D(dPhi, dEta, ";#Delta#phi(CSC,DT_{OOT});#Delta#eta(CSC,DT_{OOT});count", bins["dPhi_dEta"])
         )
-        hhs["2D_dPhi_dR_"+stat].append(H2D(dPhi, dR, ";#Delta#phi(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dPhi_dR"]))
-        hhs["2D_dEta_dR_"+stat].append(H2D(dEta, dR, ";#Delta#eta(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dEta_dR"]))
+        hhs["2D_dPhi_dR_" + stat].append(
+            H2D(dPhi, dR, ";#Delta#phi(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dPhi_dR"])
+        )
+        hhs["2D_dEta_dR_" + stat].append(
+            H2D(dEta, dR, ";#Delta#eta(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dEta_dR"])
+        )
 
+        ###############################################
+        ## Save data selections for further analysis ##
+        ###############################################
+        if save_dstat in stat:
+            print("Saving data to disk.")
+            dRdEtadPhi = np.c_[dR, dEta, dPhi]
+            print(dRdEtadPhi.shape)
+            np.save(out_data_dir + "dRdEtadPhi_" + stat + ".npy", dRdEtadPhi)
+
+        ###############################################
+        ## Save plots to disk and make simple histos ##
+        ###############################################
+        # TODO: save plots to a .root file
         print("Saving plots to disk.")
         for k, hs in hhs.items():
             c = canvas(1, 1)
@@ -337,7 +381,7 @@ if __name__ == "__main__":
             else:
                 _ll = multi_plot(hs, labels, ymin=0, norm=True)
             c.Print(out_dir + k + ending)
-    
+
     #########################
     ## 1D Efficiency Plots ##
     #########################
@@ -350,7 +394,7 @@ if __name__ == "__main__":
                 c.cd(2 * i + j + 1)
                 _hhs = []
                 for ff in files_mc:
-                    ms = MuonSystem(ff, isMC=True)
+                    ms = MuonSystem(ff, isMC=True, nev=nev)
                     _hhs.append(make_cluster_eff_1D(ms, det, xl, cuts=isCut))
                 if isCut:
                     legxy = (0.3, 0.7, 0.5, 0.85)

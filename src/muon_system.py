@@ -30,7 +30,7 @@ def get_lat_leg(leg_coords=(0.6, 0.7, 0.95, 0.8)):
 def H1D(x, title, bins, **kwargs):
     name = title.split(";")[0]
     if name == "":
-        name = str(np.random.randint(0, 10000))
+        name = str(np.random.randint(0, 1e9))
 
     hh = rt.TH1F(name, title, *bins)
     hh.SetLineWidth(4)
@@ -38,10 +38,10 @@ def H1D(x, title, bins, **kwargs):
     if isinstance(x, ak.Array):
         x = ak.flatten(x, -1)
 
-    #weights = None
-    #if "norm" in kwargs and kwargs['norm']:
+    # weights = None
+    # if "norm" in kwargs and kwargs['norm']:
     #    weights = np.ones_like(x) / len(x)
-    #fill_hist(hh, x, weights)
+    # fill_hist(hh, x, weights)
     for xx in x:
         hh.Fill(xx, 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
 
@@ -60,7 +60,7 @@ def H1D(x, title, bins, **kwargs):
 def H2D(x, y, title, bins, method="c", **kwargs):
     name = title.split(";")[0]
     if name == "":
-        name = str(np.random.randint(0, 10000))
+        name = str(np.random.randint(0, 1e9))
 
     hh = rt.TH2F(name, title, *bins)
 
@@ -118,9 +118,9 @@ def multi_plot(hhs, tts, **kwargs):
         ccs = kwargs["ccs"]
 
     lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.85, 0.95))
-    if 'norm' in kwargs and kwargs['norm']:
+    if "norm" in kwargs and kwargs["norm"]:
         for hh in hhs:
-            hh.Scale(1/(hh.Integral() if hh.Integral() else 1))
+            hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
     ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
@@ -214,12 +214,12 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 class MuonSystem:
     """Handler for working with Muon System ntuples"""
 
-    def __init__(self, file_name, tree_name="MuonSystem", isMC=False) -> None:
+    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
         self.fuproot = upr.open(file_name + ":" + tree_name)
-        self.ms = self.fuproot.arrays(entry_stop=5_000_000)#5_000_000)
+        self.ms = self.fuproot.arrays(entry_stop=nev)
 
     def __getitem__(self, key):
         return self.ms[key]
@@ -246,11 +246,12 @@ class MuonSystem:
 
             if system not in pre:
                 raise ValueError(f"Invaid system {system}.")
-            
+
             pre = pre[system]
             for k in self.ms.fields:
                 if pre == k[: len(pre)]:
                     self.ms[k] = self.ms[k][idxs]
+
         self.fix_nbranch()
 
     def fix_nbranch(self):
