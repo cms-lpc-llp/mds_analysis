@@ -7,6 +7,7 @@ from collections import defaultdict
 import ROOT as rt
 import numpy as np
 import sklearn as skl
+import awkward as ak
 
 from src import CMS_lumi, tdrstyle
 from src.muon_system import MuonSystem
@@ -98,7 +99,7 @@ if __name__ == "__main__":
 
     isCut = True
     save_dstat = "ca_0p6"
-    nev = 2_000_000
+    nev = 800_000
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
     pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
@@ -198,17 +199,17 @@ if __name__ == "__main__":
         ## CUT, BLIND, & MATCH DATA ##
         ##############################
 
-        # if isCut:
-        #     sel_csc_jet, sel_dt_jet = ms.jet_veto_cut()
-        #     ms.apply_cut(sel_csc_jet, system="csc")
-        #     ms.apply_cut(sel_dt_jet, system="dt")
-        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
 
-        #     sel_csc_muon, sel_dt_muon = ms.muon_veto_cut()
-        #     ms.apply_cut(sel_csc_muon, system="csc")
-        #     ms.apply_cut(sel_dt_muon, system="dt")
-        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
+        if isCut:
+            sel_csc_jet, sel_dt_jet = ms.jet_veto_cut()
+            ms.apply_cut(sel_csc_jet, system="csc")
+            ms.apply_cut(sel_dt_jet, system="dt")
+            ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
 
+            sel_csc_muon, sel_dt_muon = ms.muon_veto_cut()
+            ms.apply_cut(sel_csc_muon, system="csc")
+            ms.apply_cut(sel_dt_muon, system="dt")
+            ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
         if isMC:
             print("!!!!!!!!!!!!!!!!!!!")
             print("!! MATCHING DATA !!")
@@ -330,6 +331,7 @@ if __name__ == "__main__":
         sel_1csc1dt_orig = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
         sel_1csc1dt = land(asum(ms["cscRechitClusterSize"] > 0) == 1, asum(ms["dtRechitClusterSize"] > 0) == 1)
         if np.sum(sel_1csc1dt_orig ^ sel_1csc1dt) != 0:
+            print(np.sum(sel_1csc1dt_orig ^ sel_1csc1dt))
             print("UH OH SOMETHING BAD HAPPENED!")
             exit()
         if not isMC:
@@ -338,6 +340,8 @@ if __name__ == "__main__":
             sel = sel_1csc1dt
 
         # dEta, dPhi, dR
+        # dEta = ak.to_numpy(ak.flatten(ms["cscRechitClusterEta"][sel])) - ak.to_numpy(ak.flatten(ms["dtRechitClusterEta"][sel]))
+        # dPhi = ak.to_numpy(ak.flatten(ms["cscRechitClusterPhi"][sel])) - ak.to_numpy(ak.flatten(ms["dtRechitClusterPhi"][sel]))
         dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
         dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
         dPhi = dPhi - (dPhi > pi) * 2 * pi
