@@ -76,6 +76,9 @@ bins2D = {
     "dPhi_dEta": bins["dPhi"] + bins["dEta"],
     "dPhi_dR": bins["dPhi"] + bins["dR"],
     "dEta_dR": bins["dEta"] + bins["dR"],
+    "dPhi_met": bins["dPhi"] + bins["met"],
+    "dEta_met": bins["dEta"] + bins["met"],
+    "dR_met": bins["dR"] + bins["met"],
 }
 
 bins = {**bins, **bins2D}
@@ -99,7 +102,7 @@ if __name__ == "__main__":
 
     isCut = True
     save_dstat = "ca_0p6"
-    nev = 800_000
+    nev = 1_000_000
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
     pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
@@ -326,50 +329,79 @@ if __name__ == "__main__":
         ###################################
         ## Single Pair CSC-DT Kinematics ##
         ###################################
-        print("Generating CSC-DT kinematics plots")
-        sel_hlt = ms["HLTDecision"][:, 569]  # HLT_L1CSCCluster_DTCluster50
-        sel_1csc1dt_orig = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
-        sel_1csc1dt = land(asum(ms["cscRechitClusterSize"] > 0) == 1, asum(ms["dtRechitClusterSize"] > 0) == 1)
-        if np.sum(sel_1csc1dt_orig ^ sel_1csc1dt) != 0:
-            print(np.sum(sel_1csc1dt_orig ^ sel_1csc1dt))
-            print("UH OH SOMETHING BAD HAPPENED!")
-            exit()
-        if not isMC:
-            sel = land(sel_hlt, sel_1csc1dt)
-        else:
-            sel = sel_1csc1dt
+        
+        for second in ('csc', 'dt'):
+            print(f"Generating CSC-{second.upper()} kinematics plots")
+            
+            if second == 'csc':
+                sel_hlt = ms["HLTDecision"][:, 566]  # HLT_CscCluster_Loose
+                sel_2csc = ms["nCscRechitClusters"] == 2
+                
+                if not isMC:
+                    lpair = "(CSC,CSC_{OOT})"
+                    sel = land(sel_hlt, sel_2csc)
+                else:
+                    lpair = "(CSC,CSC)"
+                    sel = sel_2csc
 
-        # dEta, dPhi, dR
-        # dEta = ak.to_numpy(ak.flatten(ms["cscRechitClusterEta"][sel])) - ak.to_numpy(ak.flatten(ms["dtRechitClusterEta"][sel]))
-        # dPhi = ak.to_numpy(ak.flatten(ms["cscRechitClusterPhi"][sel])) - ak.to_numpy(ak.flatten(ms["dtRechitClusterPhi"][sel]))
-        dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
-        dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
-        dPhi = dPhi - (dPhi > pi) * 2 * pi
-        dR = np.sqrt(dEta * dEta + dPhi * dPhi)
+                # dEta, dPhi, dR
+                met = ms["met"][sel]
+                dEta = ms["cscRechitClusterEta"][sel,0] - ms["cscRechitClusterEta"][sel,1]
+                dPhi = ms["cscRechitClusterPhi"][sel,0] - ms["cscRechitClusterPhi"][sel,1]
+                dPhi = dPhi - (dPhi > pi) * 2 * pi
+                dR = np.sqrt(dEta * dEta + dPhi * dPhi)
+            if second == 'dt':
+                sel_hlt = ms["HLTDecision"][:, 569]  # HLT_L1CSCCluster_DTCluster50
+                sel_1csc1dt = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
+                
+                if not isMC:
+                    lpair = "(CSC,DT_{OOT})"
+                    sel = land(sel_hlt, sel_1csc1dt)
+                else:
+                    lpair = "(CSC,DT)"
+                    sel = sel_1csc1dt
 
-        hhs["dEta"].append(H1D(dEta, ";#Delta#eta(CSC,DT_{OOT});count", bins["dEta"]))
-        hhs["dPhi"].append(H1D(dPhi, ";#Delta#phi(CSC,DT_{OOT});count", bins["dPhi"]))
-        hhs["dR"].append(H1D(dR, ";#DeltaR(CSC,DT_{OOT});count", bins["dR"]))
+                # dEta, dPhi, dR
+                met = ms["met"][sel]
+                dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
+                dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
+                dPhi = dPhi - (dPhi > pi) * 2 * pi
+                dR = np.sqrt(dEta * dEta + dPhi * dPhi)
 
-        # d__ vs d__
-        hhs["2D_dPhi_dEta_" + stat].append(
-            H2D(dPhi, dEta, ";#Delta#phi(CSC,DT_{OOT});#Delta#eta(CSC,DT_{OOT});count", bins["dPhi_dEta"])
-        )
-        hhs["2D_dPhi_dR_" + stat].append(
-            H2D(dPhi, dR, ";#Delta#phi(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dPhi_dR"])
-        )
-        hhs["2D_dEta_dR_" + stat].append(
-            H2D(dEta, dR, ";#Delta#eta(CSC,DT_{OOT});#DeltaR(CSC,DT_{OOT});count", bins["dEta_dR"])
-        )
+            hhs["csc"+second+"_dEta"].append(H1D(dEta, ";#Delta#eta"+lpair+";count", bins["dEta"]))
+            hhs["csc"+second+"_dPhi"].append(H1D(dPhi, ";#Delta#phi"+lpair+";count", bins["dPhi"]))
+            hhs["csc"+second+"_dR"].append(H1D(dR, ";#DeltaR"+lpair+";count", bins["dR"]))
 
-        ###############################################
-        ## Save data selections for further analysis ##
-        ###############################################
-        if save_dstat in stat:
-            print("Saving data to disk.")
-            dRdEtadPhi = np.c_[dR, dEta, dPhi]
-            print(dRdEtadPhi.shape)
-            np.save(out_data_dir + "dRdEtadPhi_" + stat + ".npy", dRdEtadPhi)
+            # d__ vs d__
+            hhs["csc"+second+"_2D_dPhi_dEta_" + stat].append(
+                H2D(dPhi, dEta, ";#Delta#phi"+lpair+";#Delta#eta"+lpair+";count", bins["dPhi_dEta"])
+            )
+            hhs["csc"+second+"_2D_dPhi_dR_" + stat].append(
+                H2D(dPhi, dR, ";#Delta#phi"+lpair+";#DeltaR"+lpair+";count", bins["dPhi_dR"])
+            )
+            hhs["csc"+second+"_2D_dEta_dR_" + stat].append(
+                H2D(dEta, dR, ";#Delta#eta"+lpair+";#DeltaR"+lpair+";count", bins["dEta_dR"])
+            )
+ 
+            #
+            hhs["csc"+second+"_2D_dPhi_met_" + stat].append(
+                H2D(dPhi, met, ";#Delta#phi"+lpair+";E_{T}^{miss} [GeV];count", bins["dPhi_met"])
+            )
+            hhs["csc"+second+"_2D_dEta_met_" + stat].append(
+                H2D(dEta, met, ";#Delta#eta"+lpair+";E_{T}^{miss} [GeV];count", bins["dEta_met"])
+            )
+            hhs["csc"+second+"_2D_dR_met_" + stat].append(
+                H2D(dR, met, ";#DeltaR"+lpair+";E_{T}^{miss} [GeV];count", bins["dPhi_met"])
+            )
+
+            ###############################################
+            ## Save data selections for further analysis ##
+            ###############################################
+            if save_dstat in stat:
+                print("Saving data to disk.")
+                metdRdEtadPhi = np.c_[met, dR, dEta, dPhi]
+                print(metdRdEtadPhi.shape)
+                np.save(out_data_dir + "csc"+second+"_metdRdEtadPhi_" + stat + ".npy", metdRdEtadPhi)
 
         ###############################################
         ## Save plots to disk and make simple histos ##

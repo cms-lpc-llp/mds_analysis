@@ -53,13 +53,18 @@ if __name__ == "__main__":
     print(f"Using output directory '{out_dir}'")
 
     ########
-    fname_mc = in_data_dir + "dRdEtadPhi_mc_" + stat + ".npy"
-    fname_r3 = in_data_dir + "dRdEtadPhi_r3_" + stat + ".npy"
+    fname_mc = in_data_dir + "metdRdEtadPhi_mc_" + stat + ".npy"
+    fname_r3 = in_data_dir + "metdRdEtadPhi_r3_" + stat + ".npy"
 
     print("LOADING DATA")
     vars_mc, vars_r3 = np.load(fname_mc), np.load(fname_r3)
     print(f"MC LEN: {len(vars_mc):,} | R3 LEN: {len(vars_r3):,}")
-
+    
+    #ns = int((len(vars_mc)+len(vars_r3))/2)
+    #print("Resampling to balance classes")
+    #vars_mc = skl.utils.resample(vars_mc, n_samples=ns)
+   # vars_r3 = skl.utils.resample(vars_r3, n_samples=ns)
+    
     # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     # print(f"! TAKING ABSOLUTE VALUE OF DATA !")
     # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -70,8 +75,8 @@ if __name__ == "__main__":
     y = np.r_[np.ones((vars_mc.shape[0],)), np.zeros((vars_r3.shape[0],))]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
 
-    data_bin_names = ["dR", "dEta", "dPhi"]
-    data_plot_labels = [r"$\Delta R$", r"$\Delta\eta$", r"$\Delta\Phi$"]
+    data_bin_names = ["met", "dR", "dEta", "dPhi"]
+    data_plot_labels = [r"$E_{T}^{miss}$ [GeV]",r"$\Delta R$", r"$\Delta\eta$", r"$\Delta\Phi$"]
     # Define Classifiers #
 
     names = [
@@ -92,17 +97,18 @@ if __name__ == "__main__":
         QuadraticDiscriminantAnalysis(),
     ]
 
-    fig, axs = plt.subplots(3, len(names), figsize=((len(names)) * 3, 3 * 3))
+    fig, axs = plt.subplots(6, len(names), figsize=((len(names)) * 3, 6 * 3))
     cmap = "RdBu"
 
     for iclf, (name, clf) in enumerate(zip(names, classifiers)):
-        print(f"({iclf:,}/{len(classifiers):,}) - {name=}")
+        print(f"({iclf+1:,}/{len(classifiers):,}) - {name=}")
         clf = make_pipeline(StandardScaler(), clf)
         clf.fit(X_train, y_train)
         try:
             y_pred = clf.decision_function(X)
             y_test_pred = clf.decision_function(X_test)
         except:
+            print('here')
             y_pred = clf.predict_proba(X)
             y_test_pred = clf.predict_proba(X_test)
 
@@ -114,7 +120,7 @@ if __name__ == "__main__":
         print(f"\tScore: {score:>0.3f}, AUC: {auc:>0.3f}")
 
         # Plot Data
-        for iplot, (ix, iy) in enumerate(zip((2, 2, 1), (0, 1, 0))):
+        for iplot, (ix, iy) in enumerate(zip((3, 3, 2, 1, 2, 3), (1, 2, 1, 0, 0, 0))):
             ax = axs[iplot, iclf]
 
             # DecisionBoundaryDisplay.from_estimator(
@@ -130,13 +136,16 @@ if __name__ == "__main__":
 
             xmc, xr3 = X[y == 1], X[y == 0]
             ypmc, ypr3 = y_pred[y == 1], y_pred[y == 0]
+            vmin, vmax = np.min(y_pred), np.max(y_pred)
+            print(vmin, vmax)
+
             if iplot == 0:
                 ax.set_title(name)
             ax.set_xlabel(xl)
             ax.set_ylabel(yl)
 
-            ax.scatter(xmc[:, ix], xmc[:, iy], c=ypmc, cmap=cmap, marker="o", alpha=0.2, edgecolors="k")
-            ax.scatter(xr3[:, ix], xr3[:, iy], c=ypr3, cmap=cmap, marker="X", alpha=0.2)  # , edgecolors="k")
+            ax.scatter(xr3[:, ix], xr3[:, iy], c=ypr3, cmap=cmap, vmin=vmin, vmax=vmax, marker="X", alpha=0.1)  # , edgecolors="k")
+            ax.scatter(xmc[:, ix], xmc[:, iy], c=ypmc, cmap=cmap, vmin=vmin, vmax=vmax, marker="o", alpha=0.1, edgecolors="k")
 
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)

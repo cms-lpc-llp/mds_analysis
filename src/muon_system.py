@@ -203,9 +203,9 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 
     return hnum
 
-
-############
-
+##################################################
+##################################################
+##################################################
 
 class MuonSystem:
     """Handler for working with Muon System ntuples"""

@@ -1,6 +1,8 @@
 llp_env/
 venv/
 .vscode/
+*.pyc
+*.swp
 *.root
 *.pkl
 *.csv
