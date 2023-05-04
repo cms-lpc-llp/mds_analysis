@@ -352,7 +352,7 @@ class MuonSystemRDF:
         return self.rdf.Histo2D(*args)
 
     def Count(self):
-        return self.rdf.Count()
+        return self.rdf.Count().GetValue()
 
     def fix_nbranch(self):
         #yapf: disable
