@@ -67,10 +67,13 @@ def H2D(x, y, title, bins, method="c", **kwargs):
 
         #rtnp.fill_hist(hh, x, y)
         for xx, yy in zip(x, y):
-            hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+            hh.Fill(
+                xx, yy
+            )  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
     elif method == "c":  # COMBINATORIAL
         if len(x) != len(y):
-            raise ValueError(f"x and y don't have the same length! ({len(x):=}, {len(y):=}")
+            raise ValueError(
+                f"x and y don't have the same length! ({len(x):=}, {len(y):=}")
 
         for xr, yr in zip(x, y):
             # print(xr, yr)
@@ -103,7 +106,9 @@ def H2D(x, y, title, bins, method="c", **kwargs):
 
             # print('\t', xr, yr)
             for xx, yy in combs(xr, yr):
-                hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+                hh.Fill(
+                    xx, yy
+                )  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
 
     return hh
 
@@ -114,12 +119,17 @@ def multi_plot(hhs, tts, **kwargs):
     if "ccs" in kwargs:
         ccs = kwargs["ccs"]
 
-    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.85, 0.95))
+    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7,
+                                                                      0.85,
+                                                                      0.95))
     if "norm" in kwargs and kwargs["norm"]:
         for hh in hhs:
-           hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
+            hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
 
-    ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
+    ymax = max([
+        hh.GetMaximum() *
+        (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs
+    ])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
         if "ymin" in kwargs:
@@ -150,7 +160,7 @@ def draw_dt_r_boxes(hh):
     boxes.append(rt.TBox(533, ymin, 597, ymax))  # b4 MB3
     boxes.append(rt.TBox(636, ymin, 700, ymax))  # b4 MB4
     boxes.append(rt.TBox(738, ymin, xmax, ymax))  # beyond CMS
-    
+
     for b in boxes:
         b.SetFillColor(15)
         b.SetFillStyle(3001)
@@ -180,6 +190,7 @@ def draw_dt_r_boxes(hh):
 
     return boxes
 
+
 def draw_csc_z_boxes(hh):
     ymin, ymax = hh.GetMinimum(), hh.GetMaximum()
     xmin, xmax = hh.GetXaxis().GetXmin(), hh.GetXaxis().GetXmax()
@@ -188,8 +199,10 @@ def draw_csc_z_boxes(hh):
     boxes.append(rt.TBox(xmin, ymin, 568, ymax))  # in front of ME11
     boxes.append(rt.TBox(632, ymin, 671, ymax))  # between ME11 and ME12
     boxes.append(rt.TBox(724, ymin, 789, ymax))  # between ME12 and station2
-    boxes.append(rt.TBox(849, ymin, 911, ymax))  # between station2 and station3
-    boxes.append(rt.TBox(970, ymin, 1002, ymax))  # between station3 and station4
+    boxes.append(rt.TBox(849, ymin, 911,
+                         ymax))  # between station2 and station3
+    boxes.append(rt.TBox(970, ymin, 1002,
+                         ymax))  # between station3 and station4
     boxes.append(rt.TBox(1073, ymin, xmax, ymax))  # beyond CMS
     for b in boxes:
         b.SetFillColor(15)
@@ -237,7 +250,9 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
     sel_cltr_in_det = ms.in_det_cut(det, "rechit")
 
     sel_match = ms.match_cut(det)
-    sel_num = land(asum(sel_match) > 0, asum(sel_cltr_in_det) == asum(sel_match))
+    sel_num = land(
+        asum(sel_match) > 0,
+        asum(sel_cltr_in_det) == asum(sel_match))
     if cuts:
         sel_jets = ms.jet_veto_cut(det)
         sel_muon = ms.muon_veto_cut(det)
@@ -251,37 +266,178 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 
     return hnum
 
+
 ##################################################
 ##################################################
 ##################################################
+
+
+class MuonSystemRDF:
+    """Handler for working with muon system ntuples using an RDataFrame, works with 2tag CSC-DT (CSC triggers) only"""
+
+    def __init__(self,
+                 file_name,
+                 tree_name="MuonSystem",
+                 isMC=False,
+                 nev=None) -> None:
+        self.isMC = isMC
+        self.file_name = file_name
+        self.tree_name = tree_name
+        self.nev = nev
+
+        self.rdf = rt.RDataFrame(tree_name, file_name)
+
+    def get(self, key):
+        ctype = self.rdf.GetColumnType(key)
+        print(ctype)
+        if ctype == "int":
+            return self.rdf.Take[int](key)
+        elif ctype == "float":
+            return self.rdf.Take[float](key)
+        elif ctype == "bool":
+            return self.rdf.Take[bool](key)
+        elif ctype == "RVec<int>":
+            return self.rdf.Take[rt.VecOps.RVec[int]](key)
+        elif ctype == "RVec<float>":
+            return self.rdf.Take[rt.VecOps.RVec[float]](key)
+        elif ctype == "RVec<bool>":
+            return self.rdf.Take[rt.VecOps.RVec[bool]](key)
+        else:
+            raise ValueError(f"Column type '{ctype}' not known!")
+        #return self.rdf.AsNumpy(key)
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, value):
+        self.Define(key, value)
+
+    def Define(self, key, value):
+        if key in self.rdf.GetColumnNames():
+            self.rdf = self.rdf.Redefine(key, value)
+        else:
+            self.rdf = self.rdf.Define(key, value)
+
+        return self
+
+    def Filter(self, f, system="event"):
+        if system == "event":
+            self.rdf.Filter(f)
+        else:
+            pre = {
+                "csc": "cscRechitCluster",
+                "dt": "dtRechitCluster",
+                "gllp": "gLLP",
+                "lep": "lep",
+                "jet": "jet",
+            }
+
+            if system not in pre:
+                raise ValueError(f"Invaid system {system}.")
+
+            system = pre[system]
+            for k in self.rdf.GetColumnNames():
+                if system == k[:len(system)]:
+                    self.Define(k, f)
+
+            self.fix_nbranch()
+
+        return self
+
+    def Histo1D(self, *args):
+        return self.rdf.Histo1D(*args)
+
+    def Histo2D(self, *args):
+        #Add in behavior for RVec vs RVec, not sure how...
+        return self.rdf.Histo2D(*args)
+
+    def Count(self):
+        return self.rdf.Count()
+
+    def fix_nbranch(self):
+        #yapf: disable
+        (self.Define("nCscRechitClusters", "cscRechitClusterSize.size()")
+            .Define("ndtRechitClusters", "dtRechitClusterSize.size()")
+            .Define("nJets", "jetPt.size()")
+            .Define("nLeptons", "lepPt.size()"))
+        #yapf: enable
+
+    def find_2tag_pair(self):
+        pass
+
+    def L1_plateau(self):
+        pass
+
+    def jet_cut(self):  # AN-21-124
+        self.Filter(
+            "!(cscRechitClusterJetVetoLooseId & (cscRechitClusterJetVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4))",
+            system="csc")
+        self.Filter(
+            "!(dtRechitClusterJetVetoLooseId & (dtRechitClusterJetVetoPt > 50.) & (abs(dtRechitClusterEta) < 2.4))",
+            system="dt")
+
+    def muon_cut(self):  # AN-19-154
+        self.Filter(
+            "!( (cscRechitClusterMuonVetoLooseId & (cscRechitClusterMuonVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4)) | (cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 > 0) )",
+            system="csc")
+        self.Filter(
+            "!( (dtRechitClusterMuonVetoLooseId & (dtRechitClusterMuonVetoPt > 10.) & (abs(dtRechitClusterEta) < 2.4)) | (dtRechitClusterNSegStation1 > 0) )",
+            system="dt")
+
+    def time_cut(self, time="it", system='dt'):
+        if time == "oot":
+            if 'csc' in system:
+                self.Filter(
+                    "(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
+                    system="csc")
+            if 'dt' in system:
+                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0",
+                            system="dt")
+        elif time == "it":
+            if 'csc' in system:
+                self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5",
+                            system="csc")
+            if 'dt' in system:
+                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0",
+                            system="dt")
+
+
+##################################################
+##################################################
+##################################################
+
 
 class MuonSystem:
-    """Handler for working with Muon System ntuples"""
+    """Handler for working with Muon System ntuples using uproot"""
     _hlt_columns = {
-        "HLT_CaloMET60_DTCluster50"       : 562,
+        "HLT_CaloMET60_DTCluster50": 562,
         "HLT_CaloMET60_DTClusterNoMB1S50": 563,
-        "HLT_L1MET_DTCluster50"          : 564,
-        "HLT_L1MET_DTClusterNoMB1S50"    : 565,
-        "HLT_CscCluster_Loose"           : 566,
-        "HLT_CscCluster_Medium"          : 567,
-        "HLT_CscCluster_Tight"           : 568,
-        "HLT_L1CSCCluster_DTCluster50"    : 569,
-        "HLT_L1CSCCluser_DTCluster75"    : 570,
+        "HLT_L1MET_DTCluster50": 564,
+        "HLT_L1MET_DTClusterNoMB1S50": 565,
+        "HLT_CscCluster_Loose": 566,
+        "HLT_CscCluster_Medium": 567,
+        "HLT_CscCluster_Tight": 568,
+        "HLT_L1CSCCluster_DTCluster50": 569,
+        "HLT_L1CSCCluser_DTCluster75": 570,
     }
 
-    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
+    def __init__(self,
+                 file_name,
+                 tree_name="MuonSystem",
+                 isMC=False,
+                 nev=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
         self.nev = nev
         self.fupr = upr.open(file_name + ":" + tree_name)
 
-        ## self.keys = {"met", "runNum"}
-        ## self.ms = self.fupr.arrays(("met", "runNum"), entry_stop=self.nev)
-        #self.ms = {"met": self.fupr["met"].array(entry_stop=self.nev)}
+        # self.keys = {"met", "runNum"}
+        # self.ms = self.fupr.arrays(("met", "runNum"), entry_stop=self.nev)
+        self.ms = {"met": self.fupr["met"].array(entry_stop=self.nev)}
         self.cuts = []
 
-        self.ms = self.fupr.arrays(array_cache="inherit",entry_stop=self.nev)
+        #self.ms = self.fupr.arrays(array_cache="inherit",entry_stop=self.nev)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -290,37 +446,38 @@ class MuonSystem:
         if isinstance(key, str):
             self.ms[key] = value
         else:
-            for k in self.ms.fields: # what was this supposed to be? set a slice?
-                self.ms[k] = self.ms[k][idxs]
+            for k in self.ms:  # what was this supposed to be? set a slice?
+                self.ms[k] = self.ms[k][value]
         return self
 
     def get(self, key):
         # if key not in self.ms.fields:
         #    dd = self.fupr.arrays(key, entry_stop=self.nev)[key]
-        if key not in self.ms.fields:
+        if key not in self.ms:
             if 'HLT' in key[:3]:
                 if key == 'HLT' or key == 'HLTDecision':
-                    raise ValueError("Memory overflow if you try to load all of HLT.")
+                    raise ValueError(
+                        "Memory overflow if you try to load all of HLT.")
                 if key[4:].isdigit():
                     idx = int(key[4:])
                 else:
                     idx = self._hlt_columns[key]
 
                 print(idx)
-                
-                #dd = self.fupr['HLTDecision'].array(entry_stop=self.nev)
-                dd = self['HLTDecision']
-                dd = dd[:,idx]
+
+                dd = self.fupr['HLTDecision'].array(entry_stop=self.nev)
+                #dd = self['HLTDecision']
+                dd = dd[:, idx]
                 #dd = self.fupr['HLTDecision'].array(filter_branch=lambda b: b[:,idx], entry_stop=self.nev)
             else:
                 dd = self.fupr[key].array(entry_stop=self.nev)
 
-                for system, idxs in self.cuts:
-                    if system == "event":
+            for system, idxs in self.cuts:
+                if system == "event":
+                    dd = dd[idxs]
+                else:
+                    if system == key[:len(system)]:
                         dd = dd[idxs]
-                    else:
-                        if system == key[: len(system)]:
-                            dd = dd[idxs]
 
             self.ms[key] = dd
 
@@ -331,9 +488,9 @@ class MuonSystem:
         system = system.lower()
 
         if system == "event":
-            #for k in self.ms:
-            #    self[k] = self[k][idxs]
-            self.ms = self.ms[idxs]   
+            for k in self.ms:
+                self[k] = self[k][idxs]
+            # self.ms = self.ms[idxs]
         else:
             pre = {
                 "csc": "cscRechitCluster",
@@ -348,8 +505,8 @@ class MuonSystem:
 
             system = pre[system]
             # for k in self.ms.fields:
-            for k in self.ms.fields:
-                if system == k[: len(system)]:
+            for k in self.ms:
+                if system == k[:len(system)]:
                     self.ms[k] = self.ms[k][idxs]
 
         self.cuts.append((system, idxs))
@@ -400,16 +557,14 @@ class MuonSystem:
                         aabs(self.get(prev + "r")) < max_csc_r,
                         aabs(self.get(prev + "z")) > min_csc_z,
                         aabs(self.get(prev + "z")) < max_csc_z,
-                    )
-                )
+                    ))
             if "dt" == det:
                 cuts.append(
                     land(
                         aabs(self.get(prev + "r")) > min_dt_r,
                         aabs(self.get(prev + "r")) < max_dt_r,
                         aabs(self.get(prev + "z")) < max_dt_z,
-                    )
-                )
+                    ))
 
         return cuts[0] if len(cuts) == 1 else cuts
 
@@ -431,7 +586,9 @@ class MuonSystem:
         if you're not cutting on one of the vars LEAVE OP as default"""
         lcsc, ldt = "nCscRechitClusters", "nDtRechitClusters"
         if isinstance(ncsc, (tuple, list)):
-            idx_csc = land(self.get(lcsc) <= ncsc[0], self.get(lcsc) <= ncsc[1])
+            idx_csc = land(
+                self.get(lcsc) <= ncsc[0],
+                self.get(lcsc) <= ncsc[1])
         elif isinstance(ncsc, int):
             idx_csc = self.get(lcsc) == ncsc
         else:
@@ -473,14 +630,12 @@ class MuonSystem:
                                 self.get("cscRechitClusterMuonVetoPt") > 30,
                                 aabs(self.get("cscRechitClusterEta")) < 2.4,
                             ),
-                            self.get("cscRechitClusterNRechitChamberMinus11")
-                            + self.get("cscRechitClusterNRechitChamberMinus12")
-                            + self.get("cscRechitClusterNRechitChamberPlus11")
-                            + self.get("cscRechitClusterNRechitChamberPlus12")
-                            > 0,
-                        )
-                    )
-                )  # AN-19-154
+                            self.get("cscRechitClusterNRechitChamberMinus11") +
+                            self.get("cscRechitClusterNRechitChamberMinus12") +
+                            self.get("cscRechitClusterNRechitChamberPlus11") +
+                            self.get("cscRechitClusterNRechitChamberPlus12") >
+                            0,
+                        )))  # AN-19-154
             if "dt" == det:
                 cuts.append(
                     lnot(
@@ -491,9 +646,7 @@ class MuonSystem:
                                 aabs(self.get("dtRechitClusterEta")) < 2.4,
                             ),
                             self.get("dtRechitClusterNSegStation1") > 0,
-                        )
-                    )
-                )  # AN-19-154
+                        )))  # AN-19-154
         return cuts[0] if len(cuts) == 1 else cuts
 
     def jet_veto_cut(self, dets=["csc", "dt"], implicit=False):
@@ -509,9 +662,7 @@ class MuonSystem:
                             self.get("cscRechitClusterJetVetoLooseId"),
                             self.get("cscRechitClusterJetVetoPt") > 30,
                             aabs(self.get("cscRechitClusterEta")) < 2.4,
-                        )
-                    )
-                )  # AN-21-124
+                        )))  # AN-21-124
             if det == "dt":
                 cuts.append(
                     lnot(
@@ -519,9 +670,7 @@ class MuonSystem:
                             self.get("dtRechitClusterJetVetoLooseId"),
                             self.get("dtRechitClusterJetVetoPt") > 50,
                             aabs(self.get("dtRechitClusterEta")) < 2.4,
-                        )
-                    )
-                )  # AN-21-124
+                        )))  # AN-21-124
 
         return cuts[0] if len(cuts) == 1 else cuts
 
@@ -536,10 +685,9 @@ class MuonSystem:
                     land(
                         -5 < self.get("cscRechitClusterTimeWeighted"),
                         self.get("cscRechitClusterTimeWeighted") < 12.5,
-                    )
-                )
+                    ))
             if "dt" == det:
-                cuts.append(self.get("dtRechitCluster_match_RPCBx_dPhi0p5") == 0)
+                cuts.append(
+                    self.get("dtRechitCluster_match_RPCBx_dPhi0p5") == 0)
 
         return cuts[0] if len(cuts) == 1 else cuts
-
