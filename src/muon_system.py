@@ -140,7 +140,7 @@ def multi_plot(hhs, tts, **kwargs):
         leg.AddEntry(hh, tt, "L")
 
     leg.Draw()
-    return lat, leg
+    return hhs, lat, leg
 
 
 ############
@@ -345,11 +345,11 @@ class MuonSystemRDF:
         return self
 
     def Histo1D(self, *args):
-        return self.rdf.Histo1D(*args)
+        return self.rdf.Histo1D(*args).GetPtr()
 
     def Histo2D(self, *args):
         #Add in behavior for RVec vs RVec, not sure how...
-        return self.rdf.Histo2D(*args)
+        return self.rdf.Histo2D(*args).GetPtr()
 
     def Count(self):
         return self.rdf.Count().GetValue()

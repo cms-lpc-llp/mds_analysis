@@ -445,7 +445,7 @@ if __name__ == "__main__":
                     c.Print(out_dir + k + f"_{ss}" + ending)
             else:
                 c = canvas(1, 1)
-                _ll = multi_plot(hs, labels, ymin=0, norm=True)
+                _hll = multi_plot(hs, labels, ymin=0, norm=True)
                 c.Print(out_dir + k + ending)
 
     #     #####################################################
