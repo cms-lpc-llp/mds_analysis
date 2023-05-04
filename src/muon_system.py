@@ -268,6 +268,10 @@ class MuonSystemRDF:
         self.nev = nev
 
         self.rdf = rt.RDataFrame(tree_name, file_name)
+        if self.nev is not None:
+            self.rdf = self.rdf.Range(self.nev)
+
+        self.nev = self.rdf.Count().GetValue()
 
     def get(self, key):
         ctype = self.rdf.GetColumnType(key)
@@ -318,9 +322,11 @@ class MuonSystemRDF:
                 raise ValueError(f"Invaid system {system}.")
 
             system = pre[system]
+            self.Define("cut", f)
             for k in self.rdf.GetColumnNames():
+                k = str(k)
                 if system == k[:len(system)]:
-                    self.Define(k, f"{k}[{f}]")
+                    self.Define(k, f"{k}[cut]")
 
             self.fix_nbranch()
 
@@ -338,10 +344,10 @@ class MuonSystemRDF:
 
     def fix_nbranch(self):
         #yapf: disable
-        (self.Define("nCscRechitClusters", "cscRechitClusterSize.size()")
-            .Define("ndtRechitClusters", "dtRechitClusterSize.size()")
-            .Define("nJets", "jetPt.size()")
-            .Define("nLeptons", "lepPt.size()"))
+        (self.Define("nCscRechitClusters", "Sum(cscRechitClusterSize>0)")
+            .Define("nDtRechitClusters", "Sum(dtRechitClusterSize>0)")
+            .Define("nJets", "Sum(jetPt>0)")
+            .Define("nLeptons", "Sum(lepPt>0)"))
         #yapf: enable
 
     def find_2tag_pair(self):

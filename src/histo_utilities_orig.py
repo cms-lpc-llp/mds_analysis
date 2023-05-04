@@ -1,6 +1,6 @@
 import numpy as np
 import ROOT as rt
-#import root_numpy as rtnp
+import root_numpy as rtnp
 import matplotlib.pyplot as plt
 from array import array
 
@@ -77,13 +77,7 @@ def create_TH1D(
         h.SetTitle(title)
         h.Reset()
 
-    #rtnp.fill_hist(h, x, weights=weights)
-    for i in range(len(x)):
-        if weights is None:
-            h.Fill(x[i])
-        else:
-            h.Fill(x[i],weights[i])
-        
+    rtnp.fill_hist(h, x, weights=weights)
     if axis_title is not None:
         h.SetXTitle(axis_title[0])
         h.SetYTitle(axis_title[1])
@@ -212,12 +206,13 @@ def create_TH2D(
             array("f", binning[binning[-2] : -2]),
         )
 
-    #rtnp.fill_hist(h, sample, weights=weights)
-    for i in range(len(sample)):
-        if weights is None:
-            h.Fill(sample[i,0],sample[i,1])
-        else:
-            h.Fill(sample[i,0],sample[i,1],weights[i])
+    # for i in range(len(sample)):
+
+    # 	if weights is None:
+    # 	    h.Fill(sample[i,0],sample[i,1])
+    # 	else:
+    # 	    h.Fill(sample[i,0],sample[i,1],weights[i])
+    rtnp.fill_hist(h, sample, weights=weights)
     if axis_title is not None:
         h.SetXTitle(axis_title[0])
         h.SetYTitle(axis_title[1])
