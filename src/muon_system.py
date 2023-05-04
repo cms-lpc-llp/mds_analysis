@@ -67,13 +67,10 @@ def H2D(x, y, title, bins, method="c", **kwargs):
 
         #rtnp.fill_hist(hh, x, y)
         for xx, yy in zip(x, y):
-            hh.Fill(
-                xx, yy
-            )  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+            hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
     elif method == "c":  # COMBINATORIAL
         if len(x) != len(y):
-            raise ValueError(
-                f"x and y don't have the same length! ({len(x):=}, {len(y):=}")
+            raise ValueError(f"x and y don't have the same length! ({len(x):=}, {len(y):=}")
 
         for xr, yr in zip(x, y):
             # print(xr, yr)
@@ -106,9 +103,7 @@ def H2D(x, y, title, bins, method="c", **kwargs):
 
             # print('\t', xr, yr)
             for xx, yy in combs(xr, yr):
-                hh.Fill(
-                    xx, yy
-                )  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
+                hh.Fill(xx, yy)  # , 1 / len(x) if "norm" in kwargs and kwargs["norm"] == True else 1)
 
     return hh
 
@@ -119,17 +114,12 @@ def multi_plot(hhs, tts, **kwargs):
     if "ccs" in kwargs:
         ccs = kwargs["ccs"]
 
-    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7,
-                                                                      0.85,
-                                                                      0.95))
+    lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.85, 0.95))
     if "norm" in kwargs and kwargs["norm"]:
         for hh in hhs:
             hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
 
-    ymax = max([
-        hh.GetMaximum() *
-        (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs
-    ])
+    ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
         if "ymin" in kwargs:
@@ -199,10 +189,8 @@ def draw_csc_z_boxes(hh):
     boxes.append(rt.TBox(xmin, ymin, 568, ymax))  # in front of ME11
     boxes.append(rt.TBox(632, ymin, 671, ymax))  # between ME11 and ME12
     boxes.append(rt.TBox(724, ymin, 789, ymax))  # between ME12 and station2
-    boxes.append(rt.TBox(849, ymin, 911,
-                         ymax))  # between station2 and station3
-    boxes.append(rt.TBox(970, ymin, 1002,
-                         ymax))  # between station3 and station4
+    boxes.append(rt.TBox(849, ymin, 911, ymax))  # between station2 and station3
+    boxes.append(rt.TBox(970, ymin, 1002, ymax))  # between station3 and station4
     boxes.append(rt.TBox(1073, ymin, xmax, ymax))  # beyond CMS
     for b in boxes:
         b.SetFillColor(15)
@@ -250,9 +238,7 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
     sel_cltr_in_det = ms.in_det_cut(det, "rechit")
 
     sel_match = ms.match_cut(det)
-    sel_num = land(
-        asum(sel_match) > 0,
-        asum(sel_cltr_in_det) == asum(sel_match))
+    sel_num = land(asum(sel_match) > 0, asum(sel_cltr_in_det) == asum(sel_match))
     if cuts:
         sel_jets = ms.jet_veto_cut(det)
         sel_muon = ms.muon_veto_cut(det)
@@ -275,11 +261,7 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 class MuonSystemRDF:
     """Handler for working with muon system ntuples using an RDataFrame, works with 2tag CSC-DT (CSC triggers) only"""
 
-    def __init__(self,
-                 file_name,
-                 tree_name="MuonSystem",
-                 isMC=False,
-                 nev=None) -> None:
+    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
@@ -322,7 +304,7 @@ class MuonSystemRDF:
 
     def Filter(self, f, system="event"):
         if system == "event":
-            self.rdf.Filter(f)
+            self.rdf = self.rdf.Filter(f)
         else:
             pre = {
                 "csc": "cscRechitCluster",
@@ -338,7 +320,7 @@ class MuonSystemRDF:
             system = pre[system]
             for k in self.rdf.GetColumnNames():
                 if system == k[:len(system)]:
-                    self.Define(k, f)
+                    self.Define(k, f"{k}[{f}]")
 
             self.fix_nbranch()
 
@@ -387,19 +369,15 @@ class MuonSystemRDF:
     def time_cut(self, time="it", system='dt'):
         if time == "oot":
             if 'csc' in system:
-                self.Filter(
-                    "(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
-                    system="csc")
-            if 'dt' in system:
-                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0",
-                            system="dt")
-        elif time == "it":
-            if 'csc' in system:
-                self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5",
+                self.Filter("(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
                             system="csc")
             if 'dt' in system:
-                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0",
-                            system="dt")
+                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0", system="dt")
+        elif time == "it":
+            if 'csc' in system:
+                self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5", system="csc")
+            if 'dt' in system:
+                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0", system="dt")
 
 
 ##################################################
@@ -421,11 +399,7 @@ class MuonSystem:
         "HLT_L1CSCCluser_DTCluster75": 570,
     }
 
-    def __init__(self,
-                 file_name,
-                 tree_name="MuonSystem",
-                 isMC=False,
-                 nev=None) -> None:
+    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
@@ -456,8 +430,7 @@ class MuonSystem:
         if key not in self.ms:
             if 'HLT' in key[:3]:
                 if key == 'HLT' or key == 'HLTDecision':
-                    raise ValueError(
-                        "Memory overflow if you try to load all of HLT.")
+                    raise ValueError("Memory overflow if you try to load all of HLT.")
                 if key[4:].isdigit():
                     idx = int(key[4:])
                 else:
@@ -586,9 +559,7 @@ class MuonSystem:
         if you're not cutting on one of the vars LEAVE OP as default"""
         lcsc, ldt = "nCscRechitClusters", "nDtRechitClusters"
         if isinstance(ncsc, (tuple, list)):
-            idx_csc = land(
-                self.get(lcsc) <= ncsc[0],
-                self.get(lcsc) <= ncsc[1])
+            idx_csc = land(self.get(lcsc) <= ncsc[0], self.get(lcsc) <= ncsc[1])
         elif isinstance(ncsc, int):
             idx_csc = self.get(lcsc) == ncsc
         else:
@@ -633,8 +604,7 @@ class MuonSystem:
                             self.get("cscRechitClusterNRechitChamberMinus11") +
                             self.get("cscRechitClusterNRechitChamberMinus12") +
                             self.get("cscRechitClusterNRechitChamberPlus11") +
-                            self.get("cscRechitClusterNRechitChamberPlus12") >
-                            0,
+                            self.get("cscRechitClusterNRechitChamberPlus12") > 0,
                         )))  # AN-19-154
             if "dt" == det:
                 cuts.append(
@@ -687,7 +657,6 @@ class MuonSystem:
                         self.get("cscRechitClusterTimeWeighted") < 12.5,
                     ))
             if "dt" == det:
-                cuts.append(
-                    self.get("dtRechitCluster_match_RPCBx_dPhi0p5") == 0)
+                cuts.append(self.get("dtRechitCluster_match_RPCBx_dPhi0p5") == 0)
 
         return cuts[0] if len(cuts) == 1 else cuts
