@@ -319,6 +319,7 @@ class MuonSystemRDF:
 
             system = pre[system]
             for k in self.rdf.GetColumnNames():
+                k = str(k)
                 if system == k[:len(system)]:
                     self.Define(k, f"{k}[{f}]")
 
