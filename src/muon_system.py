@@ -366,7 +366,7 @@ class MuonSystemRDF:
             "!( (dtRechitClusterMuonVetoLooseId & (dtRechitClusterMuonVetoPt > 10.) & (abs(dtRechitClusterEta) < 2.4)) | (dtRechitClusterNSegStation1 > 0) )",
             system="dt")
 
-    def time_cut(self, time="it", system='dt'):
+    def time_cut(self, time="it", system='cscdt'):
         if time == "oot":
             if 'csc' in system:
                 self.Filter("(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",

@@ -202,9 +202,12 @@ if __name__ == "__main__":
         ms = MuonSystemRDF(ff, isMC=isMC, nev=nev)
         print(f"\tLoaded {ms.Count():,} events.")
 
-        hhs["met_nocut"].append(ms.Histo1D(('metnc', ';met;', *bins['met']), 'met'))
-        ms.Filter("met < 100")  #(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
-        hhs["met_cut"].append(ms.Histo1D(('metc', ';met;', *bins['met']), 'met'))
+        hhs["met_all"].append(ms.Histo1D(('meta', ';met, all;', *bins['met']), 'met'))
+        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        hhs["met_2tag"].append(ms.Histo1D(('met2tag', ';met, CSC+DT;', *bins['met']), 'met'))
+        ms.time_cut("oot", "dt")
+        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        hhs["met_2t_DtOot"].append(ms.Histo1D(('met2tDtOot', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
 
         # # =======================================#
         # # Making time plots before cuts on time #
