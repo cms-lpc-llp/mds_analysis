@@ -110,13 +110,15 @@ def H2D(x, y, title, bins, method="c", **kwargs):
 
 def multi_plot(hhs, tts, **kwargs):
     ccs = std_color_list
+    hhs = [hh.Clone() for hh in hhs]
     if "ccs" in kwargs:
         ccs = kwargs["ccs"]
 
     lat, leg = get_lat_leg(kwargs["legxy"] if "legxy" in kwargs else (0.6, 0.7, 0.85, 0.95))
     if "norm" in kwargs and kwargs["norm"]:
         for hh in hhs:
-            hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
+           hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
+
     ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
@@ -132,6 +134,52 @@ def multi_plot(hhs, tts, **kwargs):
 
 
 ############
+def draw_dt_r_boxes(hh):
+    ymin, ymax = hh.GetMinimum(), hh.GetMaximum()
+    xmin, xmax = hh.GetXaxis().GetXmin(), hh.GetXaxis().GetXmax()
+    boxes = []
+
+    # if xmin < 181.1:
+    #     boxes.append(rt.TBox(max(xmin, 181.1), ymin, 286.4, ymax))  # HCAL barrel
+    # if xmin < 295:
+    #     boxes.append(rt.TBox(max(xmin, 295), ymin, 377.5, ymax))  # solenoid
+    #     #boxes.append(rt.TBox(max(xmin, 295), ymin, 380, ymax))  # solenoid
+    # boxes.append(rt.TBox(max(xmin, 380), ymin, 402, ymax))  # b4 MB1
+    boxes.append(rt.TBox(max(xmin, 180), ymin, 402, ymax))  # b4 MB1
+    boxes.append(rt.TBox(449, ymin, 490, ymax))  # b4 MB2
+    boxes.append(rt.TBox(533, ymin, 597, ymax))  # b4 MB3
+    boxes.append(rt.TBox(636, ymin, 700, ymax))  # b4 MB4
+    boxes.append(rt.TBox(738, ymin, xmax, ymax))  # beyond CMS
+    
+    for b in boxes:
+        b.SetFillColor(15)
+        b.SetFillStyle(3001)
+        b.Draw("same")
+
+    l = rt.TLatex()
+    l.SetTextSize(0.08)
+    l.SetTextAlign(12)
+    l.SetTextColor(12)
+    l.SetTextAngle(90)
+    l.DrawLatex(230, ymax * 0.3, "Steel")
+    #l.DrawLatex(230, ymax * 0.3, "HCAL")
+    #l.DrawLatex(335, ymax * 0.3, "Solenoid")
+    #l.DrawLatex(390, ymax * 0.3, "Steel")
+
+    l2 = rt.TLatex()
+    l2.SetTextSize(0.06)
+    l2.SetTextColor(13)
+    l2.SetTextAngle(90)
+    l2.DrawLatex(780, ymax * 0.5, "Beyond CMS")
+    text = rt.TLatex()
+    text.SetTextSize(0.04)
+    text.DrawLatex(400, ymax * 1.01, "MB1")
+    text.DrawLatex(490, ymax * 1.01, "MB2")
+    text.DrawLatex(600, ymax * 1.01, "MB3")
+    text.DrawLatex(700, ymax * 1.01, "MB4")
+
+    return boxes
+
 def draw_csc_z_boxes(hh):
     ymin, ymax = hh.GetMinimum(), hh.GetMaximum()
     xmin, xmax = hh.GetXaxis().GetXmin(), hh.GetXaxis().GetXmax()
@@ -183,7 +231,7 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
         if det == "csc":
             bins = (100, 0, 800)
         elif det == "dt":
-            bins = (100, 0, 800)
+            bins = (100, 180, 800)
 
     sel_gllp_in_det = ms.in_det_cut(det, "gllp")
     sel_cltr_in_det = ms.in_det_cut(det, "rechit")
@@ -209,18 +257,31 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 
 class MuonSystem:
     """Handler for working with Muon System ntuples"""
+    _hlt_columns = {
+        "HLT_CaloMET60_DTCluster50"       : 562,
+        "HLT_CaloMET60_DTClusterNoMB1S50": 563,
+        "HLT_L1MET_DTCluster50"          : 564,
+        "HLT_L1MET_DTClusterNoMB1S50"    : 565,
+        "HLT_CscCluster_Loose"           : 566,
+        "HLT_CscCluster_Medium"          : 567,
+        "HLT_CscCluster_Tight"           : 568,
+        "HLT_L1CSCCluster_DTCluster50"    : 569,
+        "HLT_L1CSCCluser_DTCluster75"    : 570,
+    }
 
     def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
         self.nev = nev
-        self.fuproot = upr.open(file_name + ":" + tree_name)
+        self.fupr = upr.open(file_name + ":" + tree_name)
 
-        # self.keys = {"met", "runNum"}
-        # self.ms = self.fuproot.arrays(("met", "runNum"), entry_stop=self.nev)
-        self.ms = {"met": self.fuproot["met"].array(entry_stop=self.nev)}
+        ## self.keys = {"met", "runNum"}
+        ## self.ms = self.fupr.arrays(("met", "runNum"), entry_stop=self.nev)
+        #self.ms = {"met": self.fupr["met"].array(entry_stop=self.nev)}
         self.cuts = []
+
+        self.ms = self.fupr.arrays(array_cache="inherit",entry_stop=self.nev)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -229,22 +290,37 @@ class MuonSystem:
         if isinstance(key, str):
             self.ms[key] = value
         else:
-            for k in self.ms:
+            for k in self.ms.fields: # what was this supposed to be? set a slice?
                 self.ms[k] = self.ms[k][idxs]
         return self
 
     def get(self, key):
         # if key not in self.ms.fields:
-        #    dd = self.fuproot.arrays(key, entry_stop=self.nev)[key]
-        if key not in self.ms:
-            dd = self.fuproot[key].array(entry_stop=self.nev)
-
-            for system, idxs in self.cuts:
-                if system == "event":
-                    dd = dd[idxs]
+        #    dd = self.fupr.arrays(key, entry_stop=self.nev)[key]
+        if key not in self.ms.fields:
+            if 'HLT' in key[:3]:
+                if key == 'HLT' or key == 'HLTDecision':
+                    raise ValueError("Memory overflow if you try to load all of HLT.")
+                if key[4:].isdigit():
+                    idx = int(key[4:])
                 else:
-                    if system == key[: len(system)]:
+                    idx = self._hlt_columns[key]
+
+                print(idx)
+                
+                #dd = self.fupr['HLTDecision'].array(entry_stop=self.nev)
+                dd = self['HLTDecision']
+                dd = dd[:,idx]
+                #dd = self.fupr['HLTDecision'].array(filter_branch=lambda b: b[:,idx], entry_stop=self.nev)
+            else:
+                dd = self.fupr[key].array(entry_stop=self.nev)
+
+                for system, idxs in self.cuts:
+                    if system == "event":
                         dd = dd[idxs]
+                    else:
+                        if system == key[: len(system)]:
+                            dd = dd[idxs]
 
             self.ms[key] = dd
 
@@ -255,8 +331,9 @@ class MuonSystem:
         system = system.lower()
 
         if system == "event":
-            for k in self.ms:
-                self[k] = self[k][idxs]
+            #for k in self.ms:
+            #    self[k] = self[k][idxs]
+            self.ms = self.ms[idxs]   
         else:
             pre = {
                 "csc": "cscRechitCluster",
@@ -271,9 +348,9 @@ class MuonSystem:
 
             system = pre[system]
             # for k in self.ms.fields:
-            for k in self.ms:
+            for k in self.ms.fields:
                 if system == k[: len(system)]:
-                    self[k] = self[k][idxs]
+                    self.ms[k] = self.ms[k][idxs]
 
         self.cuts.append((system, idxs))
         self.fix_nbranch()
@@ -465,3 +542,4 @@ class MuonSystem:
                 cuts.append(self.get("dtRechitCluster_match_RPCBx_dPhi0p5") == 0)
 
         return cuts[0] if len(cuts) == 1 else cuts
+

@@ -45,16 +45,19 @@ if __name__ == "__main__":
     out_data_dir = cur_dir + "/data/processed/"
     out_dir = cur_dir + "/reports/weekly/apr10/"
 
+    show = False
     stat = "ca_0p6"
     ending = f"_{stat}_.png"
+    pair = 'csccsc' # 'cscdt'
+    print(pair)
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
     pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
     print(f"Using output directory '{out_dir}'")
 
     ########
-    fname_mc = in_data_dir + "metdRdEtadPhi_mc_" + stat + ".npy"
-    fname_r3 = in_data_dir + "metdRdEtadPhi_r3_" + stat + ".npy"
+    fname_mc = in_data_dir + pair + "_metdRdEtadPhi_mc_" + stat + ".npy"
+    fname_r3 = in_data_dir + pair + "_metdRdEtadPhi_r3_" + stat + ".npy"
 
     print("LOADING DATA")
     vars_mc, vars_r3 = np.load(fname_mc), np.load(fname_r3)
@@ -108,7 +111,7 @@ if __name__ == "__main__":
             y_pred = clf.decision_function(X)
             y_test_pred = clf.decision_function(X_test)
         except:
-            print('here')
+            print('proba')
             y_pred = clf.predict_proba(X)
             y_test_pred = clf.predict_proba(X_test)
 
@@ -153,5 +156,6 @@ if __name__ == "__main__":
             ax.text(xmax, ymin, f"{auc:.3f}", size=15, ha="right")
 
     plt.tight_layout()
-    plt.savefig(out_dir + "ang_kin_compare_cuts" + ending)
-    plt.show()
+    plt.savefig(out_dir + pair + "_ang_kin_compare_cuts" + ending)
+    if show:
+        plt.show()
