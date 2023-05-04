@@ -14,9 +14,7 @@ from src import CMS_lumi, tdrstyle
 from src.muon_system import MuonSystem, MuonSystemRDF
 from src.helper_functions import lnot, land, lor, lxor, asum, aabs
 
-from src.muon_system import (get_lat_leg, H1D, H2D, multi_plot,
-                             make_cluster_eff_1D, draw_csc_z_boxes,
-                             draw_dt_r_boxes)
+from src.muon_system import (get_lat_leg, H1D, H2D, multi_plot, make_cluster_eff_1D, draw_csc_z_boxes, draw_dt_r_boxes)
 from src.helper_functions import canvas
 
 pi = rt.TMath.Pi()
@@ -77,10 +75,8 @@ bins = {
     "dR": (100, 0, 5),
 }
 
-bins["cmsZ"] = (bins['cscZ'][0], min(bins['cscZ'][1], bins['dtZ'][1]),
-                max(bins['cscZ'][2], bins['dtZ'][2]))
-bins["cmsR"] = (bins['cscR'][0], min(bins['cscR'][1], bins['dtR'][1]),
-                max(bins['cscR'][2], bins['dtR'][2]))
+bins["cmsZ"] = (bins['cscZ'][0], min(bins['cscZ'][1], bins['dtZ'][1]), max(bins['cscZ'][2], bins['dtZ'][2]))
+bins["cmsR"] = (bins['cscR'][0], min(bins['cscR'][1], bins['dtR'][1]), max(bins['cscR'][2], bins['dtR'][2]))
 
 bins2D = {
     "met_cscMetDPhi": bins["met"] + bins["cscMetDPhi"],
@@ -119,11 +115,8 @@ if __name__ == "__main__":
     else:
         nev = 100_000
 
-    pathlib.Path(out_dir).mkdir(
-        parents=True, exist_ok=True)  # make out directory if it doesn't exist
-    pathlib.Path(out_data_dir).mkdir(
-        parents=True,
-        exist_ok=True)  # make out data directory if it doesn't exist
+    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
+    pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
     print(f"Using output directory '{out_dir}'")
 
     fout_name = out_data_dir + "processed_data.root"
@@ -209,9 +202,9 @@ if __name__ == "__main__":
         ms = MuonSystemRDF(ff, isMC=isMC, nev=nev)
         print(f"\tLoaded {ms.Count():,} events.")
 
-        hhs["met_nocut"].append(ms.Histo1D('met'))
-        ms.Filter("nCscRechitClusters + nDtRechitClusters == 2")
-        hhs["met_cut"].append(ms.Histo1D('met'))
+        hhs["met_nocut"].append(ms.Histo1D(('metnc', ';met;', *bins['met']), 'met'))
+        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        hhs["met_cut"].append(ms.Histo1D(('metc', ';met;', *bins['met']), 'met'))
 
         # # =======================================#
         # # Making time plots before cuts on time #
