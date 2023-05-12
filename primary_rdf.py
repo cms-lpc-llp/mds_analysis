@@ -97,6 +97,8 @@ if __name__ == "__main__":
 
     gc = []
     rt.gROOT.SetBatch()
+    rt.EnableImplicitMT(8)
+    print(f"Running with thread pool size = {rt.GetThreadPoolSize():,}")
 
     a = tdrstyle.setTDRStyle()
     # CMS_lumi.writeExtraText = 0

@@ -269,8 +269,11 @@ class MuonSystemRDF:
 
         if rdf is None:
             self.rdf = rt.RDataFrame(tree_name, file_name)
-            if self.nev is not None:
-                self.rdf = self.rdf.Range(self.nev)
+            if rt.IsImplicitMTEnabled():
+                print("Disabling 'Range' for IMT -- will load ALL events!")
+            else:
+                if self.nev is not None:
+                    self.rdf = self.rdf.Range(self.nev)
         else:
             self.rdf = rdf
 
@@ -306,9 +309,13 @@ class MuonSystemRDF:
 
     def Define(self, key, value, implicit=True):
         if key in self.rdf.GetColumnNames():
+            print("In define - redefining -", key, value)
             rdf = self.rdf.Redefine(key, value)
+            print("In define - finished redefining")
         else:
+            print("In define - defining -", key, value)
             rdf = self.rdf.Define(key, value)
+            print("In define - finished defining")
 
         if implicit:
             self.rdf = rdf
@@ -319,7 +326,9 @@ class MuonSystemRDF:
 
     def Filter(self, f, system="event", implicit=True):
         if system == "event":
+            print("In filter - event -", f)
             rdf = self.rdf.Filter(f)
+            print("In filter - finished event filter")
             if implicit:
                 self.rdf = rdf
             else:
