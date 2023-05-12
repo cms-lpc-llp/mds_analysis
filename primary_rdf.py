@@ -202,12 +202,80 @@ if __name__ == "__main__":
         ms = MuonSystemRDF(ff, isMC=isMC, nev=nev)
         print(f"\tLoaded {ms.Count():,} events.")
 
+        ######################
+
+        print("Not implicit")
+
+        print(r"\begin{table}[]")
+        print(r"\begin{tabular}{c|rr}")
+        print(r"Selection & Yield & Eff. vs no cuts (%) \\ \hline")
+
+        ms2 = ms.Filter("met != -3.14159")  # Useless cut just to make a copy
+        hhs["met_all"].append(ms2.Histo1D(('meta', ';met, all;', *bins['met']), 'met'))
+        yd, nc = ms2.Count(), ms2.Count()
+        print(f"All    & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        hhs["met_2tag"].append(ms2.Histo1D(('met2tag', ';met, CSC+DT;', *bins['met']), 'met'))
+        yd = ms2.Count()
+        print(f"2 Tag  & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms2.jet_cut(implicit=False)
+        ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        yd = ms2.Count()
+        print(f"Jet    & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms2.muon_cut(implicit=False)
+        ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        yd = ms2.Count()
+        print(f"Muon   & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        ms2.time_cut("oot", "dt", implicit=False)
+        hhs["met_2t_DtOot"].append(ms2.Histo1D(('met2tDtOot', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
+        yd = ms2.Count()
+        print(f"DT OOT & {yd:,} & {yd/nc*100:,}% \\")
+        print(r"\end{tabular}")
+        print(r"\end{table}")
+        print("")
+
+        ######################
+
+        print("Implicit")
+
+        print(r"\begin{table}[]")
+        print(r"\begin{tabular}{c|rr}")
+        print(r"Selection & Yield & Eff. vs no cuts (%) \\ \hline")
+
         hhs["met_all"].append(ms.Histo1D(('meta', ';met, all;', *bins['met']), 'met'))
+        yd, nc = ms.Count(), ms.Count()
+        print(f"All    & {yd:,} & {yd/nc*100:,}% \\")
+
         ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
         hhs["met_2tag"].append(ms.Histo1D(('met2tag', ';met, CSC+DT;', *bins['met']), 'met'))
-        ms.time_cut("oot", "dt")
+        yd = ms.Count()
+        print(f"+2 Tag  & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms.jet_cut()
         ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        yd = ms.Count()
+        print(f"+Jet    & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms.muon_cut()
+        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        yd = ms.Count()
+        print(f"+Muon   & {yd:,} & {yd/nc*100:,}% \\")
+
+        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        ms.time_cut("oot", "dt")
         hhs["met_2t_DtOot"].append(ms.Histo1D(('met2tDtOot', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
+        yd = ms.Count()
+        print(f"+DT OOT & {yd:,} & {yd/nc*100:,}% \\")
+        print(r"\end{tabular}")
+        print(r"\end{table}")
+        print("")
+
+        ######################
 
         # # =======================================#
         # # Making time plots before cuts on time #

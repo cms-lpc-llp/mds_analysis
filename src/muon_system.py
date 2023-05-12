@@ -261,15 +261,18 @@ def make_cluster_eff_1D(ms, det, xl="z", cuts=False):
 class MuonSystemRDF:
     """Handler for working with muon system ntuples using an RDataFrame, works with 2tag CSC-DT (CSC triggers) only"""
 
-    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None) -> None:
+    def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None, rdf=None) -> None:
         self.isMC = isMC
         self.file_name = file_name
         self.tree_name = tree_name
         self.nev = nev
 
-        self.rdf = rt.RDataFrame(tree_name, file_name)
-        if self.nev is not None:
-            self.rdf = self.rdf.Range(self.nev)
+        if rdf is None:
+            self.rdf = rt.RDataFrame(tree_name, file_name)
+            if self.nev is not None:
+                self.rdf = self.rdf.Range(self.nev)
+        else:
+            self.rdf = rdf
 
         self.nev = self.rdf.Count().GetValue()
 
@@ -298,17 +301,30 @@ class MuonSystemRDF:
     def __setitem__(self, key, value):
         self.Define(key, value)
 
-    def Define(self, key, value):
+    def __copy__(self):
+        pass
+
+    def Define(self, key, value, implicit=True):
         if key in self.rdf.GetColumnNames():
-            self.rdf = self.rdf.Redefine(key, value)
+            rdf = self.rdf.Redefine(key, value)
         else:
-            self.rdf = self.rdf.Define(key, value)
+            rdf = self.rdf.Define(key, value)
+
+        if implicit:
+            self.rdf = rdf
+        else:
+            self = MuonSystemRDF(self.file_name, self.tree_name, self.isMC, self.nev, rdf=rdf)
 
         return self
 
-    def Filter(self, f, system="event"):
+    def Filter(self, f, system="event", implicit=True):
         if system == "event":
-            self.rdf = self.rdf.Filter(f)
+            rdf = self.rdf.Filter(f)
+            if implicit:
+                self.rdf = rdf
+            else:
+                self = MuonSystemRDF(self.file_name, self.tree_name, self.isMC, self.nev, rdf=rdf)
+
         else:
             pre = {
                 "csc": "cscRechitCluster",
@@ -322,13 +338,13 @@ class MuonSystemRDF:
                 raise ValueError(f"Invaid system {system}.")
 
             system = pre[system]
-            self.Define("cut", f)
+            self = self.Define("cut", f, implicit=implicit)
             for k in self.rdf.GetColumnNames():
                 k = str(k)
                 if system == k[:len(system)]:
-                    self.Define(k, f"{k}[cut]")
+                    self = self.Define(k, f"{k}[cut]", implicit=implicit)
 
-            self.fix_nbranch()
+            self = self.fix_nbranch(implicit=implicit)
 
         return self
 
@@ -342,48 +358,57 @@ class MuonSystemRDF:
     def Count(self):
         return self.rdf.Count().GetValue()
 
-    def fix_nbranch(self):
-        #yapf: disable
-        (self.Define("nCscRechitClusters", "Sum(cscRechitClusterSize>0)")
-            .Define("nDtRechitClusters", "Sum(dtRechitClusterSize>0)")
-            .Define("nJets", "Sum(jetPt>0)")
-            .Define("nLeptons", "Sum(lepPt>0)"))
-        #yapf: enable
+    def fix_nbranch(self, implicit=True):
+        self = self.Define("nCscRechitClusters", "Sum(cscRechitClusterSize>0)", implicit=implicit)
+        self = self.Define("nDtRechitClusters", "Sum(dtRechitClusterSize>0)", implicit=implicit)
+        self = self.Define("nJets", "Sum(jetPt>0)", implicit=implicit)
+        self = self.Define("nLeptons", "Sum(lepPt>0)", implicit=implicit)
+        return self
 
-    def find_2tag_pair(self):
+    def find_2tag_pair(self, implicit=True):
+        return self
         pass
 
     def L1_plateau(self):
+        return self
         pass
 
-    def jet_cut(self):  # AN-21-124
-        self.Filter(
+    def jet_cut(self, implicit=True):  # AN-21-124
+        self = self.Filter(
             "!(cscRechitClusterJetVetoLooseId & (cscRechitClusterJetVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4))",
-            system="csc")
-        self.Filter(
+            system="csc",
+            implicit=implicit)
+        self = self.Filter(
             "!(dtRechitClusterJetVetoLooseId & (dtRechitClusterJetVetoPt > 50.) & (abs(dtRechitClusterEta) < 2.4))",
-            system="dt")
+            system="dt",
+            implicit=implicit)
+        return self
 
-    def muon_cut(self):  # AN-19-154
-        self.Filter(
+    def muon_cut(self, implicit=True):  # AN-19-154
+        self = self.Filter(
             "!( (cscRechitClusterMuonVetoLooseId & (cscRechitClusterMuonVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4)) | (cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 > 0) )",
-            system="csc")
-        self.Filter(
+            system="csc",
+            implicit=implicit)
+        self = self.Filter(
             "!( (dtRechitClusterMuonVetoLooseId & (dtRechitClusterMuonVetoPt > 10.) & (abs(dtRechitClusterEta) < 2.4)) | (dtRechitClusterNSegStation1 > 0) )",
-            system="dt")
+            system="dt",
+            implicit=implicit)
+        return self
 
-    def time_cut(self, time="it", system='cscdt'):
+    def time_cut(self, time="it", system='cscdt', implicit=True):
         if time == "oot":
             if 'csc' in system:
-                self.Filter("(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
-                            system="csc")
+                self = self.Filter("(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
+                                   system="csc",
+                                   implicit=implicit)
             if 'dt' in system:
-                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0", system="dt")
+                self = self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0", system="dt", implicit=implicit)
         elif time == "it":
             if 'csc' in system:
-                self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5", system="csc")
+                self = self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5", system="csc", implicit=implicit)
             if 'dt' in system:
-                self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0", system="dt")
+                self = self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0", system="dt", implicit=implicit)
+        return self
 
 
 ##################################################
