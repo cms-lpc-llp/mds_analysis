@@ -1,0 +1,36 @@
+Loading mc_ca_0p6
+
+\begin{table}[]
+  \begin{tabular}{c|rr}
+    Selection & Yield & Eff. vs no cuts \\ \hline
+    All    & 1,851,400 & 100.000\% \\
+    1 CSC/DT + 0 lep  & 46,781 & 2.527\% \\
+    ME1 veto [CSC]  & 18,387 & 39.304\% \\
+    MB1 veto [DT]  & 17,272 & 36.921\% \\
+    ME1 + MB1 veto [CSC&DT]  & 6,761 & 14.452\% \\
+    CSC In-time & 6,661 & 14.239\% \\
+    DT In-time & 6,417 & 13.717\% \\
+    CSC + DT In-time & 6,417 & 13.717\% \\
+    Jet + Muon veto & 6,402 & 13.685\% \\
+  \end{tabular}
+\end{table}
+
+
+Loading r3_ca_0p6
+
+\begin{table}[]
+  \begin{tabular}{c|rr}
+    Selection & Yield & Eff. vs no cuts \\ \hline
+    All    & 14,597,375 & 100.000\% \\
+    1 CSC + 1 DT + 0 lep  & 701,860 & 4.808\% \\
+    ME1 veto [CSC]  & 558,249 & 79.539\% \\
+    MB1 veto [DT]  & 415,465 & 59.195\% \\
+    ME1 + MB1 veto [CSC&DT]  & 306,982 & 43.738\% \\
+    CSC In-time & 269,177 & 38.352\% \\
+    DT In-time & 36,701 & 5.229\% \\
+    CSC + DT In-time & 36,701 & 5.229\% \\
+    Jet + Muon veto & 299,561 & 42.681\% \\
+  \end{tabular}
+\end{table}
+
+

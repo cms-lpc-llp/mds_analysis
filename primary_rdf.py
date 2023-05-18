@@ -8,13 +8,17 @@ from collections import defaultdict
 import ROOT as rt
 import numpy as np
 import sklearn as skl
-import awkward as ak
+# import awkward as ak
 
 from src import CMS_lumi, tdrstyle
-from src.muon_system import MuonSystem, MuonSystemRDF
-from src.helper_functions import lnot, land, lor, lxor, asum, aabs
 
-from src.muon_system import (get_lat_leg, H1D, H2D, multi_plot, make_cluster_eff_1D, draw_csc_z_boxes, draw_dt_r_boxes)
+from src.muon_system import MuonSystemRDF
+from src.muon_system import (get_lat_leg, multi_plot, draw_csc_z_boxes, draw_dt_r_boxes)
+
+# from src.muon_system import MuonSystem, MuonSystemRDF
+# from src.helper_functions import lnot, land, lor, lxor, asum, ABS
+# from src.muon_system import (get_lat_leg, ms.Histo1D(, ms.Histo2D(, multi_plot, make_cluster_eff_1D, draw_csc_z_boxes, draw_dt_r_boxes)
+
 from src.helper_functions import canvas
 
 pi = rt.TMath.Pi()
@@ -70,9 +74,12 @@ bins = {
     "jetEta": (100, -5, 5),
     "jetPhi": (100, -pi, pi),
     #
-    "dEta": (100, -4, 4),
+    "dEta": (100, -5, 5),
     "dPhi": (100, -pi, pi),
     "dR": (100, 0, 5),
+    #
+    "AdEta": (100, 0, 5),
+    "AdPhi": (100, 0, pi),
 }
 
 bins["cmsZ"] = (bins['cscZ'][0], min(bins['cscZ'][1], bins['dtZ'][1]), max(bins['cscZ'][2], bins['dtZ'][2]))
@@ -87,6 +94,11 @@ bins2D = {
     "dPhi_met": bins["dPhi"] + bins["met"],
     "dEta_met": bins["dEta"] + bins["met"],
     "dR_met": bins["dR"] + bins["met"],
+    "AdPhi_AdEta": bins["AdPhi"] + bins["AdEta"],
+    "AdPhi_dR": bins["AdPhi"] + bins["dR"],
+    "AdEta_dR": bins["AdEta"] + bins["dR"],
+    "AdPhi_met": bins["AdPhi"] + bins["met"],
+    "AdEta_met": bins["AdEta"] + bins["met"],
     "cmsZ_cmsR": bins["cmsZ"] + bins["cmsR"],
 }
 
@@ -97,15 +109,20 @@ if __name__ == "__main__":
 
     gc = []
     rt.gROOT.SetBatch()
-    rt.EnableImplicitMT(8)
+
+    cur_dir = os.getcwd()
+    if 'Documents' in cur_dir:
+        rt.EnableImplicitMT()
+    else:
+        rt.EnableImplicitMT(8)
+
     print(f"Running with thread pool size = {rt.GetThreadPoolSize():,}")
 
     a = tdrstyle.setTDRStyle()
     # CMS_lumi.writeExtraText = 0
     rt.gStyle.SetOptFit(0)  # 1011)
 
-    cur_dir = os.getcwd()
-    out_dir = cur_dir + "/reports/weekly/may8/"
+    out_dir = cur_dir + "/reports/weekly/may15/"
     in_data_dir = cur_dir + "/data/raw/"
     out_data_dir = cur_dir + "/data/processed/"
     ending = ".png"
@@ -199,14 +216,36 @@ if __name__ == "__main__":
     hhs = defaultdict(list)
 
     for ff, label, stat in zip(files, labels, stats):
-        print(f"\nLoading {stat}. (N Max Events = {nev:,})")  # ms.file_name)
+        print(f"\nLoading {stat} (N Max Events = {nev:,})")  # ms.file_name)
         isMC = "mc" in stat
         ms = MuonSystemRDF(ff, isMC=isMC, nev=nev)
         print(f"\tLoaded {ms.Count():,} events.")
 
-        ######################
+        # # ---------------------------------------- #
+        # # ---------------------------------------- #
+        # # ---------------------------------------- #
 
-        print("Not implicit")
+        # No cuts		 1118331.31	 100.000
+        # 2 CSC + 0 lep	 15543.23	 1.390
+        # ME1 veto [0]	 7406.14	 0.662
+        # ME1 veto [1]	 4898.57	 0.438
+        # ME1 veto [0&1]	 2461.67	 0.220
+        # Trigger plateau	 6951.87	 0.622
+        # Trigger + ME1	 1277.05	 0.114
+        # Min dphi>1.8	 5470.03	 0.489
+        # Delta eta<1.9	 4833.32	 0.432
+        # In time cut	 4566.32	 0.408
+        # Time spread	 4339.78	 0.388
+        # Jet muon vetoes	 3494.06	 0.312
+        # ABCD plane	 3494.06	 0.31
+        # C	 822.77	 0.07
+        # B	 953.86	 0.09
+        # D	 767.19	 0.07
+        # A	 950.23	 0.08
+
+        cscdt = "(nCscRechitClusters == 1) && (nDtRechitClusters == 1) && (nLeptons == 0)"
+        # ##
+        # print("Not implicit")
 
         print(r"\begin{table}[]")
         print(r"\begin{tabular}{c|rr}")
@@ -214,275 +253,292 @@ if __name__ == "__main__":
 
         hhs["met_all_ni"].append(ms.Histo1D(('meta_ni', ';met, all;', *bins['met']), 'met'))
         yd, nc = ms.Count(), ms.Count()
-        print(f"All    & {yd:,} & {yd/nc*100:,.3f}% \\")
+        print(f"All    & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms2 = ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
-        hhs["met_2tag_ni"].append(ms2.Histo1D(('met2tag_ni', ';met, CSC+DT;', *bins['met']), 'met'))
+        #! THIS ONE IS IMPLICIT!!!!
+        ms2 = ms.Filter("(nCscRechitClusters == 1) && (nDtRechitClusters == 1) && (nLeptons == 0)", implicit=True)
         yd = ms2.Count()
-        print(f"2 Tag  & {yd:,} & {yd/nc*100:,.3f}% \\")
+        print(f"1 CSC/DT + 0 lep  & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+        nc = yd
+        #! !!!!!!!!!!!!!!!!!!!!!!!!
 
-        ms2 = ms.jet_cut(implicit=False)
-        ms2 = ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        ms2 = ms.Filter(
+            "(cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 == 0)",
+            'csc',
+            implicit=False).Filter(cscdt)
         yd = ms2.Count()
-        print(f"Jet    & {yd:,} & {yd/nc*100:,.3f}% \\")
+        print(f"ME1 veto [CSC]  & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms2 = ms.muon_cut(implicit=False)
-        ms2 = ms2.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
+        ms2 = ms.Filter("dtRechitClusterNSegStation1 == 0", 'dt', implicit=False).Filter(cscdt)
         yd = ms2.Count()
-        print(f"Muon   & {yd:,} & {yd/nc*100:,.3f}% \\")
+        print(f"MB1 veto [DT]  & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms2 = ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)", implicit=False)
-        ms2 = ms2.time_cut("oot", "dt", implicit=False)
-        hhs["met_2t_DtOot_ni"].append(ms2.Histo1D(('met2tDtOot_ni', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
+        ms2 = ms.Filter(
+            "(cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 == 0)",
+            'csc',
+            implicit=False).Filter("(dtRechitClusterNSegStation1 == 0)", 'dt').Filter(cscdt)
         yd = ms2.Count()
-        print(f"DT OOT & {yd:,} & {yd/nc*100:,.3f}% \\")
+        print(f"ME1 + MB1 veto [CSC&DT]  & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+
+        ms2 = ms2.time_cut("it", "csc", implicit=False).Filter(cscdt)
+        yd = ms2.Count()
+        print(f"CSC In-time & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+
+        ms2 = ms2.time_cut("it", "dt", implicit=False).Filter(cscdt)
+        yd = ms2.Count()
+        print(f"DT In-time & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+
+        ms2 = ms2.time_cut("it", "cscdt", implicit=False).Filter(cscdt)
+        yd = ms2.Count()
+        print(f"CSC + DT In-time & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+
+        ms2 = ms.jet_cut(implicit=False).muon_cut().Filter(cscdt)
+        yd = ms2.Count()
+        print(f"Jet + Muon veto & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+
         print(r"\end{tabular}")
         print(r"\end{table}")
         print("")
 
-        ######################
+        # ##
 
-        print("Implicit")
+        # print("Implicit")
 
-        print(r"\begin{table}[]")
-        print(r"\begin{tabular}{c|rr}")
-        print(r"Selection & Yield & Eff. vs no cuts \\ \hline")
+        # print(r"\begin{table}[]")
+        # print(r"\begin{tabular}{c|rr}")
+        # print(r"Selection & Yield & Eff. vs no cuts \\ \hline")
 
-        hhs["met_all"].append(ms.Histo1D(('meta', ';met, all;', *bins['met']), 'met'))
-        yd, nc = ms.Count(), ms.Count()
-        print(f"All    & {yd:,} & {yd/nc*100:,.3f}% \\")
+        # hhs["met_all"].append(ms.Histo1D(('meta', ';met, all;', *bins['met']), 'met'))
+        # yd, nc = ms.Count(), ms.Count()
+        # print(f"All    & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
-        hhs["met_2tag"].append(ms.Histo1D(('met2tag', ';met, CSC+DT;', *bins['met']), 'met'))
-        yd = ms.Count()
-        print(f"+2 Tag  & {yd:,} & {yd/nc*100:,.3f}% \\")
+        # ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        # hhs["met_2tag"].append(ms.Histo1D(('met2tag', ';met, CSC+DT;', *bins['met']), 'met'))
+        # yd = ms.Count()
+        # print(f"+2 Tag  & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms.jet_cut()
-        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
-        yd = ms.Count()
-        print(f"+Jet    & {yd:,} & {yd/nc*100:,.3f}% \\")
+        # ms.jet_cut()
+        # ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        # yd = ms.Count()
+        # print(f"+Jet    & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms.muon_cut()
-        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
-        yd = ms.Count()
-        print(f"+Muon   & {yd:,} & {yd/nc*100:,.3f}% \\")
+        # ms.muon_cut()
+        # ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        # yd = ms.Count()
+        # print(f"+Muon   & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
 
-        ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
-        ms.time_cut("oot", "dt")
-        hhs["met_2t_DtOot"].append(ms.Histo1D(('met2tDtOot', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
-        yd = ms.Count()
-        print(f"+DT OOT & {yd:,} & {yd/nc*100:,.3f}% \\")
-        print(r"\end{tabular}")
-        print(r"\end{table}")
-        print("")
+        # ms.Filter("(nCscRechitClusters == 1) & (nDtRechitClusters == 1)")
+        # ms.time_cut("oot", "dt")
+        # hhs["met_2t_DtOot"].append(ms.Histo1D(('met2tDtOot', ';met, CSC+DT_{OOT};', *bins['met']), 'met'))
+        # yd = ms.Count()
+        # print(f"+DT OOT & {yd:,} & {yd/nc*100:,.3f}\\% \\\\")
+        # print(r"\end{tabular}")
+        # print(r"\end{table}")
+        # print("")
 
-        ######################
+        # ##
 
-        # # =======================================#
-        # # Making time plots before cuts on time #
-        # # =======================================#
+        # ms_csc = ms.time_cut('oot', 'csc', implicit=False).Filter("nCscRechitClusters + nDtRechitClusters > 0")
+        # hCsc = ms_csc.Histo1D(("nCscRechitClusters", ";N CSC Clusters;count", *bins["cscN"]), "nCscRechitClusters")
 
-        # print("here")
-        # hhs["cscAllTime"].append(H1D(ms["cscRechitClusterTimeWeighted"], ";CSC Time [ns];count", bins["cscTime"]))
-        # hhs["cscAllTimeSpread"].append(
-        #     H1D(ms["cscRechitClusterTimeSpreadWeightedAll"], ";CSC Time Spread [ns];count", bins["cscTimeSpread"])
-        # )
-        # hhs["dtAllTime"].append(H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"]))
+        # ms_cscT = ms.time_cut('oot', 'cscT', implicit=False).Filter("nCscRechitClusters + nDtRechitClusters > 0")
+        # hCscT = ms_cscT.Histo1D(("nCscRechitClusters", ";N CSC Clusters;count", *bins["cscN"]), "nCscRechitClusters")
 
-        # ##############################
-        # ## CUT, BLIND, & MATCH DATA ##
-        # ##############################
+        # c = canvas(1, 1)
+        # _hll = multi_plot([hCsc, hCscT], ['csc', 'cscT'], ymin=0)  #, norm=True)
+        # c.Print(out_dir + 'csc_oot_test_' + stat + ending)
 
-        # if isCut:
-        #     sel_csc_jet, sel_dt_jet = ms.jet_veto_cut()
-        #     ms.apply_cut(sel_csc_jet, system="csc")
-        #     ms.apply_cut(sel_dt_jet, system="dt")
-        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
+        # ##
 
-        #     sel_csc_muon, sel_dt_muon = ms.muon_veto_cut()
-        #     ms.apply_cut(sel_csc_muon, system="csc")
-        #     ms.apply_cut(sel_dt_muon, system="dt")
-        #     ms.apply_cut(ms["nCscRechitClusters"] + ms["nDtRechitClusters"] > 0, system="event")
-        # if isMC:
-        #     print("!!!!!!!!!!!!!!!!!!!")
-        #     print("!! MATCHING DATA !!")
-        #     print("!!!!!!!!!!!!!!!!!!!")
-        #     idx_csc_match, idx_dt_match = ms.match_cut()
-        #     ms.apply_cut(idx_csc_match, system="csc")
-        #     ms.apply_cut(idx_dt_match, system="dt")
+        ms = MuonSystemRDF(ff, isMC=isMC, nev=nev)
+        # # ---------------------------------------- #
+        # # ---------------------------------------- #
+        # # ---------------------------------------- #
 
-        # elif isBlind:
-        #     print("!!!!!!!!!!!!!!!!!!!")
-        #     print("!! BLINDING DATA !!")
-        #     print("!!!!!!!!!!!!!!!!!!!")
+        # ===================================== #
+        # Making time plots before cuts on time #
+        # ===================================== #
 
-        #     # sel_csc_oot = aabs(ms["cscRechitClusterTimeWeighted"]) > 50
-        #     sel_csc_oot = ms["cscRechitClusterTimeWeighted"] < -12.5
-        #     sel_dt_oot = ms["dtRechitCluster_match_RPCBx_dPhi0p5"] != 0
+        hhs["cscAllTime"].append(
+            ms.Histo1D(("cscAllTime", ";CSC Time [ns];count", *bins["cscTime"]), "cscRechitClusterTimeWeighted"))
+        hhs["cscAllTimeSpread"].append(
+            ms.Histo1D(("cscAllTimeSpread", ";CSC Time Spread [ns];count", *bins["cscTimeSpread"]),
+                       "cscRechitClusterTimeSpreadWeightedAll"))
+        hhs["dtAllTime"].append(
+            ms.Histo1D(("dtAllTime", ";DT Time [ns];count", *bins["dtTime"]), "dtRechitCluster_match_RPCBx_dPhi0p5"))
 
-        #     sel_bkg = lor(
-        #         land(ms["nCscRechitClusters"] == 1, asum(sel_csc_oot) == 1),
-        #         land(ms["nCscRechitClusters"] == 2, asum(sel_csc_oot) == 1),  # NOTE: change to req only 2nd clstr oot
-        #         land(ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
-        #         land(ms["nDtRechitClusters"] == 2, asum(sel_dt_oot) == 1),
-        #         land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1, asum(sel_dt_oot) == 1),
-        #     )
+        ##############################
+        ## CUT, BLIND, & MATCH DATA ##
+        ##############################
 
-        #     ms.apply_cut(sel_bkg)
+        if isCut:
+            ms.jet_cut()
+            ms.muon_cut()
 
-        # # ================================ #
-        # # NOTE: Using convention "x vs y"  #
-        # # ================================ #
+        if isMC:
+            print("!!!!!!!!!!!!!!!!!!!")
+            print("!! MATCHING DATA !!")
+            print("!!!!!!!!!!!!!!!!!!!")
+            ms.match_clusters()
 
-        # #################################
-        # ## System & Cluster Kinematics ##
-        # #################################
-        # print("Generating system and cluster kinematics plots")
+        if isBlind and not isMC:
+            print("!!!!!!!!!!!!!!!!!!!")
+            print("!! BLINDING DATA !!")
+            print("!!!!!!!!!!!!!!!!!!!")
+            print("    - Requiring DT to be OOT")
+            print("    - Requiring CSC (not trigger) to be OOT")
+            ms.time_cut('oot', 'dt cscT')
+            # ms.L1_plateau()
 
-        # # System level
-        # hhs["met"].append(H1D(ms["met"], ";E_{T}^{miss} [GeV];count", bins["met"]))
-        # hhs["metPhi"].append(H1D(ms["metPhi"], ";#phi[E_{T}^{miss}];count", bins["metPhi"]))
+        ms.Filter("nCscRechitClusters + nDtRechitClusters > 0")
 
-        # # kinematics: (csc, dt, gllp, jet, lep)
-        # # N, Size, Time, TimeSpread, NSt, ASt, MSt, MetDPhi, E, Pt, Eta, Phi
-        # hhs["cscN"].append(H1D(ms["nCscRechitClusters"], ";N CSC Clusters;count", bins["cscN"]))
-        # hhs["cscSize"].append(H1D(ms["cscRechitClusterSize"], ";CSC Rechit Size;count", bins["cscSize"]))
-        # hhs["cscTime"].append(H1D(ms["cscRechitClusterTimeWeighted"], ";CSC Time [ns];count", bins["cscTime"]))
-        # hhs["cscTimeSpread"].append(
-        #     H1D(ms["cscRechitClusterTimeSpreadWeightedAll"], ";CSC Time Spread [ns];count", bins["cscTimeSpread"])
-        # )
-        # hhs["cscNSt"].append(H1D(ms["cscRechitClusterNStation10"], ";N Stations per CSC Cluster;count", bins["cscNSt"]))
-        # hhs["cscASt"].append(
-        #     H1D(aabs(ms["cscRechitClusterAvgStation10"]), ";Avg Station per CSC Cluster;count", bins["cscASt"])
-        # )
-        # hhs["cscMSt"].append(
-        #     H1D(aabs(ms["cscRechitClusterMaxStation"]), ";Max Station per CSC Cluster;count", bins["cscMSt"])
-        # )
-        # hhs["cscMetDPhi"].append(
-        #     H1D(ms["cscRechitClusterMet_dPhi"], ";#Delta#phi(CSC,E_{T}^{miss});count", bins["cscMetDPhi"])
-        # )
-        # hhs["cscEta"].append(H1D(aabs(ms["cscRechitClusterEta"]), ";CSC #eta;count", bins["cscEta"]))
-        # hhs["cscPhi"].append(H1D(ms["cscRechitClusterPhi"], ";CSC #phi;count", bins["cscPhi"]))
+        # ================================ #
+        # NOTE: Using convention "x vs y"  #
+        # ================================ #
 
-        # hhs["dtN"].append(H1D(ms["nDtRechitClusters"], ";N DT Clusters;count", bins["dtN"]))
-        # hhs["dtSize"].append(H1D(ms["dtRechitClusterSize"], ";DT Rechit Size;count", bins["dtSize"]))
-        # hhs["dtTime"].append(H1D(ms["dtRechitCluster_match_RPCBx_dPhi0p5"], ";DT Time [ns];count", bins["dtTime"]))
-        # hhs["dtNSt"].append(H1D(ms["dtRechitClusterNStation10"], ";N Stations per DT Cluster;count", bins["dtNSt"]))
-        # hhs["dtASt"].append(
-        #     H1D(aabs(ms["dtRechitClusterAvgStation10"]), ";Avg Station per DT Cluster;count", bins["dtASt"])
-        # )
-        # hhs["dtMSt"].append(
-        #     H1D(aabs(ms["dtRechitClusterMaxStation"]), ";Max Station per DT Cluster;count", bins["dtMSt"])
-        # )
-        # hhs["dtMetDPhi"].append(
-        #     H1D(ms["dtRechitClusterMet_dPhi"], ";#Delta#phi(DT,E_{T}^{miss});count", bins["dtMetDPhi"])
-        # )
-        # hhs["dtEta"].append(H1D(aabs(ms["dtRechitClusterEta"]), ";DT #eta;count", bins["dtEta"]))
-        # hhs["dtPhi"].append(H1D(ms["dtRechitClusterPhi"], ";DT #phi;count", bins["dtPhi"]))
+        #################################
+        ## System & Cluster Kinematics ##
+        #################################
+        print("Generating system and cluster kinematics plots")
 
-        # hhs["gllpN"].append(H1D(ms["nGLLP"], ";N gLLPs;count", bins["gllpN"]))
-        # hhs["gllpE"].append(H1D(ms["gLLP_e"], ";gLLP E [GeV];count", bins["gllpE"]))
-        # hhs["gllpPt"].append(H1D(ms["gLLP_pt"], ";gLLP P_{T} [GeV];count", bins["gllpPt"]))
-        # hhs["gllpEta"].append(H1D(ms["gLLP_eta"], ";gLLP #eta;count", bins["gllpEta"]))
-        # hhs["gllpPhi"].append(H1D(ms["gLLP_phi"], ";gLLP #phi;count", bins["gllpPhi"]))
+        ms.Define("ABScscRechitClusterAvgStation10", "abs(cscRechitClusterAvgStation10)")
+        ms.Define("ABScscRechitClusterMaxStation", "abs(cscRechitClusterMaxStation)")
+        ms.Define("ABScscRechitClusterEta", "abs(cscRechitClusterEta)")
+        ms.Define("ABSdtRechitClusterAvgStation10", "abs(dtRechitClusterAvgStation10)")
+        ms.Define("ABSdtRechitClusterMaxStation", "abs(dtRechitClusterMaxStation)")
+        ms.Define("ABSdtRechitClusterEta", "abs(dtRechitClusterEta)")
 
-        # hhs["jetN"].append(H1D(ms["nJets"], ";N Jets;count", bins["jetN"]))
-        # hhs["jetE"].append(H1D(ms["jetE"], ";Jet E [GeV];count", bins["jetE"]))
-        # hhs["jetPt"].append(H1D(ms["jetPt"], ";Jet P_{T} [GeV];count", bins["jetPt"]))
-        # hhs["jetEta"].append(H1D(ms["jetEta"], ";Jet #eta;count", bins["jetEta"]))
-        # hhs["jetPhi"].append(H1D(ms["jetPhi"], ";Jet #phi;count", bins["jetPhi"]))
+        # System level
+        hhs["met"].append(ms.Histo1D(("met", ";E_{T}^{miss} [GeV];count", *bins["met"]), "met"))
+        hhs["metPhi"].append(ms.Histo1D(("metPhi", ";#phi[E_{T}^{miss}];count", *bins["metPhi"]), "metPhi"))
 
-        # hhs["lepN"].append(H1D(ms["nLeptons"], ";N Leptons;count", bins["lepN"]))
-        # hhs["lepE"].append(H1D(ms["lepE"], ";Lepton E [GeV];count", bins["lepE"]))
-        # hhs["lepPt"].append(H1D(ms["lepPt"], ";Lepton P_{T} [GeV];count", bins["lepPt"]))
-        # hhs["lepEta"].append(H1D(ms["lepEta"], ";Lepton #eta;count", bins["lepEta"]))
-        # hhs["lepPhi"].append(H1D(ms["lepPhi"], ";Lepton #phi;count", bins["lepPhi"]))
+        # kinematics: (csc, dt, gllp, jet, lep)
+        # N, Size, Time, TimeSpread, NSt, ASt, MSt, MetDPhi, E, Pt, Eta, Phi
+        hhs["cscN"].append(
+            ms.Histo1D(("nCscRechitClusters", ";N CSC Clusters;count", *bins["cscN"]), "nCscRechitClusters"))
+        hhs["cscSize"].append(
+            ms.Histo1D(("cscRechitClusterSize", ";CSC Rechit Size;count", *bins["cscSize"]), "cscRechitClusterSize"))
+        hhs["cscTime"].append(
+            ms.Histo1D(("cscRechitClusterTimeWeighted", ";CSC Time [ns];count", *bins["cscTime"]),
+                       "cscRechitClusterTimeWeighted"))
+        hhs["cscTimeSpread"].append(
+            ms.Histo1D(("cscTimeSpread", ";CSC Time Spread [ns];count", *bins["cscTimeSpread"]),
+                       "cscRechitClusterTimeSpreadWeightedAll"))
+        hhs["cscNSt"].append(
+            ms.Histo1D(("cscRechitClusterNStation10", ";N Stations / CSC Cluster;count", *bins["cscNSt"]),
+                       "cscRechitClusterNStation10"))
+        hhs["cscASt"].append(
+            ms.Histo1D(("cscASt", ";Avg Station / CSC Cluster;count", *bins["cscASt"]),
+                       "ABScscRechitClusterAvgStation10"))
+        hhs["cscMSt"].append(
+            ms.Histo1D(("cscMSt", ";Max Station / CSC Cluster;count", *bins["cscMSt"]),
+                       "ABScscRechitClusterMaxStation"))
+        hhs["cscMetDPhi"].append(
+            ms.Histo1D(("cscMetDPhi", ";#Delta#phi(CSC,E_{T}^{miss});count", *bins["cscMetDPhi"]),
+                       "cscRechitClusterMet_dPhi"))
+        hhs["cscEta"].append(
+            ms.Histo1D(("cscRechitClusterEta", ";CSC #eta;count", *bins["cscEta"]), "ABScscRechitClusterEta"))
+        hhs["cscPhi"].append(
+            ms.Histo1D(("cscRechitClusterPhi", ";CSC #phi;count", *bins["cscPhi"]), "cscRechitClusterPhi"))
 
-        # # MET vs (csc, dt) MET dPhi
-        # hhs["2D_met_cscMetDPhi"].append(
-        #     H2D(
-        #         ms["met"],
-        #         ms["cscRechitClusterMet_dPhi"],
-        #         ";E_{T}^{miss} [GeV];#Delta#phi(csc, #phi_{T}^{miss});",
-        #         bins["met_cscMetDPhi"],
-        #     )
-        # )
-        # hhs["2D_met_dtMetDPhi"].append(
-        #     H2D(
-        #         ms["met"],
-        #         ms["dtRechitClusterMet_dPhi"],
-        #         ";E_{T}^{miss} [GeV];#Delta#phi(dt, #phi_{T}^{miss});count",
-        #         bins["met_dtMetDPhi"],
-        #     )
-        # )
+        hhs["dtN"].append(ms.Histo1D(("nDtRechitClusters", ";N DT Clusters;count", *bins["dtN"]), "nDtRechitClusters"))
+        hhs["dtSize"].append(
+            ms.Histo1D(("dtRechitClusterSize", ";DT Rechit Size;count", *bins["dtSize"]), "dtRechitClusterSize"))
+        hhs["dtTime"].append(
+            ms.Histo1D(("dtRechitCluster_match_RPCBx_dPhi0p5", ";DT Time [ns];count", *bins["dtTime"]),
+                       "dtRechitCluster_match_RPCBx_dPhi0p5"))
+        hhs["dtNSt"].append(
+            ms.Histo1D(("dtRechitClusterNStation10", ";N Stations / DT Cluster;count", *bins["dtNSt"]),
+                       "dtRechitClusterNStation10"))
+        hhs["dtASt"].append(
+            ms.Histo1D(("dtRechitClusterAvgStation10", ";Avg Station / DT Cluster;count", *bins["dtASt"]),
+                       "ABSdtRechitClusterAvgStation10"))
+        hhs["dtMSt"].append(
+            ms.Histo1D(("dtRechitClusterMaxStation", ";Max Station / DT Cluster;count", *bins["dtMSt"]),
+                       "ABSdtRechitClusterMaxStation"))
+        hhs["dtMetDPhi"].append(
+            ms.Histo1D(("dtRechitClusterMet_dPhi", ";#Delta#phi(DT,E_{T}^{miss});count", *bins["dtMetDPhi"]),
+                       "dtRechitClusterMet_dPhi"))
+        hhs["dtEta"].append(
+            ms.Histo1D(("dtRechitClusterEta", ";DT #eta;count", *bins["dtEta"]), "ABSdtRechitClusterEta"))
+        hhs["dtPhi"].append(ms.Histo1D(("dtRechitClusterPhi", ";DT #phi;count", *bins["dtPhi"]), "dtRechitClusterPhi"))
 
-        # ###################################
-        # ## Single Pair CSC-DT Kinematics ##
-        # ###################################
+        hhs["gllpN"].append(ms.Histo1D(("nGLLP", ";N gLLPs;count", *bins["gllpN"]), "nGLLP"))
+        hhs["gllpE"].append(ms.Histo1D(("gLLP_e", ";gLLP E [GeV];count", *bins["gllpE"]), "gLLP_e"))
+        hhs["gllpPt"].append(ms.Histo1D(("gLLP_pt", ";gLLP P_{T} [GeV];count", *bins["gllpPt"]), "gLLP_pt"))
+        hhs["gllpEta"].append(ms.Histo1D(("gLLP_eta", ";gLLP #eta;count", *bins["gllpEta"]), "gLLP_eta"))
+        hhs["gllpPhi"].append(ms.Histo1D(("gLLP_phi", ";gLLP #phi;count", *bins["gllpPhi"]), "gLLP_phi"))
 
-        # for second in ('csc', 'dt'):
-        #     print(f"Generating CSC-{second.upper()} kinematics plots")
+        hhs["jetN"].append(ms.Histo1D(("nJets", ";N Jets;count", *bins["jetN"]), "nJets"))
+        hhs["jetE"].append(ms.Histo1D(("jetE", ";Jet E [GeV];count", *bins["jetE"]), "jetE"))
+        hhs["jetPt"].append(ms.Histo1D(("jetPt", ";Jet P_{T} [GeV];count", *bins["jetPt"]), "jetPt"))
+        hhs["jetEta"].append(ms.Histo1D(("jetEta", ";Jet #eta;count", *bins["jetEta"]), "jetEta"))
+        hhs["jetPhi"].append(ms.Histo1D(("jetPhi", ";Jet #phi;count", *bins["jetPhi"]), "jetPhi"))
 
-        #     if second == 'csc':
-        #         sel_hlt = ms["HLT_CscCluster_Loose"]
-        #         sel_2csc = ms["nCscRechitClusters"] == 2
+        hhs["lepN"].append(ms.Histo1D(("nLeptons", ";N Leptons;count", *bins["lepN"]), "nLeptons"))
+        hhs["lepE"].append(ms.Histo1D(("lepE", ";Lepton E [GeV];count", *bins["lepE"]), "lepE"))
+        hhs["lepPt"].append(ms.Histo1D(("lepPt", ";Lepton P_{T} [GeV];count", *bins["lepPt"]), "lepPt"))
+        hhs["lepEta"].append(ms.Histo1D(("lepEta", ";Lepton #eta;count", *bins["lepEta"]), "lepEta"))
+        hhs["lepPhi"].append(ms.Histo1D(("lepPhi", ";Lepton #phi;count", *bins["lepPhi"]), "lepPhi"))
 
-        #         if not isMC:
-        #             lpair = "(CSC,CSC_{OOT})"
-        #             sel = land(sel_hlt, sel_2csc)
-        #         else:
-        #             lpair = "(CSC,CSC)"
-        #             sel = sel_2csc
+        # MET vs (csc, dt) MET dPhi
+        hhs["2D_met_cscMetDPhi"].append(
+            ms.Histo2D(
+                ("2D_met_cscMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(csc, #phi_{T}^{miss});", *bins["met_cscMetDPhi"]),
+                "met", "cscRechitClusterMet_dPhi"))
+        hhs["2D_met_dtMetDPhi"].append(
+            ms.Histo2D(("2D_met_dtMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(dt, #phi_{T}^{miss});count",
+                        *bins["met_dtMetDPhi"]), "met", "dtRechitClusterMet_dPhi"))
 
-        #         # dEta, dPhi, dR
-        #         met = ms["met"][sel]
-        #         dEta = ms["cscRechitClusterEta"][sel,0] - ms["cscRechitClusterEta"][sel,1]
-        #         dPhi = ms["cscRechitClusterPhi"][sel,0] - ms["cscRechitClusterPhi"][sel,1]
-        #         dPhi = dPhi - (dPhi > pi) * 2 * pi
-        #         dR = np.sqrt(dEta * dEta + dPhi * dPhi)
-        #     if second == 'dt':
-        #         sel_hlt = ms["HLT_L1CSCCluster_DTCluster50"]
-        #         sel_1csc1dt = land(ms["nCscRechitClusters"] == 1, ms["nDtRechitClusters"] == 1)
+        ###########################################
+        ## Single Pair CSC-CSC/CSC-DT Kinematics ##
+        ###########################################
 
-        #         if not isMC:
-        #             lpair = "(CSC,DT_{OOT})"
-        #             sel = land(sel_hlt, sel_1csc1dt)
-        #         else:
-        #             lpair = "(CSC,DT)"
-        #             sel = sel_1csc1dt
+        print("Reducing to 2tag analysis!")
+        ms.define_tag_kins(system="csccsc,cscdt")
 
-        #         # dEta, dPhi, dR
-        #         met = ms["met"][sel]
-        #         dEta = ms["cscRechitClusterEta"][sel] - ms["dtRechitClusterEta"][sel]
-        #         dPhi = ms["cscRechitClusterPhi"][sel] - ms["dtRechitClusterPhi"][sel]
-        #         dPhi = dPhi - (dPhi > pi) * 2 * pi
-        #         dR = np.sqrt(dEta * dEta + dPhi * dPhi)
+        for second in ('csc', 'dt'):
+            print(f"Generating CSC-{second.upper()} kinematics plots")
+            _ms = ms.Filter(f"tag_type == {0 if second == 'csc' else 1}", implicit=False)
 
-        #     hhs["csc"+second+"_dEta"].append(H1D(dEta, ";#Delta#eta"+lpair+";count", bins["dEta"]))
-        #     hhs["csc"+second+"_dPhi"].append(H1D(dPhi, ";#Delta#phi"+lpair+";count", bins["dPhi"]))
-        #     hhs["csc"+second+"_dR"].append(H1D(dR, ";#DeltaR"+lpair+";count", bins["dR"]))
+            if isMC:
+                lpair = f"(CSC,{second.upper()})"
+            else:
+                lpair = f"(CSC,{second.upper()}_" + "{OOT})"
+                if second == 'csc':
+                    _ms.Filter("HLTDecision[566] > 0 ")  # HLT_CscCluster_Loose
+                elif second == 'dt':
+                    _ms.Filter("HLTDecision[569] > 0 ")  # HLT_L1CSCCluster_DTCluster50
 
-        #     # d__ vs d__
-        #     hhs["csc"+second+"_2D_dPhi_dEta"].append(
-        #         H2D(dPhi, dEta, ";#Delta#phi"+lpair+";#Delta#eta"+lpair+";count", bins["dPhi_dEta"])
-        #     )
-        #     hhs["csc"+second+"_2D_dPhi_dR"].append(
-        #         H2D(dPhi, dR, ";#Delta#phi"+lpair+";#DeltaR"+lpair+";count", bins["dPhi_dR"])
-        #     )
-        #     hhs["csc"+second+"_2D_dEta_dR"].append(
-        #         H2D(dEta, dR, ";#Delta#eta"+lpair+";#DeltaR"+lpair+";count", bins["dEta_dR"])
-        #     )
+            hhs["csc" + second + "_dEta"].append(
+                _ms.Histo1D(("csc" + second + "_dEta", ";#Delta#eta" + lpair + ";count", *bins["AdEta"]), "tag_dEta"))
+            hhs["csc" + second + "_dPhi"].append(
+                _ms.Histo1D(("csc" + second + "_dPhi", ";#Delta#phi" + lpair + ";count", *bins["AdPhi"]), "tag_dPhi"))
+            hhs["csc" + second + "_dR"].append(
+                _ms.Histo1D(("csc" + second + "_dR", ";#DeltaR" + lpair + ";count", *bins["dR"]), "tag_dR"))
 
-        #     #
-        #     hhs["csc"+second+"_2D_dPhi_met"].append(
-        #         H2D(dPhi, met, ";#Delta#phi"+lpair+";E_{T}^{miss} [GeV];count", bins["dPhi_met"])
-        #     )
-        #     hhs["csc"+second+"_2D_dEta_met"].append(
-        #         H2D(dEta, met, ";#Delta#eta"+lpair+";E_{T}^{miss} [GeV];count", bins["dEta_met"])
-        #     )
-        #     hhs["csc"+second+"_2D_dR_met"].append(
-        #         H2D(dR, met, ";#DeltaR"+lpair+";E_{T}^{miss} [GeV];count", bins["dPhi_met"])
-        #     )
+            # d__ vs d__
+            hhs["csc" + second + "_2D_dPhi_dEta"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dPhi_dEta", ";#Delta#phi" + lpair + ";#Delta#eta" + lpair + ";count",
+                             *bins["AdPhi_AdEta"]), "tag_dPhi", "tag_dEta"))
+            hhs["csc" + second + "_2D_dPhi_dR"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dPhi_dR", ";#Delta#phi" + lpair + ";#DeltaR" + lpair + ";count",
+                             *bins["AdPhi_dR"]), "tag_dPhi", "tag_dR"))
+            hhs["csc" + second + "_2D_dEta_dR"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dEta_dR", ";#Delta#eta" + lpair + ";#DeltaR" + lpair + ";count",
+                             *bins["AdEta_dR"]), "tag_dEta", "tag_dR"))
+
+            #
+            hhs["csc" + second + "_2D_dPhi_met"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dPhi_met", ";#Delta#phi" + lpair + ";E_{T}^{miss} [GeV];count",
+                             *bins["AdPhi_met"]), "tag_dPhi", "met"))
+            hhs["csc" + second + "_2D_dEta_met"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dEta_met", ";#Delta#eta" + lpair + ";E_{T}^{miss} [GeV];count",
+                             *bins["AdEta_met"]), "tag_dEta", "met"))
+            hhs["csc" + second + "_2D_dR_met"].append(
+                _ms.Histo2D(
+                    ("csc" + second + "_2D_dR_met", ";#DeltaR" + lpair + ";E_{T}^{miss} [GeV];count", *bins["dR_met"]),
+                    "tag_dR", "met"))
 
         #     ###############################################
         #     ## Save data selections for further analysis ##
@@ -499,6 +555,7 @@ if __name__ == "__main__":
         # TODO: save plots to a .root file
         print("Saving plots to disk.")
         for k, hs in hhs.items():
+            hs = [h.GetPtr() for h in hs]
             for i, ss in enumerate(stats[:len(hs)]):
                 fout_root.WriteObject(hs[i], k + f"_{ss}")
 
@@ -513,12 +570,7 @@ if __name__ == "__main__":
                 _hll = multi_plot(hs, labels, ymin=0, norm=True)
                 c.Print(out_dir + k + ending)
 
-    #     #####################################################
-    #     ## Clear memory because im having memory issues :( ##
-    #     #####################################################
-    #     del ms
-
-    # fout_root.Close()
+    fout_root.Close()
     # #########################
     # ## 1D Efficiency Plots ##
     # #########################
