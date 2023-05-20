@@ -1,36 +1,39 @@
-Loading mc_ca_0p6
-
 \begin{table}[]
-  \begin{tabular}{c|rr}
-    Selection & Yield & Eff. vs no cuts \\ \hline
-    All    & 1,851,400 & 100.000\% \\
-    1 CSC/DT + 0 lep  & 46,781 & 2.527\% \\
-    ME1 veto [CSC]  & 18,387 & 39.304\% \\
-    MB1 veto [DT]  & 17,272 & 36.921\% \\
-    ME1 + MB1 veto [CSC&DT]  & 6,761 & 14.452\% \\
-    CSC In-time & 6,661 & 14.239\% \\
-    DT In-time & 6,417 & 13.717\% \\
-    CSC + DT In-time & 6,417 & 13.717\% \\
-    Jet + Muon veto & 6,402 & 13.685\% \\
+  \begin{tabular}{c|rrr}
+    Selection & Yield & Eff. vs matched & Eff. vs 1CSC+1DT \\ \hline
+    All    & 1,851,400 & -- & -- \\
+    Matched*  & 664,531 & 100.000\% & -- \\
+    1CSC + 1DT + 0Lep*  & 34,731 & 5.226\% & 100.000\% \\
+    ME1 veto [CSC]  & 17,652 & 2.656\% & 50.825\% \\
+    MB1 veto [DT]  & 13,312 & 2.003\% & 38.329\% \\
+    ME1 + MB1 veto [CSC\&DT]  & 6,779 & 1.020\% & 19.519\% \\
+    L1 Plateau & 17,975 & 2.705\% & 51.755\% \\
+    L1 + ME1 + MB1 veto  & 3,460 & 0.521\% & 9.962\% \\
+    CSC In-time & 34,655 & 5.215\% & 99.781\% \\
+    DT In-time & 34,162 & 5.141\% & 98.362\% \\
+    CSC + DT In-time & 34,087 & 5.129\% & 98.146\% \\
+    Jet veto & 27,439 & 4.129\% & 79.004\% \\
+    Muon veto & 34,418 & 5.179\% & 99.099\% \\
+    Jet + Muon veto & 27,235 & 4.098\% & 78.417\% \\
   \end{tabular}
 \end{table}
 
-
-Loading r3_ca_0p6
-
 \begin{table}[]
-  \begin{tabular}{c|rr}
-    Selection & Yield & Eff. vs no cuts \\ \hline
-    All    & 14,597,375 & 100.000\% \\
-    1 CSC + 1 DT + 0 lep  & 701,860 & 4.808\% \\
-    ME1 veto [CSC]  & 558,249 & 79.539\% \\
-    MB1 veto [DT]  & 415,465 & 59.195\% \\
-    ME1 + MB1 veto [CSC&DT]  & 306,982 & 43.738\% \\
-    CSC In-time & 269,177 & 38.352\% \\
-    DT In-time & 36,701 & 5.229\% \\
-    CSC + DT In-time & 36,701 & 5.229\% \\
-    Jet + Muon veto & 299,561 & 42.681\% \\
+  \begin{tabular}{c|rrr}
+    Selection & Yield & Eff. vs no cut & Eff. vs 1CSC+1DT \\ \hline
+    All    & 14,597,375 & 100.000\% & -- \\
+    1CSC + 1DT + 0Lep*  & 701,860 & 4.808\% & 100.000\% \\
+    ME1 veto [CSC]  & 558,249 & 3.824\% & 79.539\% \\
+    MB1 veto [DT]  & 415,465 & 2.846\% & 59.195\% \\
+    ME1 + MB1 veto [CSC\&DT]  & 306,982 & 2.103\% & 43.738\% \\
+    L1 Plateau & 224,621 & 1.539\% & 32.004\% \\
+    L1 + ME1 + MB1 veto  & 43,603 & 0.299\% & 6.212\% \\
+    CSC In-time & 481,268 & 3.297\% & 68.570\% \\
+    DT In-time & 126,814 & 0.869\% & 18.068\% \\
+    CSC + DT In-time & 85,928 & 0.589\% & 12.243\% \\
+    Jet veto & 650,094 & 4.453\% & 92.624\% \\
+    Muon veto & 695,784 & 4.767\% & 99.134\% \\
+    Jet + Muon veto & 646,403 & 4.428\% & 92.099\% \\
   \end{tabular}
 \end{table}
-
 

@@ -119,11 +119,27 @@ def multi_plot(hhs, tts, **kwargs):
             hh.Scale(1 / (hh.Integral() if hh.Integral() else 1))
 
     ymax = max([hh.GetMaximum() * (kwargs["ymax_mult"] if "ymax_mult" in kwargs else 1.05) for hh in hhs])
+    ymin = max([hh.GetMinimum() * (kwargs["ymin_mult"] if "ymin_mult" in kwargs else 1) for hh in hhs])
+
+    if "ymax" in kwargs and isinstance(kwargs["ymax"], str):
+        if 'log' in kwargs["ymax"]:
+            ymax = 10**(np.ceil(np.log10(ymax)))
+    elif "ymax" in kwargs:
+        ymax = kwargs["ymax"]
+
+    # if "ymin" in kwargs and isinstance(kwargs["ymin"], str):
+    #     if 'log' in kwargs["ymin"]:
+    #         kwargs["ymin"] = 10**(np.floor(np.log10(ymin)))
+
     for hh, tt, cc in zip(hhs, tts, ccs):
         hh.SetMaximum(ymax)
         if "ymin" in kwargs:
             hh.SetMinimum(kwargs["ymin"])
+
         hh.SetLineColor(cc)
+
+        if 'lw' in kwargs:
+            hh.SetLineWidth(kwargs['lw'])
         hh.Draw("same hist")
 
         leg.AddEntry(hh, tt, "L")
@@ -257,7 +273,7 @@ def draw_csc_z_boxes(hh):
 
 
 class MuonSystemRDF:
-    """Handler for working with muon system ntuples using an RDataFrame, works with 2tag CSC-DT (CSC triggers) only. Implicit is a lot faster"""
+    """Handler for working with muon system ntuples using an RDataFrame, works with 2tag CSC-DT (CSC triggers) only"""
 
     def __init__(self, file_name, tree_name="MuonSystem", isMC=False, nev=None, rdf=None) -> None:
         self.isMC = isMC
@@ -272,10 +288,9 @@ class MuonSystemRDF:
             else:
                 if self.nev is not None:
                     self.rdf = self.rdf.Range(self.nev)
+            self.Count()
         else:
             self.rdf = rdf
-
-        self.nev = self.rdf.Count().GetValue()
 
     def get(self, key):
         ctype = self.rdf.GetColumnType(key)
@@ -352,6 +367,7 @@ class MuonSystemRDF:
                     self = self.Define(k, f"{k}[cut]", implicit=True)
 
             self = self.fix_nbranch(implicit=True)
+            self.rdf = self.rdf.Filter("nCscRechitClusters + nDtRechitClusters > 0")
 
         return self
 
@@ -367,7 +383,8 @@ class MuonSystemRDF:
         return self.rdf.Histo2D(*args)  #.GetPtr()
 
     def Count(self):
-        return self.rdf.Count().GetValue()
+        self.nev = self.rdf.Count().GetValue()
+        return self.nev
 
     def fix_nbranch(self, implicit=True):
         self = self.Define("nCscRechitClusters", "Sum(cscRechitClusterSize>0)", implicit=implicit)
@@ -376,11 +393,58 @@ class MuonSystemRDF:
         self = self.Define("nLeptons", "Sum(lepPt>0)", implicit=True)
         return self
 
-    def match_clusters(self, system='cscdt', implicit=True):
+    def match_clusters(self, system='cscdt', in_det=True, implicit=True):
         if 'csc' in system:
             self = self.Filter("cscRechitCluster_match_gLLP == 1", system="csc", implicit=implicit)
         if 'dt' in system:
             self = self.Filter("dtRechitCluster_match_gLLP == 1", system="dt", implicit=implicit)
+
+        if in_det:
+            self = self.match_in_det(system=system, implicit=implicit)
+
+        return self
+
+    def match_in_det(self, system="cscdt", implicit=False):
+        max_csc_eta, max_csc_r, min_csc_z, max_csc_z = 3, 800, 400, 1200
+        min_dt_r, max_dt_r, max_dt_z = 200, 800, 700
+
+        if 'csc' in system:
+            self = self.Filter( \
+                f"""(abs(cscRechitCluster_match_gLLP_eta) < {max_csc_eta}) && 
+                    (abs(cscRechitCluster_match_gLLP_decay_r) < {max_csc_r}) && 
+                    (abs(cscRechitCluster_match_gLLP_decay_z) > {min_csc_z}) && 
+                    (abs(cscRechitCluster_match_gLLP_decay_z) < {max_csc_z})""",
+                            system='csc',
+                            implicit=implicit)
+
+        if 'dt' in system:
+            self = self.Filter( \
+                f"""(abs(dtRechitCluster_match_gLLP_decay_r) > {min_dt_r}) && 
+                    (abs(dtRechitCluster_match_gLLP_decay_r) < {max_dt_r}) && 
+                    (abs(dtRechitCluster_match_gLLP_decay_z) < {max_dt_z})""",
+                            system='dt',
+                            implicit=implicit)
+
+        return self
+
+    def blind(self, sector, implicit=True):
+        if sector == "dPhi":
+            self = self.Filter()
+        pass
+
+    def find_csc_trigger(self, implicit=True):
+        """Adds column with idx of the CSC cluster that may have triggered the event
+            - Not in ME11
+
+        """
+
+        self = self.Define("idxCscRechitClusterTrigger",
+                           """
+        int iTrig = -1;
+        for (int iCsc = 0; iCsc < nCscRechitClusters; iCsc++) {
+        }
+        """,
+                           implicit=implicit)
         return self
 
 # for k in tree_keys:
@@ -426,89 +490,104 @@ class MuonSystemRDF:
 
 #     first_in_plateau[k] = first_in_plateau_ME11[k] | first_in_plateau_ME12[k] | first_in_plateau_ME13[k] | first_in_plateau_ME21[k] | first_in_plateau_ME22[k] | first_in_plateau_ME31[k] | first_in_plateau_ME32[k] | first_in_plateau_ME41[k] | first_in_plateau_ME42[k]
 
-    def find_csc_trigger(self, implicit=True):
-        """Adds column with idx of the CSC cluster that may have triggered the event
-            - Not in ME11
+    def L1_plateau(self, implicit=True):
+        """https://github.com/cms-lpc-llp/run3_muon_system_analysis/blob/main/study_triggered_events_CSC_v2.ipynb"""
+        self = self.Filter("""
+        auto sel_trgCluster_tr1 = (cscRechitClusterSize >= 100) && (cscRechitClusterNStation10 >= 2) && (abs(cscRechitClusterEta) < 1.9);
+        auto sel_trgCluster_tr2 = (cscRechitClusterSize >= 200) && (cscRechitClusterNStation10 == 1) && (abs(cscRechitClusterEta) < 1.9);
+        auto sel_trgCluster_tr3 = (cscRechitClusterSize >= 500) && (abs(cscRechitClusterEta) >= 1.9);
 
-        """
-
-        self = self.Define("idxCscRechitClusterTrigger",
-                           """
-        int iTrig = -1;
-        for (int iCsc = 0; iCsc < nCscRechitClusters; iCsc++) {
-        }
+        // Event level
+        auto L1_plateau = Sum(cscRechitClusterSize >= 200) > 0;
+        auto HLT_plateau = Sum(sel_trgCluster_tr1 || sel_trgCluster_tr2 || sel_trgCluster_tr3) > 0;
+        return (L1_plateau && HLT_plateau);
         """,
                            implicit=implicit)
-        return self
 
-    def L1_plateau(self):
         return self
 
     def jet_cut(self, system='cscdt', implicit=True):  # AN-21-124
         if 'csc' in system:
             self = self.Filter(
-                "!(cscRechitClusterJetVetoLooseId & (cscRechitClusterJetVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4))",
+                "!(cscRechitClusterJetVetoLooseId && (cscRechitClusterJetVetoPt > 30.) && (abs(cscRechitClusterEta) < 2.4))",
                 system="csc",
                 implicit=implicit)
         if 'dt' in system:
             self = self.Filter(
-                "!(dtRechitClusterJetVetoLooseId & (dtRechitClusterJetVetoPt > 50.) & (abs(dtRechitClusterEta) < 2.4))",
+                "!(dtRechitClusterJetVetoLooseId && (dtRechitClusterJetVetoPt > 50.) && (abs(dtRechitClusterEta) < 2.4))",
                 system="dt",
                 implicit=implicit)
         return self
 
     def muon_cut(self, system='cscdt', implicit=True):  # AN-19-154
-        self = self.Filter(
-            "!( (cscRechitClusterMuonVetoLooseId & (cscRechitClusterMuonVetoPt > 30.) & (abs(cscRechitClusterEta) < 2.4)) | (cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 > 0) )",
-            system="csc",
-            implicit=implicit)
-        self = self.Filter(
-            "!( (dtRechitClusterMuonVetoLooseId & (dtRechitClusterMuonVetoPt > 10.) & (abs(dtRechitClusterEta) < 2.4)) | (dtRechitClusterNSegStation1 > 0) )",
-            system="dt",
-            implicit=True)
+        if 'csc' in system:
+            self = self.Filter(
+                "!( (cscRechitClusterMuonVetoLooseId && (cscRechitClusterMuonVetoPt > 30.) && (abs(cscRechitClusterEta) < 2.4)) )",
+                # "!( (cscRechitClusterMuonVetoLooseId && (cscRechitClusterMuonVetoPt > 30.) && (abs(cscRechitClusterEta) < 2.4)) || (cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 > 0) )",
+                system="csc",
+                implicit=implicit)
+        if 'dt' in system:
+            self = self.Filter(
+                "!( (dtRechitClusterMuonVetoLooseId && (dtRechitClusterMuonVetoPt > 10.) && (abs(dtRechitClusterEta) < 2.4)) )",
+                # "!( (dtRechitClusterMuonVetoLooseId && (dtRechitClusterMuonVetoPt > 10.) && (abs(dtRechitClusterEta) < 2.4)) || (dtRechitClusterNSegStation1 > 0) )",
+                system="dt",
+                implicit=True)
         return self
 
     def time_cut(self, time="it", system='cscdt', implicit=True):
         if time == "oot":
             if 'cscT' in system:
                 self = self.Filter(
-                    "auto tcut = (cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50); tcut[0] = 1; return tcut",
+                    "auto tcut = (cscRechitClusterTimeWeighted  < -12.5) || (cscRechitClusterTimeWeighted > 50); tcut[0] = 1; return tcut",
                     system="csc",
                     implicit=implicit)
             elif 'csc' in system:
-                self = self.Filter("(cscRechitClusterTimeWeighted  < -12.5) | (cscRechitClusterTimeWeighted > 50)",
+                self = self.Filter("(cscRechitClusterTimeWeighted  < -12.5) || (cscRechitClusterTimeWeighted > 50)",
                                    system="csc",
                                    implicit=implicit)
             if 'dt' in system:
                 self = self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 != 0", system="dt", implicit=implicit)
         elif time == "it":
             if 'csc' in system:
-                self = self.Filter("abs(cscRechitClusterTimeWeighted) < 12.5", system="csc", implicit=implicit)
+                self = self.Filter("-5 < cscRechitClusterTimeWeighted && cscRechitClusterTimeWeighted < 12.5",
+                                   system="csc",
+                                   implicit=implicit)
             if 'dt' in system:
                 self = self.Filter("dtRechitCluster_match_RPCBx_dPhi0p5 == 0", system="dt", implicit=implicit)
         return self
 
-    def define_tag_kins(self, system='csccsc,cscdt', implicit=True):
-        self = self.Filter("nCscRechitClusters == 2 || (nCscRechitClusters == 1 && nDtRechitClusters == 1)",
-                           implicit=implicit)
+    def define_2tag_kins_and_cut(self, system='csccsc,cscdt', implicit=True):
+        system_cut = []
+        if 'csccsc' in system:
+            system_cut.append("(nCscRechitClusters == 2)")
+        if 'cscdt' in system:
+            system_cut.append("(nCscRechitClusters == 1 && nDtRechitClusters == 1)")
+        if '1csc' in system:
+            system_cut.append("(nCscRechitClusters == 1)")
+        if '1dt' in system:
+            system_cut.append("(nDtRechitClusters == 1)")
+
+        system_cut = ' || '.join(system_cut)
+        self = self.Filter(system_cut, implicit=implicit)
+
         self = self.Define("vals",
                            """
-        double tag_type = -999;
+        double ttype = -999;
         double dEta = -999;
         double dPhi = -999;
         double dR = -999;
         if (nCscRechitClusters == 2) {
-            tag_type = 0;
+            ttype = 0;
             dEta = abs(cscRechitClusterEta[0] - cscRechitClusterEta[1]);
             dPhi = abs(cscRechitClusterPhi[0] - cscRechitClusterPhi[1]);
             dR = TMath::Sqrt(dEta*dEta + dPhi*dPhi);
         } else {
-            tag_type = 1;
+            ttype = 1;
             dEta = abs(cscRechitClusterEta[0] - dtRechitClusterEta[0]);
             dPhi = abs(cscRechitClusterPhi[0] - dtRechitClusterPhi[0]);
             dR = TMath::Sqrt(dEta*dEta + dPhi*dPhi);
         }
-        return std::vector<double>{tag_type,dEta,dPhi,dR}; 
+        return std::vector<double>{ttype,dEta,dPhi,dR}; 
         """,
                            implicit=True)
         self = self.Define("tag_type", "vals[0]", implicit=True)
@@ -517,6 +596,73 @@ class MuonSystemRDF:
         self = self.Define("tag_dR", "vals[3]", implicit=True)
 
         return self
+
+    def print_cutflow_table(self, match=False):
+        ms = self.Filter('met >= 0', implicit=False)  # Make a copy of the MuonSystem
+        cscdt = "(nCscRechitClusters == 1) && (nDtRechitClusters == 1) && (nLeptons == 0)"
+        me1veto = "(cscRechitClusterNRechitChamberMinus11 + cscRechitClusterNRechitChamberMinus12 + cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberPlus12 == 0)"
+        mb1veto = "dtRechitClusterNSegStation1 == 0"
+        # ##
+        # print("Not implicit")
+
+        print(r"\begin{table}[]")
+        print(r"\begin{tabular}{c|rrr}")
+        print(r"Selection & Yield & Eff. vs " + ("matched" if match else "no cut") + r" & Eff. vs 1CSC+1DT \\ \hline")
+
+        yd = ms.Count()
+        nall = yd
+        print(f"All    & {yd:,} & " + ("--" if match else f"{yd/nall*100:,.3f}\\%") + " & -- \\\\")
+
+        if match:
+            #! THIS ONE IS IMPLICIT!!!!
+            yd = ms.match_clusters(implicit=True).Filter("nCscRechitClusters + nDtRechitClusters > 0").Count()
+            nall = yd
+            print(f"Matched*  & {yd:,} & {yd/nall*100:,.3f}\\% & -- \\\\")
+            #! !!!!!!!!!!!!!!!!!!!!!!!!
+
+        #! THIS ONE IS IMPLICIT!!!!
+        yd = ms.Filter(cscdt, implicit=True).Count()
+        ntag = yd
+        print(f"1CSC + 1DT + 0Lep*  & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+        #! !!!!!!!!!!!!!!!!!!!!!!!!
+
+        yd = ms.Filter(me1veto, 'csc', implicit=False).Filter(cscdt).Count()
+        print(f"ME1 veto [CSC]  & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.Filter(mb1veto, 'dt', implicit=False).Filter(cscdt).Count()
+        print(f"MB1 veto [DT]  & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.Filter(me1veto, 'csc', implicit=False).Filter(mb1veto, 'dt').Filter(cscdt).Count()
+        print(f"ME1 + MB1 veto [CSC\\&DT]  & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.L1_plateau(implicit=False).Filter(cscdt).Count()
+        print(f"L1 Plateau & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.L1_plateau(implicit=False).Filter(me1veto, 'csc').Filter(mb1veto, 'dt').Filter(cscdt).Count()
+        print(f"L1 + ME1 + MB1 veto  & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.time_cut("it", "csc", implicit=False).Filter(cscdt).Count()
+        print(f"CSC In-time & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.time_cut("it", "dt", implicit=False).Filter(cscdt).Count()
+        print(f"DT In-time & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.time_cut("it", "cscdt", implicit=False).Filter(cscdt).Count()
+        print(f"CSC + DT In-time & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.jet_cut(implicit=False).Filter(cscdt).Count()
+        print(f"Jet veto & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.muon_cut(implicit=False).Filter(cscdt).Count()
+        print(f"Muon veto & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        yd = ms.jet_cut(implicit=False).muon_cut().Filter(cscdt).Count()
+        print(f"Jet + Muon veto & {yd:,} & {yd/nall*100:,.3f}\\% & {yd/ntag*100:,.3f}\\% \\\\")
+
+        print(r"\end{tabular}")
+        # print(r"\caption{*This cut is applied to all consecutive rows}")
+        print(r"\end{table}")
+        print("")
 
 
 ##################################################
