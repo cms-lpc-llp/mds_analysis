@@ -8,6 +8,7 @@ import pathlib
 from collections import defaultdict
 
 import ROOT as rt
+# from ROOT import gErrorIgnoreLevel
 import numpy as np
 import sklearn as skl
 # import awkward as ak
@@ -47,6 +48,7 @@ bins = {
     "dtR": (100, 180, 800),
     "dtN": (11, -0.5, 10.5),
     "dtSize": (100, 0, 500),
+    "dtSizeSmall": (50, 40, 200),
     "dtTime": (7, -3.5, 3.5),
     #'dtTimeSpread' : (100, -100, 100),
     #'dtE' : (100, -100, 100),
@@ -57,6 +59,8 @@ bins = {
     "dtNSt": (9, -0.5, 8.5),
     "dtASt": (9, -0.5, 8.5),
     "dtMSt": (9, -0.5, 8.5),
+    "mb1": (50, 0, 100),
+    "mb1Ratio": (100, 0, 0.1),
     #
     "gllpN": (4, -0.5, 3.5),
     "gllpE": (100, 0, 200),
@@ -76,11 +80,11 @@ bins = {
     "jetEta": (100, -5, 5),
     "jetPhi": (100, -pi, pi),
     #
-    "dEta": (100, -5, 5),
+    "dEta": (100, -3.5, 3.5),
     "dPhi": (100, -pi, pi),
     "dR": (100, 0, 5),
     #
-    "AdEta": (100, 0, 5),
+    "AdEta": (100, 0, 3.5),
     "AdPhi": (100, 0, pi),
 }
 
@@ -96,12 +100,16 @@ bins2D = {
     "dPhi_met": bins["dPhi"] + bins["met"],
     "dEta_met": bins["dEta"] + bins["met"],
     "dR_met": bins["dR"] + bins["met"],
+    "AdPhi_dtSize": bins["AdPhi"] + bins["dtSize"],
+    "AdPhi_dtSizeSmall": bins["AdPhi"] + bins["dtSizeSmall"],
     "AdPhi_AdEta": bins["AdPhi"] + bins["AdEta"],
     "AdPhi_dR": bins["AdPhi"] + bins["dR"],
     "AdEta_dR": bins["AdEta"] + bins["dR"],
     "AdPhi_met": bins["AdPhi"] + bins["met"],
     "AdEta_met": bins["AdEta"] + bins["met"],
     "cmsZ_cmsR": bins["cmsZ"] + bins["cmsR"],
+    "jetPt_mb1": bins["jetPt"] + bins["mb1"],
+    "muonPt_mb1": bins["lepPt"] + bins["mb1"],
 }
 
 bins = {**bins, **bins2D}
@@ -114,7 +122,7 @@ def build_hists(ms, hhs, comment=''):
     #################################
     ## System & Cluster Kinematics ##
     #################################
-    print("Generating system and cluster kinematics plots")
+    # print("Generating system and cluster kinematics plots")
 
     # System level
     hhs["met" + comment].append(ms.Histo1D(("met", ";E_{T}^{miss} [GeV];count", *bins["met"]), "met"))
@@ -188,6 +196,11 @@ def build_hists(ms, hhs, comment=''):
     hhs["lepPt" + comment].append(ms.Histo1D(("lepPt", ";Lepton P_{T} [GeV];count", *bins["lepPt"]), "lepPt"))
     hhs["lepEta" + comment].append(ms.Histo1D(("lepEta", ";Lepton #eta;count", *bins["lepEta"]), "lepEta"))
     hhs["lepPhi" + comment].append(ms.Histo1D(("lepPhi", ";Lepton #phi;count", *bins["lepPhi"]), "lepPhi"))
+
+    hhs["mb1" + comment].append(ms.Histo1D(("mb1", ";N MB1;count", *bins["mb1"]), "dtRechitClusterNHitStation1"))
+    hhs["mb1Ratio" + comment].append(
+        ms.Histo1D(("mb1Ratio", ";N MB1 / N DT;count", *bins["mb1Ratio"]), "dtRechitClusterMB1Ratio"))
+
     return hhs
 
 
@@ -201,11 +214,12 @@ def alert(msg: str):
 if __name__ == "__main__":
 
     # Parameters #
+    # TODO - make a control card (yaml)
     isBlind = True
     justMC = False
     isCut = True
     save_dstat = "ca_0p6"
-    save_date = 'may15'
+    save_date = 'may25'
     nev = 100_000
     nThreads = 8
     ##############
@@ -228,6 +242,7 @@ if __name__ == "__main__":
     ssOpt.fLazy = True
 
     out_dir = cur_dir + f"/reports/weekly/{save_date}/"
+    out_plots_dir = out_dir + "/plots/"
     in_data_dir = cur_dir + "/data/raw/"
     out_data_dir = cur_dir + "/data/processed/"
     ending = ".png"
@@ -236,10 +251,11 @@ if __name__ == "__main__":
         nev = int(sys.argv[1])
 
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)  # make out directory if it doesn't exist
+    pathlib.Path(out_plots_dir).mkdir(parents=True, exist_ok=True)  # make plots directory if it doesn't exist
     pathlib.Path(out_data_dir).mkdir(parents=True, exist_ok=True)  # make out data directory if it doesn't exist
     print(f"Using output directory '{out_dir}'")
 
-    fout_name = out_data_dir + "processed_data.root"
+    fout_name = out_data_dir + f"histograms_{save_date}.root"
     fout_root = rt.TFile(fout_name, "recreate")
 
     mc_db_0p4 = in_data_dir + "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root"
@@ -337,74 +353,86 @@ if __name__ == "__main__":
         oms.Define("ABSdtRechitClusterAvgStation10", "abs(dtRechitClusterAvgStation10)")
         oms.Define("ABSdtRechitClusterMaxStation", "abs(dtRechitClusterMaxStation)")
         oms.Define("ABSdtRechitClusterEta", "abs(dtRechitClusterEta)")
+        oms.Define(
+            "dtRechitClusterMB1Ratio",
+            "auto _mb1Ratio = dtRechitCluster_match_MB1hits_0p5; for (int i=0; i<nDtRechitClusters; i++) { _mb1Ratio[i] = dtRechitClusterNHitStation1[i] / dtRechitClusterSize[i];} return _mb1Ratio; "
+        )
 
         # Make copy of orignal muon system to work on
         #   - For efficient analysis I should define all my RDFs now in as few ops as possible...
         ms = oms.Filter('met >= 0', implicit=False)
 
+        #########################
+        ## MAKE CUT-FLOW TABLE ##
+        #########################
+
+        # alert("MAKING CUT-FLOW TABLE")
+        # ms.print_cutflow_table(match=isMC)
+        # print('repeating but with DT size < 80 (BLINDED BKG REGION)')
+        # ms.Filter('dtRechitClusterSize < 80', 'dt', implicit=False).print_cutflow_table(match=isMC)
+
         # # ---------------------------------------- #
         # # ---------------------------------------- #
         # # ---------------------------------------- #
 
-        ms.print_cutflow_table(match=isMC)
-        if isMC:
-            template = (("dtAllTime", ";RPC_{DT,matched} B_{X};count", *bins["dtTime"]),
-                        "dtRechitCluster_match_RPCBx_dPhi0p5")
-            cdl = "(nCscRechitClusters == 1) && (nDtRechitClusters == 1) && (nLeptons == 0)"
-            mb1 = "dtRechitClusterNSegStation1 == 0"
+        # if isMC:
+        #     template = (("dtAllTime", ";RPC_{DT,matched} B_{X};count", *bins["dtTime"]),
+        #                 "dtRechitCluster_match_RPCBx_dPhi0p5")
+        #     cdl = "(nCscRechitClusters == 1) && (nDtRechitClusters == 1) && (nLeptons == 0)"
+        #     mb1 = "dtRechitClusterNSegStation1 == 0"  
 
-            hRPC_all = ms.Histo1D(*template)
-            hRPC_jmv = ms.jet_cut(implicit=False).muon_cut().Histo1D(*template)
-            hRPC_mb1 = ms.Filter(mb1, 'dt', implicit=False).Histo1D(*template)
-            hRPC_cut = ms.Filter(cdl, implicit=False).Histo1D(*template)
-            hRPC_mat = ms.match_clusters('cscdt', implicit=False).Histo1D(*template)
-            hRPC_mat_jmv = ms.match_clusters('cscdt', implicit=False).jet_cut().muon_cut().Histo1D(*template)
-            hRPC_mat_mb1 = ms.match_clusters('cscdt', implicit=False).Filter(mb1, 'dt').Histo1D(*template)
-            hRPC_mat_cut = ms.match_clusters('cscdt', implicit=False).Filter(cdl).Histo1D(*template)
+        #     hRPC_all = ms.Histo1D(*template)
+        #     hRPC_jmv = ms.jet_cut(implicit=False).muon_cut().Histo1D(*template)
+        #     hRPC_mb1 = ms.Filter(mb1, 'dt', implicit=False).Histo1D(*template)
+        #     hRPC_cut = ms.Filter(cdl, implicit=False).Histo1D(*template)
+        #     hRPC_mat = ms.match_clusters('cscdt', implicit=False).Histo1D(*template)
+        #     hRPC_mat_jmv = ms.match_clusters('cscdt', implicit=False).jet_cut().muon_cut().Histo1D(*template)
+        #     hRPC_mat_mb1 = ms.match_clusters('cscdt', implicit=False).Filter(mb1, 'dt').Histo1D(*template)
+        #     hRPC_mat_cut = ms.match_clusters('cscdt', implicit=False).Filter(cdl).Histo1D(*template)
 
-            _hhs = [hRPC_all, hRPC_jmv, hRPC_mb1, hRPC_cut, hRPC_mat, hRPC_mat_mb1, hRPC_mat_cut]
-            _lls = [
-                'no cuts', 'Jet+Muon Veto', 'MB1 Veto', '1CSC+1DT+0Lep', 'signal', 'sig+JM Veto', 'sig+MB1 Veto',
-                'sig+(1CSC+1DT+0Lep)'
-            ]
-            _lxy = (0.2, 0.7, 0.45, 0.9)
+        #     _hhs = [hRPC_all, hRPC_jmv, hRPC_mb1, hRPC_cut, hRPC_mat, hRPC_mat_mb1, hRPC_mat_cut]
+        #     _lls = [
+        #         'no cuts', 'Jet+Muon Veto', 'MB1 Veto', '1CSC+1DT+0Lep', 'signal', 'sig+JM Veto', 'sig+MB1 Veto',
+        #         'sig+(1CSC+1DT+0Lep)'
+        #     ]
+        #     _lxy = (0.2, 0.7, 0.45, 0.9)
 
-            c = canvas(1, 1)
-            c.cd(1).SetLogy()
-            _hll = multi_plot(_hhs, _lls, ymin=1, ymax='log', lw=3, legxy=_lxy)
-            c.Print(out_dir + 'rpc_compare_' + stat + ending)
+        #     c = canvas(1, 1)
+        #     c.cd(1).SetLogy()
+        #     _hll = multi_plot(_hhs, _lls, ymin=1, ymax='log', lw=3, legxy=_lxy)
+        #     c.Print(out_dir + 'rpc_compare_' + stat + ending)
 
-            c = canvas(1, 1)
-            c.cd(1).SetLogy()
-            _hll = multi_plot(_hhs, _lls, ymin=3e-4, ymax=1.3, lw=3, legxy=_lxy, norm=True)
-            c.Print(out_dir + 'rpc_compare_norm_' + stat + ending)
+        #     c = canvas(1, 1)
+        #     c.cd(1).SetLogy()
+        #     _hll = multi_plot(_hhs, _lls, ymin=3e-4, ymax=1.3, lw=3, legxy=_lxy, norm=True)
+        #     c.Print(out_dir + 'rpc_compare_norm_' + stat + ending)
 
-            hRPC_mb1_cl = hRPC_mb1.Clone()
+        #     hRPC_mb1_cl = hRPC_mb1.Clone()
 
-            c = canvas(1, 1)
-            hRPC_jmv.Divide(hRPC_all.GetPtr())
-            hRPC_mb1.Divide(hRPC_all.GetPtr())
-            hRPC_cut.Divide(hRPC_all.GetPtr())
-            hRPC_mat_jmv.Divide(hRPC_mat.GetPtr())
-            hRPC_mat_mb1.Divide(hRPC_mat.GetPtr())
-            hRPC_mat_cut.Divide(hRPC_mat.GetPtr())
-            _hhs = [hRPC_jmv, hRPC_mb1, hRPC_cut, hRPC_mat_jmv, hRPC_mat_mb1, hRPC_mat_cut]
-            for hh in _hhs:
-                hh.GetYaxis().SetTitle('acceptance')
-            _lls = [
-                'Jet+Muon Veto / no cuts', 'MB1 Veto / no cuts', '1CSC+1DT+0Lep / no cuts', 'sig+JM Veto / sig',
-                'sig+MB1 Veto / sig', 'sig+(1CSC+1DT+0Lep) / sig'
-            ]
-            _hll = multi_plot(_hhs, _lls, ymin=0, ymax=1, lw=3, legxy=_lxy)
-            c.Print(out_dir + 'rpc_compare_eff_' + stat + ending)
+        #     c = canvas(1, 1)
+        #     hRPC_jmv.Divide(hRPC_all.GetPtr())
+        #     hRPC_mb1.Divide(hRPC_all.GetPtr())
+        #     hRPC_cut.Divide(hRPC_all.GetPtr())
+        #     hRPC_mat_jmv.Divide(hRPC_mat.GetPtr())
+        #     hRPC_mat_mb1.Divide(hRPC_mat.GetPtr())
+        #     hRPC_mat_cut.Divide(hRPC_mat.GetPtr())
+        #     _hhs = [hRPC_jmv, hRPC_mb1, hRPC_cut, hRPC_mat_jmv, hRPC_mat_mb1, hRPC_mat_cut]
+        #     for hh in _hhs:
+        #         hh.GetYaxis().SetTitle('acceptance')
+        #     _lls = [
+        #         'Jet+Muon Veto / no cuts', 'MB1 Veto / no cuts', '1CSC+1DT+0Lep / no cuts', 'sig+JM Veto / sig',
+        #         'sig+MB1 Veto / sig', 'sig+(1CSC+1DT+0Lep) / sig'
+        #     ]
+        #     _hll = multi_plot(_hhs, _lls, ymin=0, ymax=1, lw=3, legxy=_lxy)
+        #     c.Print(out_dir + 'rpc_compare_eff_' + stat + ending)
 
-            c = canvas(1, 1)
-            hRPC_mb1_cl.Divide(hRPC_mat.GetPtr())
-            hRPC_mb1_cl.GetYaxis().SetTitle('efficiency')
-            _hhs = [hRPC_mb1_cl]
-            _lls = ['MB1 Veto / sig']
-            _hll = multi_plot(_hhs, _lls, ymin=0, ymax=1, lw=3, legxy=_lxy)
-            c.Print(out_dir + 'rpc_mb1_div_sig_eff_' + stat + ending)
+        #     c = canvas(1, 1)
+        #     hRPC_mb1_cl.Divide(hRPC_mat.GetPtr())
+        #     hRPC_mb1_cl.GetYaxis().SetTitle('efficiency')
+        #     _hhs = [hRPC_mb1_cl]
+        #     _lls = ['MB1 Veto / sig']
+        #     _hll = multi_plot(_hhs, _lls, ymin=0, ymax=1, lw=3, legxy=_lxy)
+        #     c.Print(out_dir + 'rpc_mb1_div_sig_eff_' + stat + ending)
 
         # ##
 
@@ -426,14 +454,14 @@ if __name__ == "__main__":
         # Making time plots before cuts on time #
         # ===================================== #
 
-        hhs["cscAllTime"].append(
-            ms.Histo1D(("cscAllTime", ";CSC Time [ns];count", *bins["cscTime"]), "cscRechitClusterTimeWeighted"))
-        hhs["cscAllTimeSpread"].append(
-            ms.Histo1D(("cscAllTimeSpread", ";CSC Time Spread [ns];count", *bins["cscTimeSpread"]),
-                       "cscRechitClusterTimeSpreadWeightedAll"))
-        hhs["dtAllTime"].append(
-            ms.Histo1D(("dtAllTime", ";RPC_{DT,matched} B_{X};count", *bins["dtTime"]),
-                       "dtRechitCluster_match_RPCBx_dPhi0p5"))
+        # hhs["cscAllTime"].append(
+        #     ms.Histo1D(("cscAllTime", ";CSC Time [ns];count", *bins["cscTime"]), "cscRechitClusterTimeWeighted"))
+        # hhs["cscAllTimeSpread"].append(
+        #     ms.Histo1D(("cscAllTimeSpread", ";CSC Time Spread [ns];count", *bins["cscTimeSpread"]),
+        #                "cscRechitClusterTimeSpreadWeightedAll"))
+        # hhs["dtAllTime"].append(
+        #     ms.Histo1D(("dtAllTime", ";RPC_{DT,matched} B_{X};count", *bins["dtTime"]),
+        #                "dtRechitCluster_match_RPCBx_dPhi0p5"))
 
         ##############################
         ## CUT, BLIND, & MATCH DATA ##
@@ -459,61 +487,102 @@ if __name__ == "__main__":
         # More info:
         #   - 2 cluster selection after jet+muon+...+... ?
 
-        build_hists(ms, hhs, comment='raw')
-
         if isMC:
             alert("MATCHING SIGNAL MC")
+            print("    - Matching to gLLP")
+            print("    - Requiring gLLP to decay in a MD")
+            ms.match_clusters(system='cscdt', in_det=True)
 
-            ms.match_clusters()
-            ms.L1_plateau()
+        build_hists(ms, hhs, comment='raw')
 
-            build_hists(ms, hhs, comment='matched')
+        # ===================== #
+        # Simple Cut Histograms #
+        # ===================== #
 
-        if isCut:
-            alert('APPLYING CUTS')
-            print("    - Applying jet cut on CSC & DT")
-            print("    - Applying muon cut on CSC & DT")
-            print("    - Applying L1 plateau on event (uses csc)")
+        alert("MAKING SIMPLE CUT HISTS")
+        print("    - 1CSC1DT")
+        print("    - L1 Plateau")
+        print("    - Jet Veto")
+        print("    - Muon Veto")
+        print("    - HLT")
+        print("    - Jet + Muon Veto")
+        print("    - L1 + Jet + Muon Veto")
+        print("    - 1CSC1DT + L1 + Jet + Muon Veto")
 
-            ms.jet_cut()
-            ms.muon_cut()
-            # HLT_CscCluster_Loose or HLT_L1CSCCluster_DTCluster50
-            ms.Filter("(HLTDecision[566] > 0) || (HLTDecision[569] > 0)")
+        # build_hists(ms.L1_plateau(implicit=False), hhs, comment='l1')
+        # build_hists(ms.jet_cut(implicit=False), hhs, comment='jet')
+        # build_hists(ms.muon_cut(implicit=False), hhs, comment='muon')
+        # build_hists(ms.jet_cut(implicit=False).muon_cut(), hhs, comment='jet_muon')
+        # build_hists(ms.L1_plateau(implicit=False).jet_cut().muon_cut(), hhs, comment='l1_jet_muon')
 
-            build_hists(ms, hhs, comment='jmL1')
+        _ms = ms.L1_plateau(implicit=False).Filter('dtRechitClusterSize > 100', 'dt').define_2tag_kins_and_cut('cscdt')
+        if not isMC:
+            _ms.Filter('tag_dPhi < 2')
+        build_hists(_ms, hhs, comment='formb1')
+        # hhs["2D_jetPt_mb1"].append(
+        #     _ms.Filter("dtRechitClusterJetVetoLooseId == 1", "dt",
+        #                implicit=False).Histo2D(("2D_jetPt_mb1", ";Jet P_{T} [GeV];N MB1 Hits;", *bins["jetPt_mb1"]),
+        #                                        "dtRechitClusterJetVetoPt", "dtRechitClusterNSegStation1"))
+        # hhs["2D_muonPt_mb1"].append(
+        #     _ms.Filter("dtRechitClusterMuonVetoLooseId == 1", "dt",
+        #                implicit=False).Histo2D(("2D_muonPt_mb1", ";Muon P_{T} [GeV];N MB1 Hits;", *bins["muonPt_mb1"]),
+        #                                        "dtRechitClusterMuonVetoPt", "dtRechitClusterNSegStation1"))
 
-        if isBlind and not isMC:
-            alert("BLINDING DATA")
-            print("    - Requiring DT to be OOT")
-            print("    - Requiring CSC (not trigger) to be OOT")
+        _ms = ms.L1_plateau(implicit=False)
+        if not isMC:
+            _ms.time_cut('oot', 'dt')
+        build_hists(_ms, hhs, comment='dtOOT')
+        # if isCut:
+        #     alert("APPLYING CUTS")
+        #     print("    - Applying jet cut on CSC & DT")
+        #     print("    - Applying muon cut on CSC & DT")
+        #     print("    - Applying L1 plateau on event (uses csc)")
 
-            ms.time_cut('oot', 'dt cscT')
-        build_hists(ms, hhs, comment='jmL1_dtOOT')
+        #     ms.jet_cut()
+        #     ms.muon_cut()
+        #     # HLT_CscCluster_Loose or HLT_L1CSCCluster_DTCluster50
+        #     ms.Filter("(HLTDecision[566] > 0) || (HLTDecision[569] > 0)")
+
+        #     build_hists(ms, hhs, comment='jmL1')
+
+        # if isBlind and not isMC:
+        #     alert("BLINDING DATA")
+        #     print("    - Requiring DT to be OOT")
+        #     print("    - Requiring CSC (not trigger) to be OOT")
+
+        #     ms.time_cut('oot', 'dt cscT')
+        # build_hists(ms, hhs, comment='jmL1_dtOOT')
 
         # MET vs (csc, dt) MET dPhi
-        hhs["2D_met_cscMetDPhi"].append(
-            ms.Histo2D(
-                ("2D_met_cscMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(csc, #phi_{T}^{miss});", *bins["met_cscMetDPhi"]),
-                "met", "cscRechitClusterMet_dPhi"))
-        hhs["2D_met_dtMetDPhi"].append(
-            ms.Histo2D(("2D_met_dtMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(dt, #phi_{T}^{miss});count",
-                        *bins["met_dtMetDPhi"]), "met", "dtRechitClusterMet_dPhi"))
+        # hhs["2D_met_cscMetDPhi"].append(
+        #     ms.Histo2D(
+        #         ("2D_met_cscMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(csc, #phi_{T}^{miss});", *bins["met_cscMetDPhi"]),
+        #         "met", "cscRechitClusterMet_dPhi"))
+        # hhs["2D_met_dtMetDPhi"].append(
+        #     ms.Histo2D(("2D_met_dtMetDPhi", ";E_{T}^{miss} [GeV];#Delta#phi(dt, #phi_{T}^{miss});count",
+        #                 *bins["met_dtMetDPhi"]), "met", "dtRechitClusterMet_dPhi"))
 
         ###########################################
         ## Single Pair CSC-CSC/CSC-DT Kinematics ##
         ###########################################
 
         alert("Reducing to 2tag analysis")
+        ms.Filter("(HLTDecision[566] > 0) || (HLTDecision[569] > 0)")
+        ms.jet_cut()
+        ms.muon_cut()
+        ms.L1_plateau()
+        if isBlind and not isMC:
+            ms.Filter('dtRechitClusterSize < 80', 'dt')
         ms.define_2tag_kins_and_cut(system="csccsc,cscdt")
 
-        for second in ('csc', 'dt'):
+        for second in ('dt',):  #('csc', 'dt'):
             print(f"Generating CSC-{second.upper()} kinematics plots")
             _ms = ms.Filter(f"tag_type == {0 if second == 'csc' else 1}", implicit=False)
 
             if isMC:
                 lpair = f"(CSC,{second.upper()})"
             else:
-                lpair = f"(CSC,{second.upper()}_" + "{OOT})"
+                lpair = f"(CSC,{second.upper()}_"  # + "{OOT})"
 
             hhs["csc" + second + "_dEta"].append(
                 _ms.Histo1D(("csc" + second + "_dEta", ";#Delta#eta" + lpair + ";count", *bins["AdEta"]), "tag_dEta"))
@@ -523,6 +592,9 @@ if __name__ == "__main__":
                 _ms.Histo1D(("csc" + second + "_dR", ";#DeltaR" + lpair + ";count", *bins["dR"]), "tag_dR"))
 
             # d__ vs d__
+            hhs["csc" + second + "_2D_dPhi_dtSize"].append(
+                _ms.Histo2D(("csc" + second + "_2D_dPhi_dtSize", ";#Delta#phi" + lpair + ";DT Size;count",
+                             *bins["AdPhi_dtSizeSmall"]), "tag_dPhi", "dtRechitClusterSize"))
             hhs["csc" + second + "_2D_dPhi_dEta"].append(
                 _ms.Histo2D(("csc" + second + "_2D_dPhi_dEta", ";#Delta#phi" + lpair + ";#Delta#eta" + lpair + ";count",
                              *bins["AdPhi_AdEta"]), "tag_dPhi", "tag_dEta"))
@@ -534,49 +606,53 @@ if __name__ == "__main__":
                              *bins["AdEta_dR"]), "tag_dEta", "tag_dR"))
 
             #
-            hhs["csc" + second + "_2D_dPhi_met"].append(
-                _ms.Histo2D(("csc" + second + "_2D_dPhi_met", ";#Delta#phi" + lpair + ";E_{T}^{miss} [GeV];count",
-                             *bins["AdPhi_met"]), "tag_dPhi", "met"))
-            hhs["csc" + second + "_2D_dEta_met"].append(
-                _ms.Histo2D(("csc" + second + "_2D_dEta_met", ";#Delta#eta" + lpair + ";E_{T}^{miss} [GeV];count",
-                             *bins["AdEta_met"]), "tag_dEta", "met"))
-            hhs["csc" + second + "_2D_dR_met"].append(
-                _ms.Histo2D(
-                    ("csc" + second + "_2D_dR_met", ";#DeltaR" + lpair + ";E_{T}^{miss} [GeV];count", *bins["dR_met"]),
-                    "tag_dR", "met"))
+            # hhs["csc" + second + "_2D_dPhi_met"].append(
+            #     _ms.Histo2D(("csc" + second + "_2D_dPhi_met", ";#Delta#phi" + lpair + ";E_{T}^{miss} [GeV];count",
+            #                  *bins["AdPhi_met"]), "tag_dPhi", "met"))
+            # hhs["csc" + second + "_2D_dEta_met"].append(
+            #     _ms.Histo2D(("csc" + second + "_2D_dEta_met", ";#Delta#eta" + lpair + ";E_{T}^{miss} [GeV];count",
+            #                  *bins["AdEta_met"]), "tag_dEta", "met"))
+            # hhs["csc" + second + "_2D_dR_met"].append(
+            #     _ms.Histo2D(
+            #         ("csc" + second + "_2D_dR_met", ";#DeltaR" + lpair + ";E_{T}^{miss} [GeV];count", *bins["dR_met"]),
+            #         "tag_dR", "met"))
 
-        ###############################################
-        ## Save data selections for further analysis ##
-        ###############################################
-        alert("SAVING DATA SELECTIONS")
+        # ###############################################
+        # ## Save data selections for further analysis ##
+        # ###############################################
+        # alert("SAVING DATA SELECTIONS")
 
-        #=====================================================#
-        #  SAVING JET and MUON DATA TO DEVELOP BETTER MB1 Cut #
-        #=====================================================#
-        print(f'    - dt_mb1_jet_muon_{stat}')
+        # #=====================================================#
+        # #  SAVING JET and MUON DATA TO DEVELOP BETTER MB1 Cut #
+        # #=====================================================#
+        # print(f'    - dt_mb1_jet_muon_{stat}')
 
-        if isMC:
-            # require DT matched and decayed DT
-            # sms = oms.match_clusters('cscdt', implicit=False).time_cut('it').L1_plateau()
-            # sms.define_2tag_kins_and_cut('cscdt').Filter('nDtRechitClusters > 0')
+        # if isMC:
+        #     # require DT matched and decayed DT
+        #     sms = oms.match_clusters('cscdt', implicit=False).time_cut('it').L1_plateau()  #.Filter(
+        #     # 'dtRechitClusterSize > 100', 'dt')
+        #     sms.define_2tag_kins_and_cut('cscdt').Filter('nDtRechitClusters > 0')
 
-            sms = oms.match_clusters('dt', implicit=False).Filter('nDtRechitClusters > 0')
-        else:
-            # require HLT DT trigger, blind using CSC+DT IT, DT>100, 1<dPhi<2
-            # sms = oms.time_cut('it', implicit=False)
-            # sms.define_2tag_kins_and_cut('cscdt').Filter('nDtRechitClusters > 0')
-            # sms.Filter("(1<tag_dPhi)&&(tag_dPhi<2)&&(dtRechitClusterSize[0]>100)&&(HLTDecision[569] > 0)")
+        #     # sms = oms.match_clusters('dt', implicit=False).Filter('nDtRechitClusters > 0')
+        # else:
+        #     # require HLT DT trigger, blind using CSC+DT IT, DT>100, 1<dPhi<2
+        #     sms = oms.time_cut('it', implicit=False)  #.Filter('dtRechitClusterSize > 100', 'dt')
+        #     sms.define_2tag_kins_and_cut('cscdt').Filter('nDtRechitClusters > 0')
+        #     sms.Filter("(0<tag_dPhi)&&(tag_dPhi<2)")  #&&(HLTDecision[569] == 1)")
 
-            sms = oms.time_cut('oot', 'dt', implicit=False).Filter('nDtRechitClusters > 0')
+        #     # sms = oms.time_cut('oot', 'dt', implicit=False).Filter('dtRechitClusterSize > 100',
+        #     #                                                        'dt').Filter('nDtRechitClusters > 0')
 
-        build_hists(sms, hhs, 'sel_mb1')
+        # build_hists(sms, hhs, 'sel_mb1')
 
-        col_names = [
-            "nDtRechitClusters", "dtRechitClusterSize", "dtRechitClusterNSegStation1", "dtRechitClusterJetVetoLooseId",
-            "dtRechitClusterJetVetoPt", "dtRechitClusterMuonVetoLooseId", "dtRechitClusterMuonVetoPt"
-        ]
+        # col_names = [
+        #     "nDtRechitClusters", "dtRechitClusterSize", "dtRechitClusterNSegStation1", "dtRechitClusterJetVetoLooseId",
+        #     "dtRechitClusterJetVetoPt", "dtRechitClusterMuonVetoLooseId", "dtRechitClusterMuonVetoPt"
+        # ]
 
-        sms.rdf.Snapshot('ReducedMuonSystem', out_data_dir + f"dt_mb1_jet_muon_{stat}.root", col_names)  #, ssOpt)
+        # sms.rdf.Snapshot('ReducedMuonSystem', out_data_dir + f"dt_mb1_jet_muon_{stat}_{save_date}.root",
+        #                  col_names)  #, ssOpt)
+        # print(f'          n events = {sms.Count():,}')
         #=====================================================#
 
         # if save_dstat in stat:
@@ -605,7 +681,7 @@ if __name__ == "__main__":
                     c.Print(out_dir + k + f"_{ss}" + ending)
             else:
                 c = canvas(1, 1)
-                _hll = multi_plot(hs, labels, ymin=0, norm=True)
+                _hll = multi_plot(hs[::-1], labels[::-1], ymin=0, norm=True)
                 c.Print(out_dir + k + ending)
 
     fout_root.Close()

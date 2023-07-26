@@ -395,8 +395,10 @@ class MuonSystemRDF:
 
     def match_clusters(self, system='cscdt', in_det=True, implicit=True):
         if 'csc' in system:
+            # self = self.Filter("(cscRechitCluster_match_gLLP == 1) && (cscRechitCluster_match_gLLP_minDeltaR < 0.4)", system="csc", implicit=implicit)
             self = self.Filter("cscRechitCluster_match_gLLP == 1", system="csc", implicit=implicit)
         if 'dt' in system:
+            # self = self.Filter("(dtRechitCluster_match_gLLP == 1) && (dtRechitCluster_match_gLLP_minDeltaR < 0.4)", system="dt", implicit=implicit)
             self = self.Filter("dtRechitCluster_match_gLLP == 1", system="dt", implicit=implicit)
 
         if in_det:
