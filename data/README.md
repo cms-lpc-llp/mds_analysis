@@ -50,31 +50,33 @@ CA 1.0 MC:
   - DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v9.root
 
 
+```bash
 mkdir llp_roots/
 cd llp_roots/
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v4/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v4/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v4.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v5/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v5.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v5/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v5.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v4/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v4.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v4/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v4.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v5/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v5.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v5/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v5.root
 cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v6/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root
 cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v6/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v7/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v7.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v7/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v7.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v8/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v8.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v8/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v8.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v9/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v9.root
-cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v9/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v9.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v7/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v7.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v7/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v7.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v8/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v8.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v8/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v8.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie/v9/normalized/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted.root   ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v9.root
+# cp /storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022/v9/normalized/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi.root   DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v9.root
 cd ../
-tar -cvzf llp_roots.tar.gz llp_roots/*.root
+tar -cvzf llp_roots.tar.xz llp_roots/*.root
 
 cd /home/psimmerl/Documents/CMS/LLP/data/raw
 scp psimmerl@login-1.hep.caltech.edu:llp_roots.tar.xz .
 tar -xvzf llp_roots.tar.xz
 rm -f llp_roots.tar.xz
-
+```
 
 OR IF WORKING ON TIER2
 
+```bash
 mcdir="/storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/MC_Summer22EE/v1/sixie"
 r3dir="/storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19/Data2022"
 fmc="ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted"
@@ -92,7 +94,7 @@ ln -s $r3dir/v6/normalized/${fr3}.root  ${fr3}_v6.root
 ln -s $r3dir/v7/normalized/${fr3}.root  ${fr3}_v7.root
 ln -s $r3dir/v8/normalized/${fr3}.root  ${fr3}_v8.root
 ln -s $r3dir/v9/normalized/${fr3}.root  ${fr3}_v9.root
-
+```
 
 
 
