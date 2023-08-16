@@ -580,7 +580,6 @@ class MuonSystemAwkward:
         for k, v in self.ms_dict.items():
             if self.implicit:
                 if system == 'event' or system == k[:len(system)]:
-                    print(k)
                     self.ms_dict[k] = v[sel]
             else: #TODO
                 alert('Non-implicit behavior does not work (yet)')

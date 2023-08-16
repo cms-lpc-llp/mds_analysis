@@ -71,8 +71,11 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         N_EVENTS = int(sys.argv[1])
-        N_EVENTS = N_EVENTS if N_EVENTS > 0 else None
-        alert(f'Setting {N_EVENTS=:,}')
+        if N_EVENTS > 0:
+            alert(f'Setting {N_EVENTS=:,}')
+        else:
+            N_EVENTS = None
+            alert(f'Setting {N_EVENTS=} (Loading ALL events)')
 
     #############################
 
