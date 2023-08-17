@@ -337,7 +337,7 @@ class MuonSystemAwkward:
         ##########
 
         self.ms_read = { }
-        self.ms = upr.open(path=self.file_name + ':' + self.tree_name, array_cache='100 kB')
+        self.ms = upr.open(path=self.file_name + ':' + self.tree_name)#, array_cache='100 kB')
         self.ms_read['sel_evt'] = self.ms['met'].array(entry_stop=self.nev) > 0
 
         if len(self.ms_read['sel_evt']) != self.nev:
