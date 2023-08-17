@@ -298,7 +298,6 @@ def make_cluster_eff_1D(ms, det, xl='z', cuts=False):
 ###############################################################
 ###############################################################
 
-
 class MuonSystemAwkward:
     """Handler for working with muon system ntuples using an Awkward arrays"""
 
@@ -310,220 +309,76 @@ class MuonSystemAwkward:
         self.tree_name = tree_name
         self.is_mc = is_mc
         self.nev = nev
+
         self.implicit = implicit
+        self.cut = True
 
-        self.ms_dict = {
-            'met' : ak.Array,
-            'metPhi' : ak.Array,
-            'runNum' : ak.Array,
-            'weight' : ak.Array,
-            ################################
-            # 'HLTDecision' : ak.Array, #! Needs to be cut first
-            'HLT_CaloMET60_DTCluster50' : ak.Array,
-            'HLT_CaloMET60_DTClusterNoMB1S50' : ak.Array,
-            'HLT_L1MET_DTCluster50' : ak.Array,
-            'HLT_L1MET_DTClusterNoMB1S50' : ak.Array,
-            'HLT_CscCluster_Loose' : ak.Array,
-            'HLT_CscCluster_Medium' : ak.Array,
-            'HLT_CscCluster_Tight' : ak.Array,
-            'HLT_L1CSCCluster_DTCluster50' : ak.Array,
-            'HLT_L1CSCCluser_DTCluster75' : ak.Array,
-            ################################
-            'nCscRechitClusters' : ak.Array,
-            'nCscRings' : ak.Array,
-            #
-            'cscRechitClusterX' : ak.Array,
-            'cscRechitClusterY' : ak.Array,
-            'cscRechitClusterZ' : ak.Array,
-            'cscRechitClusterSize' : ak.Array,
-            'cscRechitClusterEta' : ak.Array,
-            'cscRechitClusterPhi' : ak.Array,
-            'cscRechitClusterTime' : ak.Array,
-            'cscRechitClusterTimeSpread' : ak.Array,
-            'cscRechitClusterTimeSpreadWeightedAll' : ak.Array,
-            'cscRechitClusterTimeWeighted' : ak.Array,
-            'cscRechitClusterMet_dPhi' : ak.Array,
-            #
-            'cscRechitClusterJetVetoLooseId' : ak.Array,
-            'cscRechitClusterJetVetoPt' : ak.Array,
-            'cscRechitClusterMuonVetoLooseId' : ak.Array,
-            'cscRechitClusterMuonVetoPt' : ak.Array,
-            #
-            'cscRechitClusterNStation10' : ak.Array,
-            'cscRechitClusterAvgStation10' : ak.Array,
-            'cscRechitClusterMaxStation' : ak.Array,
-            'cscRechitClusterMaxStationRatio' : ak.Array,
-            #
-            'cscRechitClusterNChamber' : ak.Array,
-            'cscRechitClusterMaxChamber' : ak.Array,
-            'cscRechitClusterMaxChamberRatio' : ak.Array,
-            #
-            # 'cscRechitClusterNRechitChamberMinus11' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus12' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus13' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus21' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus22' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus31' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus32' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus41' : ak.Array,
-            # 'cscRechitClusterNRechitChamberMinus42' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus11' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus12' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus13' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus21' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus22' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus31' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus32' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus41' : ak.Array,
-            # 'cscRechitClusterNRechitChamberPlus42' : ak.Array,
-            #
-            'cscRechitCluster_match_MB1Seg_0p4' : ak.Array,
-            'cscRechitCluster_match_RB1_0p4' : ak.Array,
-            'cscRechitCluster_match_RE12_0p4' : ak.Array,
-            #
-            'cscRechitCluster_match_gLLP' : ak.Array,
-            'cscRechitCluster_match_gLLP_csc' : ak.Array,
-            'cscRechitCluster_match_gLLP_e' : ak.Array,
-            'cscRechitCluster_match_gLLP_eta' : ak.Array,
-            'cscRechitCluster_match_gLLP_phi' : ak.Array,
-            'cscRechitCluster_match_gLLP_decay_r' : ak.Array,
-            'cscRechitCluster_match_gLLP_decay_z' : ak.Array,
-            ################################
-            'nDtRechitClusters' : ak.Array,
-            'nDtRings' : ak.Array,
-            #
-            'dtRechitClusterX' : ak.Array,
-            'dtRechitClusterY' : ak.Array,
-            'dtRechitClusterZ' : ak.Array,
-            'dtRechitClusterSize' : ak.Array,
-            'dtRechitClusterEta' : ak.Array,
-            'dtRechitClusterPhi' : ak.Array,
-            'dtRechitCluster_match_RPCBx_dPhi0p5' : ak.Array,
-            'dtRechitCluster_match_RPChits_dPhi0p5' : ak.Array,
-            'dtRechitClusterMet_dPhi' : ak.Array,
-            #
-            'dtRechitClusterJetVetoLooseId' : ak.Array,
-            'dtRechitClusterJetVetoPt' : ak.Array,
-            'dtRechitClusterMuonVetoLooseId' : ak.Array,
-            'dtRechitClusterMuonVetoPt' : ak.Array,
-            #
-            'dtRechitClusterNStation10' : ak.Array,
-            'dtRechitClusterAvgStation10' : ak.Array,
-            'dtRechitClusterMaxStation' : ak.Array,
-            'dtRechitClusterMaxStationRatio' : ak.Array,
-            #
-            'dtRechitClusterNChamber' : ak.Array,
-            'dtRechitClusterMaxChamber' : ak.Array,
-            'dtRechitClusterMaxChamberRatio' : ak.Array,
-            #
-            # 'dtRechitClusterNHitStation1' : ak.Array,
-            # 'dtRechitClusterNHitStation2' : ak.Array,
-            # 'dtRechitClusterNHitStation3' : ak.Array,
-            # 'dtRechitClusterNHitStation4' : ak.Array,
-            # 'dtRechitClusterNOppositeSegStation1' : ak.Array,
-            # 'dtRechitClusterNOppositeSegStation2' : ak.Array,
-            # 'dtRechitClusterNOppositeSegStation3' : ak.Array,
-            # 'dtRechitClusterNOppositeSegStation4' : ak.Array,
-            # 'dtRechitClusterNSegStation1' : ak.Array,
-            # 'dtRechitClusterNSegStation2' : ak.Array,
-            # 'dtRechitClusterNSegStation3' : ak.Array,
-            # 'dtRechitClusterNSegStation4' : ak.Array,
-            #
-            'dtRechitCluster_match_MB1Seg_0p4' : ak.Array,
-            'dtRechitCluster_match_MB1Seg_0p5' : ak.Array,
-            'dtRechitCluster_match_MB1hits_0p4' : ak.Array,
-            'dtRechitCluster_match_MB1hits_0p5' : ak.Array,
-            #
-            'dtRechitCluster_match_gLLP' : ak.Array,
-            'dtRechitCluster_match_gLLP_dt' : ak.Array,
-            'dtRechitCluster_match_gLLP_e' : ak.Array,
-            'dtRechitCluster_match_gLLP_eta' : ak.Array,
-            'dtRechitCluster_match_gLLP_phi' : ak.Array,
-            'dtRechitCluster_match_gLLP_decay_r' : ak.Array,
-            'dtRechitCluster_match_gLLP_decay_z' : ak.Array,
-            ################################
-            'nGLLP' : ak.Array,
-            'gLLP_e' : ak.Array,
-            'gLLP_pt' : ak.Array,
-            'gLLP_eta' : ak.Array,
-            'gLLP_phi' : ak.Array,
-            'gLLP_decay_vertex_r' : ak.Array,
-            'gLLP_decay_vertex_x' : ak.Array,
-            'gLLP_decay_vertex_y' : ak.Array,
-            'gLLP_decay_vertex_z' : ak.Array,
-            ################################
-            'nJets' : ak.Array,
-            'jetE' : ak.Array,
-            'jetPt' : ak.Array,
-            'jetEta' : ak.Array,
-            'jetPhi' : ak.Array,
-            ################################
-            'nLeptons' : ak.Array,
-            'lepE' : ak.Array,
-            'lepPt' : ak.Array,
-            'lepPhi' : ak.Array,
-            'lepEta' : ak.Array,
-            'lepPdgId' : ak.Array,
-        }
+        self.ms_read = { }
 
-        self.column_names = list(self.ms_dict.keys())
-        # self.column_names.remove('HLTDecision')
+        self.ms = upr.open(path=self.file_name + ':' + self.tree_name, array_cache='100 kB')
 
-        hlt_columns = {
-            'HLT_CaloMET60_DTCluster50': 562,
-            'HLT_CaloMET60_DTClusterNoMB1S50': 563,
-            'HLT_L1MET_DTCluster50': 564,
-            'HLT_L1MET_DTClusterNoMB1S50': 565,
+        self.ms_read['sel_evt'] = self.ms['met'].array(entry_stop=self.nev) > 0
+        self.ms_read['sel_csc'] = self.ms['cscRechitClusterSize'].array(entry_stop=self.nev) > 0
+        self.ms_read['sel_dt'] = self.ms['dtRechitClusterSize'].array(entry_stop=self.nev) > 0
+
+        self.ms_read['nCscRechitClusters'] = np.sum(self.ms_read['sel_csc'], axis=1)
+        self.ms_read['nDtRechitClusters'] = np.sum(self.ms_read['sel_dt'], axis=1)
+
+
+
+        self.hlt_info = {
+            # 'HLT_CaloMET60_DTCluster50': 562,
+            # 'HLT_CaloMET60_DTClusterNoMB1S50': 563,
+            # 'HLT_L1MET_DTCluster50': 564,
+            # 'HLT_L1MET_DTClusterNoMB1S50': 565,
             'HLT_CscCluster_Loose': 566,
-            'HLT_CscCluster_Medium': 567,
-            'HLT_CscCluster_Tight': 568,
+            # 'HLT_CscCluster_Medium': 567,
+            # 'HLT_CscCluster_Tight': 568,
             'HLT_L1CSCCluster_DTCluster50': 569,
-            'HLT_L1CSCCluser_DTCluster75': 570,
+            # 'HLT_L1CSCCluser_DTCluster75': 570,
         }
-        hlt_aliases = {k : f'HLTDecision[:,{v}]' for k,v in hlt_columns.items()}
+        self.hlt_aliases = {k : f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
+        hlt_aa = self.ms.arrays(list(self.hlt_aliases.keys()), aliases=self.hlt_aliases, entry_stop=self.nev)
+        for k, v in self.hlt_info.items():
+            self.ms_read[k] = hlt_aa[k]
 
-        pft = self.file_name + ':' + self.tree_name
-        with upr.open(path=pft, array_cache='100 kB') as fms:
-            ms_ak = fms.arrays(
-                self.column_names,
-                entry_stop=self.nev,
-                aliases=hlt_aliases,
-            )
-
-            # ms_ak = ms.arrays(self.column_names, entry_stop=self.nev)
-            for k in self.ms_dict:
-                # if k == 'HLTDecision': #TODO: apply a cut here to reduce array size
-                #     alert('Not loading HLT', '!', 'r')
-                #     # for k_hlt, i_hlt in hlt_columns.items():
-                #     #     self.ms_dict[k_hlt] = ms[k][:,i_hlt].array(entry_stop=self.nev)
-
-                #     # self.ms_dict[k] = fms.arrays(k+'[:,566:571]', entry_stop=self.nev)
-                # else:
-                    # self.ms_dict[k] = ms_ak[k]
-                # self.ms_dict[k] = fms[k].array(entry_stop=self.nev)
-                self.ms_dict[k] = ms_ak[k]
-
-        self.ms_dict['HLT'] = self.ms_dict['HLT_CscCluster_Loose'] | self.ms_dict['HLT_L1CSCCluster_DTCluster50']
-
-        if len(self.ms_dict['weight']) != self.nev:
-            self.nev = len(self.ms_dict['weight'])
-            alert(f'ExtAracted {self.nev=:,}', '!')
+        if len(self.ms_read['sel_evt']) != self.nev:
+            self.nev = len(self.ms_read['sel_evt'])
+            alert(f'Extracted {self.nev=:,}', '!')
 
     def __getitem__(self, key):
         if isinstance(key, str):
             key = self._fix_key(key)
-            return self.ms_dict[key]
+
+            if self.cut:
+                sel = self.ms_read['sel_evt']
+                if 'csc' in key[:3]:
+                    sel = (sel & self.ms_read['sel_csc'])
+                if 'dt' in key[:2]:
+                    sel = (sel & self.ms_read['sel_dt'])
+
+                if key in self.ms_read:
+                    arr = self.ms_read[sel]
+                else:
+                    arr = self.ms[key].array(cut=sel, entry_stop=self.nev)
+            else:
+                if key in self.ms_read:
+                    arr = self.ms_read[key]
+                else:
+                    arr = self.ms[key].array(entry_stop=self.nev)
+
+            return arr
         else:
             alert('BROKEN - Filters MuonSystem', '!', 'r')
             imp = self.implicit
             self.set_implicit(False)
-            sout = self.filter(sel=key, system='event')
+            sout = self.filter(sel=key, system='evt')
             self.set_implicit(imp)
             return sout
 
     def __setitem__(self, key, value):
         key = self._fix_key(key)
-        self.ms_dict[key] = value
+        self.ms_read[key] = value
 
     def __copy__(self):
         pass
@@ -546,21 +401,21 @@ class MuonSystemAwkward:
         return key
 
     def _fix_n_column(self, system):
-        if system == 'event':
+        if system == 'evt':
             return
 
         n_columns = {
-            'csc' : ('nCscRechitClusters', 'cscRechitClusterSize'),
-            'dt' : ('nDtRechitClusters', 'dtRechitClusterSize'),
-            'gllp' : ('nGLLP', 'gllp_pt'),
-            'jet' : ('nJets', 'jetPt'),
-            'lep' : ('nLeptons', 'lepPt'),
+            'csc' : ('nCscRechitClusters', 'sel_csc'),
+            'dt' : ('nDtRechitClusters', 'sel_dt'),
+            'gllp' : ('nGLLP', 'sel_gllp'),
+            'jet' : ('nJets', 'sel_jet'),
+            'lep' : ('nLeptons', 'sel_lep'),
         }
         n_key, test_col = n_columns[system]
-        self.ms_dict[n_key] = np.sum(self.ms_dict[test_col] > 0, axis=1)
+        self.ms_read[n_key] = np.sum(self.ms_read[test_col], axis=1)
 
     def count(self):
-        return len(self.ms_dict['weight'])
+        return np.sum(self.ms_read['sel_evt'])
 
     def set_implicit(self, implicit: bool=True) -> bool:
         """Set's the cut/filter method for the class.
@@ -576,133 +431,590 @@ class MuonSystemAwkward:
         self.implicit = implicit
         return self.implicit
 
-    def filter(self, sel, system='event'):
-        for k, v in self.ms_dict.items():
-            if self.implicit:
-                if system == 'event' or system == k[:len(system)]:
-                    self.ms_dict[k] = v[sel]
-            else: #TODO
-                alert('Non-implicit behavior does not work (yet)')
-                # make new ms_dict -> copy MuonSystemAwkward into new object w/ new dict
-                pass
+    def filter(self, sel, system='evt', has_clusters=True):
+        self.ms_read[f'sel_{system}'] = (self.ms_read[f'sel_{system}'] & sel)
+        # for k, v in self.ms_dict.items():
+        #     if 'sel_' in k:
+        #         continue
+ 
+        #     if self.implicit:
+        #         if system == 'evt' or system == k[:len(system)]:
+        #             self.ms_dict[k] = v[sel]
+        #     else: #TODO
+        #         alert('Non-implicit behavior does not work (yet)')
+        #         # make new ms_dict -> copy MuonSystemAwkward into new object w/ new dict
+        #         pass
 
-        if system != 'event':
+        if system != 'evt':
             self._fix_n_column(system=system)
+            if has_clusters:
+                self.filter(self.ms_read['nCscRechitClusters'] + self.ms_read['nCscRechitClusters'] > 0, system='evt')
 
         return self
 
-    def f(self, sel, system='event'):
+    def f(self, sel, system='evt'):
         return self.filter(sel=sel, system=system)
 
     def match_mc(self, system='csc,dt', check_decay=True):
+        self.cut, pcut = False, self.cut
+
         max_csc_eta, max_csc_r, min_csc_z, max_csc_z = 3, 800, 400, 1200
         min_dt_r, max_dt_r, max_dt_z = 200, 800, 700
         if 'csc' in system:
-            self.filter(self.ms_dict['cscRechitCluster_match_gLLP'], system='csc')
+            self.filter(self['cscRechitCluster_match_gLLP'], system='csc')
             if check_decay:
                 sel_decay = (
-                    ( self.ms_dict['cscRechitCluster_match_gLLP_eta'] < max_csc_eta ) &
-                    ( self.ms_dict['cscRechitCluster_match_gLLP_decay_r'] < max_csc_r ) &
-                    ( min_csc_z < np.abs(self.ms_dict['cscRechitCluster_match_gLLP_decay_z']) ) &
-                    ( np.abs(self.ms_dict['cscRechitCluster_match_gLLP_decay_z']) < max_csc_z )
+                    ( self['cscRechitCluster_match_gLLP_eta'] < max_csc_eta ) &
+                    ( self['cscRechitCluster_match_gLLP_decay_r'] < max_csc_r ) &
+                    ( min_csc_z < np.abs(self['cscRechitCluster_match_gLLP_decay_z']) ) &
+                    ( np.abs(self['cscRechitCluster_match_gLLP_decay_z']) < max_csc_z )
                 )
                 self.filter(sel_decay, system='csc')
 
         if 'dt' in system:
-            self.filter(self.ms_dict['dtRechitCluster_match_gLLP'], system='dt')
+            self.filter(self['dtRechitCluster_match_gLLP'], system='dt')
             if check_decay:
                 sel_decay = (
-                    ( min_dt_r < self.ms_dict['dtRechitCluster_match_gLLP_decay_r'] ) &
-                    ( self.ms_dict['dtRechitCluster_match_gLLP_decay_r'] < max_dt_r ) &
-                    ( np.abs(self.ms_dict['dtRechitCluster_match_gLLP_decay_z']) < max_dt_z )
+                    ( min_dt_r < self['dtRechitCluster_match_gLLP_decay_r'] ) &
+                    ( self['dtRechitCluster_match_gLLP_decay_r'] < max_dt_r ) &
+                    ( np.abs(self['dtRechitCluster_match_gLLP_decay_z']) < max_dt_z )
                 )
                 self.filter(sel_decay, system='dt')
 
+        self.cut = pcut
         return self
 
     def blind(self, region):
+        self.cut, pcut = False, self.cut
         if region == 'dphi':
-            self.filter(self.ms_dict['tag_dPhi'] > 0.5, system='event')
+            self.filter(self['tag_dPhi'] > 0.5, system='evt')
 
+        self.cut = pcut
         return self
 
     def tag(self, tags='csccsc,cscdt'):
+        self.cut, pcut = False, self.cut
         @nb.njit
-        def _delta_kins(cscPhi, cscEta, dtPhi, dtEta, metPhi, tag):
-            dPhi, dEta, dR = np.zeros((len(tag),1)), np.zeros((len(tag),1)), np.zeros((len(tag),1))
-            for i in range(len(cscEta)):
-                p0, p1, e0, e1 = 0, metPhi[i], 0, 0
+        def _delta_kins(csc_phi, csc_eta, dt_phi, dt_eta, met_phi, sel_csc, sel_dt, tag):
+            dphi, deta, dr = np.zeros(len(tag)), np.zeros(len(tag)), np.zeros(len(tag)),
+            for i in range(len(csc_eta)):
+                if tag[i] == 0:
+                    continue
+
+                p0, p1, e0, e1 = 0, met_phi[i], 0, 0
+                c0, c1, d0, d1 = -1, -1, -1, -1
+                # Ew but works, (np.argwhere(sel_csc[i]) not compatible with compiled ArrayView(?))
+                for j, v in enumerate(sel_csc[i]):
+                    if v:
+                        if c0 == -1:
+                            c0 = j
+                        else:
+                            c1 = j
+                # Ew but works, (np.argwhere(sel_dt[i]) not compatible with compiled ArrayView(?))
+                for j, v in enumerate(sel_dt[i]):
+                    if v:
+                        if c0 == -1:
+                            d0 = j
+                        else:
+                            d1 = j
+
+                # if len(sel_csc[i]):
+                #     cidxs = np.arange(len(sel_csc[i])) * sel_csc[i]
+                # if len(sel_dt[i]):
+                #     didxs = np.arange(len(sel_dt[i])) * sel_dt[i]
+
                 if tag[i] == 20:
-                    p0, e0 = cscPhi[i][0], cscEta[i][0]
-                    p1, e1 = cscPhi[i][1], cscEta[i][1]
+                    p0, e0 = csc_phi[i][c0], csc_eta[i][c0]
+                    p1, e1 = csc_phi[i][c1], csc_eta[i][c1]
                 if tag[i] ==  2:
-                    p0, e0 = dtPhi[i][0], dtEta[i][0]
-                    p1, e1 = dtPhi[i][1], dtEta[i][1]
+                    p0, e0 = dt_phi[i][d0], dt_eta[i][d0]
+                    p1, e1 = dt_phi[i][d1], dt_eta[i][d1]
                 if tag[i] == 11:
-                    p0, e0 = cscPhi[i][0], cscEta[i][0]
-                    p1, e1 = dtPhi[i][0], dtEta[i][0]
+                    p0, e0 = csc_phi[i][c0], csc_eta[i][c0]
+                    p1, e1 = dt_phi[i][d0], dt_eta[i][d0]
                 if tag[i] == 10:
-                    p0, e0 = cscPhi[i][0], cscEta[i][0]
+                    p0, e0 = csc_phi[i][c0], csc_eta[i][c0]
                 if tag[i] ==  1:
-                    p0, e0 = dtPhi[i][0], dtEta[i][0]
-                dPhi[i] = np.abs(p0 - p1)
-                dPhi[i] -= 2 * np.pi * (dPhi[i] > 2 * np.pi)
-                dEta[i] = np.abs(e0 - e1)
-                dR[i] = np.sqrt(dPhi[i]*dPhi[i] + dEta[i]*dEta[i])
-            return dPhi, dEta, dR
+                    p0, e0 = dt_phi[i][d0], dt_eta[i][d0]
+
+                dphi[i] = np.abs(p0 - p1)
+                dphi[i] -= 2 * np.pi * (dphi[i] > 2 * np.pi)
+                deta[i] = np.abs(e0 - e1)
+                dr[i] = np.sqrt(dphi[i]*dphi[i] + deta[i]*deta[i])
+            return dphi, deta, dr
             # return ak.JaggedArray(dPhi, dEta, dR)
 
         tags = tags.split(',')
 
-        ncsc, ndt = self.ms_dict['nCscRechitClusters'], self.ms_dict['nDtRechitClusters']
-        tag = ( #! Remember to filter no cluster and many cluster events out... for now :)
+        ncsc, ndt = self['nCscRechitClusters'], self['nDtRechitClusters']
+        tag = (
             10 * ((ncsc == 1) & (ndt == 0)) * ('csc' in tags) +
              1 * ((ncsc == 0) & (ndt == 1)) * ('dt' in tags) +
             20 * ((ncsc == 2) & (ndt == 0)) * ('csccsc' in tags) +
              2 * ((ncsc == 0) & (ndt == 2)) * ('dtdt' in tags) +
             11 * ((ncsc == 1) & (ndt == 1)) * ('cscdt' in tags)
         )
+        self.filter(tag > 0, system='evt')
 
-        self.filter(tag > 0, system='event')
-        ncsc, ndt, tag = ncsc[tag>0], ndt[tag>0], tag[tag>0]
+        csc_phi, csc_eta = self['cscRechitClusterPhi'], self['cscRechitClusterEta']
+        dt_phi, dt_eta = self['dtRechitClusterPhi'], self['dtRechitClusterEta']
+        sel_csc, sel_dt, met_phi = self['sel_csc'], self['sel_dt'], self['metPhi']
+        
+        tag_dphi, tag_deta, tag_dr = _delta_kins(csc_phi, csc_eta, dt_phi, dt_eta, met_phi, sel_csc, sel_dt, tag)
 
-        cscPhi, cscEta = self.ms_dict['cscRechitClusterPhi'], self.ms_dict['cscRechitClusterEta']
-        dtPhi, dtEta = self.ms_dict['dtRechitClusterPhi'], self.ms_dict['dtRechitClusterEta']
-        metPhi = self.ms_dict['metPhi']
+        self['tag'] = tag
+        self['tag_dPhi'] = tag_dphi
+        self['tag_dEta'] = tag_deta
+        self['tag_dR'] = tag_dr
 
-        tag_dphi, tag_deta, tag_dr = _delta_kins(cscPhi, cscEta, dtPhi, dtEta, metPhi, tag)
-        self.ms_dict['tag'] = tag
-        self.ms_dict['tag_dPhi'] = tag_dphi
-        self.ms_dict['tag_dEta'] = tag_deta
-        self.ms_dict['tag_dR'] = tag_dr
+        self.cut = pcut
+        return self
 
+    def cut_hlt(self, invert=False):
+        self.cut, pcut = False, self.cut
+        self.filter(self['HLT_CscCluster_Loose'] | self['HLT_L1CSCCluster_DTCluster50'], system='evt')
+        self.cut = pcut
         return self
 
     def cut_time(self, system='csc,dt', invert=False, cut_csc_spread=True, cut_rpc_hits=True):
+        self.cut, pcut = False, self.cut
         min_csc_t, max_csc_t = -5, 12.5
         if 'csc' in system:
             sel_t = (
-                (min_csc_t < self.ms_dict['cscRechitClusterTimeWeighted']) &
-                (self.ms_dict['cscRechitClusterTimeWeighted'] < max_csc_t)
+                (min_csc_t < self['cscRechitClusterTimeWeighted']) &
+                (self['cscRechitClusterTimeWeighted'] < max_csc_t)
             )
             if cut_csc_spread:
-                sel_t = (sel_t & (self.ms_dict['cscRechitClusterTimeSpreadWeightedAll'] < 20))
+                sel_t = (sel_t & (self['cscRechitClusterTimeSpreadWeightedAll'] < 20))
             if invert:
                 sel_t = not sel_t
             self.filter(sel_t, system='csc')
 
         if 'dt' in system:
-            sel_t = (self.ms_dict['dtRechitCluster_match_RPCBx_dPhi0p5'] == 1)
+            sel_t = (self['dtRechitCluster_match_RPCBx_dPhi0p5'] == 1)
             if cut_rpc_hits:
-                sel_t = (sel_t & (self.ms_dict['dtRechitCluster_match_RPChits_dPhi0p5'] > 0))
+                sel_t = (sel_t & (self['dtRechitCluster_match_RPChits_dPhi0p5'] > 0))
             if invert:
                 sel_t = not sel_t
             self.filter(sel_t, system='dt')
         
+        self.cut = pcut
         return self
 
     def cut_l1(self, invert=False):
+        self.cut, pcut = False, self.cut
+        self.cut = pcut
         return self
+
+
+
+
+# class MuonSystemAwkward:
+#     """Handler for working with muon system ntuples using an Awkward arrays"""
+
+#     def __init__(self, file_name, nev=None, is_mc=False, tree_name='MuonSystem', implicit: bool=True) -> None:
+#         """Initialize a new instance of MuonSystemAwkward"""
+#         print(f'Building MuonSystemAwkward (\'{tree_name}\') -')
+#         print(f'  \'{file_name}\'')
+#         self.file_name  = file_name
+#         self.tree_name = tree_name
+#         self.is_mc = is_mc
+#         self.nev = nev
+#         self.implicit = implicit
+
+#         self.ms_dict = {
+#             'met' : ak.Array,
+#             'metPhi' : ak.Array,
+#             'runNum' : ak.Array,
+#             'weight' : ak.Array,
+#             ################################
+#             # 'HLTDecision' : ak.Array, #! Needs to be cut first
+#             'HLT_CaloMET60_DTCluster50' : ak.Array,
+#             'HLT_CaloMET60_DTClusterNoMB1S50' : ak.Array,
+#             'HLT_L1MET_DTCluster50' : ak.Array,
+#             'HLT_L1MET_DTClusterNoMB1S50' : ak.Array,
+#             'HLT_CscCluster_Loose' : ak.Array,
+#             'HLT_CscCluster_Medium' : ak.Array,
+#             'HLT_CscCluster_Tight' : ak.Array,
+#             'HLT_L1CSCCluster_DTCluster50' : ak.Array,
+#             'HLT_L1CSCCluser_DTCluster75' : ak.Array,
+#             ################################
+#             'nCscRechitClusters' : ak.Array,
+#             'nCscRings' : ak.Array,
+#             #
+#             'cscRechitClusterX' : ak.Array,
+#             'cscRechitClusterY' : ak.Array,
+#             'cscRechitClusterZ' : ak.Array,
+#             'cscRechitClusterSize' : ak.Array,
+#             'cscRechitClusterEta' : ak.Array,
+#             'cscRechitClusterPhi' : ak.Array,
+#             'cscRechitClusterTime' : ak.Array,
+#             'cscRechitClusterTimeSpread' : ak.Array,
+#             'cscRechitClusterTimeSpreadWeightedAll' : ak.Array,
+#             'cscRechitClusterTimeWeighted' : ak.Array,
+#             'cscRechitClusterMet_dPhi' : ak.Array,
+#             #
+#             'cscRechitClusterJetVetoLooseId' : ak.Array,
+#             'cscRechitClusterJetVetoPt' : ak.Array,
+#             'cscRechitClusterMuonVetoLooseId' : ak.Array,
+#             'cscRechitClusterMuonVetoPt' : ak.Array,
+#             #
+#             'cscRechitClusterNStation10' : ak.Array,
+#             'cscRechitClusterAvgStation10' : ak.Array,
+#             'cscRechitClusterMaxStation' : ak.Array,
+#             'cscRechitClusterMaxStationRatio' : ak.Array,
+#             #
+#             'cscRechitClusterNChamber' : ak.Array,
+#             'cscRechitClusterMaxChamber' : ak.Array,
+#             'cscRechitClusterMaxChamberRatio' : ak.Array,
+#             #
+#             # 'cscRechitClusterNRechitChamberMinus11' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus12' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus13' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus21' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus22' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus31' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus32' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus41' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberMinus42' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus11' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus12' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus13' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus21' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus22' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus31' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus32' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus41' : ak.Array,
+#             # 'cscRechitClusterNRechitChamberPlus42' : ak.Array,
+#             #
+#             'cscRechitCluster_match_MB1Seg_0p4' : ak.Array,
+#             'cscRechitCluster_match_RB1_0p4' : ak.Array,
+#             'cscRechitCluster_match_RE12_0p4' : ak.Array,
+#             #
+#             'cscRechitCluster_match_gLLP' : ak.Array,
+#             'cscRechitCluster_match_gLLP_csc' : ak.Array,
+#             'cscRechitCluster_match_gLLP_e' : ak.Array,
+#             'cscRechitCluster_match_gLLP_eta' : ak.Array,
+#             'cscRechitCluster_match_gLLP_phi' : ak.Array,
+#             'cscRechitCluster_match_gLLP_decay_r' : ak.Array,
+#             'cscRechitCluster_match_gLLP_decay_z' : ak.Array,
+#             ################################
+#             'nDtRechitClusters' : ak.Array,
+#             'nDtRings' : ak.Array,
+#             #
+#             'dtRechitClusterX' : ak.Array,
+#             'dtRechitClusterY' : ak.Array,
+#             'dtRechitClusterZ' : ak.Array,
+#             'dtRechitClusterSize' : ak.Array,
+#             'dtRechitClusterEta' : ak.Array,
+#             'dtRechitClusterPhi' : ak.Array,
+#             'dtRechitCluster_match_RPCBx_dPhi0p5' : ak.Array,
+#             'dtRechitCluster_match_RPChits_dPhi0p5' : ak.Array,
+#             'dtRechitClusterMet_dPhi' : ak.Array,
+#             #
+#             'dtRechitClusterJetVetoLooseId' : ak.Array,
+#             'dtRechitClusterJetVetoPt' : ak.Array,
+#             'dtRechitClusterMuonVetoLooseId' : ak.Array,
+#             'dtRechitClusterMuonVetoPt' : ak.Array,
+#             #
+#             'dtRechitClusterNStation10' : ak.Array,
+#             'dtRechitClusterAvgStation10' : ak.Array,
+#             'dtRechitClusterMaxStation' : ak.Array,
+#             'dtRechitClusterMaxStationRatio' : ak.Array,
+#             #
+#             'dtRechitClusterNChamber' : ak.Array,
+#             'dtRechitClusterMaxChamber' : ak.Array,
+#             'dtRechitClusterMaxChamberRatio' : ak.Array,
+#             #
+#             # 'dtRechitClusterNHitStation1' : ak.Array,
+#             # 'dtRechitClusterNHitStation2' : ak.Array,
+#             # 'dtRechitClusterNHitStation3' : ak.Array,
+#             # 'dtRechitClusterNHitStation4' : ak.Array,
+#             # 'dtRechitClusterNOppositeSegStation1' : ak.Array,
+#             # 'dtRechitClusterNOppositeSegStation2' : ak.Array,
+#             # 'dtRechitClusterNOppositeSegStation3' : ak.Array,
+#             # 'dtRechitClusterNOppositeSegStation4' : ak.Array,
+#             # 'dtRechitClusterNSegStation1' : ak.Array,
+#             # 'dtRechitClusterNSegStation2' : ak.Array,
+#             # 'dtRechitClusterNSegStation3' : ak.Array,
+#             # 'dtRechitClusterNSegStation4' : ak.Array,
+#             #
+#             'dtRechitCluster_match_MB1Seg_0p4' : ak.Array,
+#             'dtRechitCluster_match_MB1Seg_0p5' : ak.Array,
+#             'dtRechitCluster_match_MB1hits_0p4' : ak.Array,
+#             'dtRechitCluster_match_MB1hits_0p5' : ak.Array,
+#             #
+#             'dtRechitCluster_match_gLLP' : ak.Array,
+#             'dtRechitCluster_match_gLLP_dt' : ak.Array,
+#             'dtRechitCluster_match_gLLP_e' : ak.Array,
+#             'dtRechitCluster_match_gLLP_eta' : ak.Array,
+#             'dtRechitCluster_match_gLLP_phi' : ak.Array,
+#             'dtRechitCluster_match_gLLP_decay_r' : ak.Array,
+#             'dtRechitCluster_match_gLLP_decay_z' : ak.Array,
+#             ################################
+#             'nGLLP' : ak.Array,
+#             'gLLP_e' : ak.Array,
+#             'gLLP_pt' : ak.Array,
+#             'gLLP_eta' : ak.Array,
+#             'gLLP_phi' : ak.Array,
+#             'gLLP_decay_vertex_r' : ak.Array,
+#             'gLLP_decay_vertex_x' : ak.Array,
+#             'gLLP_decay_vertex_y' : ak.Array,
+#             'gLLP_decay_vertex_z' : ak.Array,
+#             ################################
+#             'nJets' : ak.Array,
+#             'jetE' : ak.Array,
+#             'jetPt' : ak.Array,
+#             'jetEta' : ak.Array,
+#             'jetPhi' : ak.Array,
+#             ################################
+#             'nLeptons' : ak.Array,
+#             'lepE' : ak.Array,
+#             'lepPt' : ak.Array,
+#             'lepPhi' : ak.Array,
+#             'lepEta' : ak.Array,
+#             'lepPdgId' : ak.Array,
+#         }
+
+#         self.column_names = list(self.ms_dict.keys())
+#         # self.column_names.remove('HLTDecision')
+
+#         hlt_columns = {
+#             'HLT_CaloMET60_DTCluster50': 562,
+#             'HLT_CaloMET60_DTClusterNoMB1S50': 563,
+#             'HLT_L1MET_DTCluster50': 564,
+#             'HLT_L1MET_DTClusterNoMB1S50': 565,
+#             'HLT_CscCluster_Loose': 566,
+#             'HLT_CscCluster_Medium': 567,
+#             'HLT_CscCluster_Tight': 568,
+#             'HLT_L1CSCCluster_DTCluster50': 569,
+#             'HLT_L1CSCCluser_DTCluster75': 570,
+#         }
+#         hlt_aliases = {k : f'HLTDecision[:,{v}]' for k,v in hlt_columns.items()}
+
+#         pft = self.file_name + ':' + self.tree_name
+#         with upr.open(path=pft, array_cache='100 kB') as fms:
+#             ms_ak = fms.arrays(
+#                 self.column_names,
+#                 entry_stop=self.nev,
+#                 aliases=hlt_aliases,
+#             )
+
+#             # ms_ak = ms.arrays(self.column_names, entry_stop=self.nev)
+#             for k in self.ms_dict:
+#                 # if k == 'HLTDecision': #TODO: apply a cut here to reduce array size
+#                 #     alert('Not loading HLT', '!', 'r')
+#                 #     # for k_hlt, i_hlt in hlt_columns.items():
+#                 #     #     self.ms_dict[k_hlt] = ms[k][:,i_hlt].array(entry_stop=self.nev)
+
+#                 #     # self.ms_dict[k] = fms.arrays(k+'[:,566:571]', entry_stop=self.nev)
+#                 # else:
+#                     # self.ms_dict[k] = ms_ak[k]
+#                 # self.ms_dict[k] = fms[k].array(entry_stop=self.nev)
+#                 self.ms_dict[k] = ms_ak[k]
+
+#         self.ms_dict['HLT'] = self.ms_dict['HLT_CscCluster_Loose'] | self.ms_dict['HLT_L1CSCCluster_DTCluster50']
+
+#         if len(self.ms_dict['weight']) != self.nev:
+#             self.nev = len(self.ms_dict['weight'])
+#             alert(f'ExtAracted {self.nev=:,}', '!')
+
+#     def __getitem__(self, key):
+#         if isinstance(key, str):
+#             key = self._fix_key(key)
+#             return self.ms_dict[key]
+#         else:
+#             alert('BROKEN - Filters MuonSystem', '!', 'r')
+#             imp = self.implicit
+#             self.set_implicit(False)
+#             sout = self.filter(sel=key, system='evt')
+#             self.set_implicit(imp)
+#             return sout
+
+#     def __setitem__(self, key, value):
+#         key = self._fix_key(key)
+#         self.ms_dict[key] = value
+
+#     def __copy__(self):
+#         pass
+
+#     def _fix_key(self, key):
+#         if 'csc' in key[:3] and 'RechitCluster' not in key:
+#             key = 'cscRechitCluster' + key[3:]
+#         if 'dt' in key[:2] and 'RechitCluster' not in key:
+#             key = 'dtRechitCluster' + key[2:]
+
+#         if 'nCsc' == key:
+#             key = 'nCscRechitClusters'
+#         if 'nDt' == key:
+#             key = 'nDtRechitClusters'
+#         if 'nLep' == key:
+#             key = 'nLeptons'
+#         if 'nJet' == key:
+#             key = 'nJets'
+
+#         return key
+
+#     def _fix_n_column(self, system):
+#         if system == 'evt':
+#             return
+
+#         n_columns = {
+#             'csc' : ('nCscRechitClusters', 'cscRechitClusterSize'),
+#             'dt' : ('nDtRechitClusters', 'dtRechitClusterSize'),
+#             'gllp' : ('nGLLP', 'gllp_pt'),
+#             'jet' : ('nJets', 'jetPt'),
+#             'lep' : ('nLeptons', 'lepPt'),
+#         }
+#         n_key, test_col = n_columns[system]
+#         self.ms_dict[n_key] = np.sum(self.ms_dict[test_col] > 0, axis=1)
+
+#     def count(self):
+#         return len(self.ms_dict['weight'])
+
+#     def set_implicit(self, implicit: bool=True) -> bool:
+#         """Set's the cut/filter method for the class.
+        
+#         args:
+#             implicit : set's filter to cut implicitly or return a new filtered copy of the class
+            
+#         returns:
+#             class filther method"""
+#         if not implicit:
+#             alert('Not loading HLT', '!', 'r')
+
+#         self.implicit = implicit
+#         return self.implicit
+
+#     def filter(self, sel, system='evt', has_clusters=True):
+#         for k, v in self.ms_dict.items():
+#             if self.implicit:
+#                 if system == 'evt' or system == k[:len(system)]:
+#                     self.ms_dict[k] = v[sel]
+#             else: #TODO
+#                 alert('Non-implicit behavior does not work (yet)')
+#                 # make new ms_dict -> copy MuonSystemAwkward into new object w/ new dict
+#                 pass
+
+#         if system != 'evt':
+#             self._fix_n_column(system=system)
+#             if has_clusters:
+#                 self.filter(self.ms_dict['nCscRechitClusters'] + self.ms_dict['nCscRechitClusters'] > 0, system='evt')
+
+#         return self
+
+#     def f(self, sel, system='evt'):
+#         return self.filter(sel=sel, system=system)
+
+#     def match_mc(self, system='csc,dt', check_decay=True):
+#         max_csc_eta, max_csc_r, min_csc_z, max_csc_z = 3, 800, 400, 1200
+#         min_dt_r, max_dt_r, max_dt_z = 200, 800, 700
+#         if 'csc' in system:
+#             self.filter(self.ms_dict['cscRechitCluster_match_gLLP'], system='csc')
+#             if check_decay:
+#                 sel_decay = (
+#                     ( self.ms_dict['cscRechitCluster_match_gLLP_eta'] < max_csc_eta ) &
+#                     ( self.ms_dict['cscRechitCluster_match_gLLP_decay_r'] < max_csc_r ) &
+#                     ( min_csc_z < np.abs(self.ms_dict['cscRechitCluster_match_gLLP_decay_z']) ) &
+#                     ( np.abs(self.ms_dict['cscRechitCluster_match_gLLP_decay_z']) < max_csc_z )
+#                 )
+#                 self.filter(sel_decay, system='csc')
+
+#         if 'dt' in system:
+#             self.filter(self.ms_dict['dtRechitCluster_match_gLLP'], system='dt')
+#             if check_decay:
+#                 sel_decay = (
+#                     ( min_dt_r < self.ms_dict['dtRechitCluster_match_gLLP_decay_r'] ) &
+#                     ( self.ms_dict['dtRechitCluster_match_gLLP_decay_r'] < max_dt_r ) &
+#                     ( np.abs(self.ms_dict['dtRechitCluster_match_gLLP_decay_z']) < max_dt_z )
+#                 )
+#                 self.filter(sel_decay, system='dt')
+
+#         return self
+
+#     def blind(self, region):
+#         if region == 'dphi':
+#             self.filter(self.ms_dict['tag_dPhi'] > 0.5, system='evt')
+
+#         return self
+
+#     def tag(self, tags='csccsc,cscdt'):
+#         @nb.njit
+#         def _delta_kins(cscPhi, cscEta, dtPhi, dtEta, metPhi, tag):
+#             dPhi, dEta, dR = np.zeros((len(tag),1)), np.zeros((len(tag),1)), np.zeros((len(tag),1))
+#             for i in range(len(cscEta)):
+#                 p0, p1, e0, e1 = 0, metPhi[i], 0, 0
+#                 if tag[i] == 20:
+#                     p0, e0 = cscPhi[i][0], cscEta[i][0]
+#                     p1, e1 = cscPhi[i][1], cscEta[i][1]
+#                 if tag[i] ==  2:
+#                     p0, e0 = dtPhi[i][0], dtEta[i][0]
+#                     p1, e1 = dtPhi[i][1], dtEta[i][1]
+#                 if tag[i] == 11:
+#                     p0, e0 = cscPhi[i][0], cscEta[i][0]
+#                     p1, e1 = dtPhi[i][0], dtEta[i][0]
+#                 if tag[i] == 10:
+#                     p0, e0 = cscPhi[i][0], cscEta[i][0]
+#                 if tag[i] ==  1:
+#                     p0, e0 = dtPhi[i][0], dtEta[i][0]
+#                 dPhi[i] = np.abs(p0 - p1)
+#                 dPhi[i] -= 2 * np.pi * (dPhi[i] > 2 * np.pi)
+#                 dEta[i] = np.abs(e0 - e1)
+#                 dR[i] = np.sqrt(dPhi[i]*dPhi[i] + dEta[i]*dEta[i])
+#             return dPhi, dEta, dR
+#             # return ak.JaggedArray(dPhi, dEta, dR)
+
+#         tags = tags.split(',')
+
+#         ncsc, ndt = self.ms_dict['nCscRechitClusters'], self.ms_dict['nDtRechitClusters']
+#         tag = ( #! Remember to filter no cluster and many cluster events out... for now :)
+#             10 * ((ncsc == 1) & (ndt == 0)) * ('csc' in tags) +
+#              1 * ((ncsc == 0) & (ndt == 1)) * ('dt' in tags) +
+#             20 * ((ncsc == 2) & (ndt == 0)) * ('csccsc' in tags) +
+#              2 * ((ncsc == 0) & (ndt == 2)) * ('dtdt' in tags) +
+#             11 * ((ncsc == 1) & (ndt == 1)) * ('cscdt' in tags)
+#         )
+
+#         self.filter(tag > 0, system='evt')
+#         ncsc, ndt, tag = ncsc[tag>0], ndt[tag>0], tag[tag>0]
+
+#         cscPhi, cscEta = self.ms_dict['cscRechitClusterPhi'], self.ms_dict['cscRechitClusterEta']
+#         dtPhi, dtEta = self.ms_dict['dtRechitClusterPhi'], self.ms_dict['dtRechitClusterEta']
+#         metPhi = self.ms_dict['metPhi']
+
+#         tag_dphi, tag_deta, tag_dr = _delta_kins(cscPhi, cscEta, dtPhi, dtEta, metPhi, tag)
+#         self.ms_dict['tag'] = tag
+#         self.ms_dict['tag_dPhi'] = tag_dphi
+#         self.ms_dict['tag_dEta'] = tag_deta
+#         self.ms_dict['tag_dR'] = tag_dr
+
+#         return self
+
+#     def cut_time(self, system='csc,dt', invert=False, cut_csc_spread=True, cut_rpc_hits=True):
+#         min_csc_t, max_csc_t = -5, 12.5
+#         if 'csc' in system:
+#             sel_t = (
+#                 (min_csc_t < self.ms_dict['cscRechitClusterTimeWeighted']) &
+#                 (self.ms_dict['cscRechitClusterTimeWeighted'] < max_csc_t)
+#             )
+#             if cut_csc_spread:
+#                 sel_t = (sel_t & (self.ms_dict['cscRechitClusterTimeSpreadWeightedAll'] < 20))
+#             if invert:
+#                 sel_t = not sel_t
+#             self.filter(sel_t, system='csc')
+
+#         if 'dt' in system:
+#             sel_t = (self.ms_dict['dtRechitCluster_match_RPCBx_dPhi0p5'] == 1)
+#             if cut_rpc_hits:
+#                 sel_t = (sel_t & (self.ms_dict['dtRechitCluster_match_RPChits_dPhi0p5'] > 0))
+#             if invert:
+#                 sel_t = not sel_t
+#             self.filter(sel_t, system='dt')
+        
+#         return self
+
+#     def cut_l1(self, invert=False):
+#         return self
 
 
 ###############################################################
