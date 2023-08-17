@@ -25,6 +25,7 @@ __credits__ = [
     'Pedro ',
 ]
 
+import sys
 import numpy as np
 import numba as nb
 
@@ -303,50 +304,59 @@ class MuonSystemAwkward:
 
     def __init__(self, file_name, nev=None, is_mc=False, tree_name='MuonSystem', implicit: bool=True) -> None:
         """Initialize a new instance of MuonSystemAwkward"""
+        
         print(f'Building MuonSystemAwkward (\'{tree_name}\') -')
         print(f'  \'{file_name}\'')
+        
+        ##########
+
         self.file_name  = file_name
         self.tree_name = tree_name
         self.is_mc = is_mc
         self.nev = nev
 
+        ##########
+        
         self.implicit = implicit
         self.cut = True
 
-        self.ms_read = { }
-
-        self.ms = upr.open(path=self.file_name + ':' + self.tree_name, array_cache='100 kB')
-
-        self.ms_read['sel_evt'] = self.ms['met'].array(entry_stop=self.nev) > 0
-        self.ms_read['sel_csc'] = self.ms['cscRechitClusterSize'].array(entry_stop=self.nev) > 0
-        self.ms_read['sel_dt'] = self.ms['dtRechitClusterSize'].array(entry_stop=self.nev) > 0
-
-        self.ms_read['nCscRechitClusters'] = np.sum(self.ms_read['sel_csc'], axis=1)
-        self.ms_read['nDtRechitClusters'] = np.sum(self.ms_read['sel_dt'], axis=1)
-
-
-
+        ##########
+        
         self.hlt_info = {
             # 'HLT_CaloMET60_DTCluster50': 562,
             # 'HLT_CaloMET60_DTClusterNoMB1S50': 563,
             # 'HLT_L1MET_DTCluster50': 564,
             # 'HLT_L1MET_DTClusterNoMB1S50': 565,
-            'HLT_CscCluster_Loose': 566,
+            # 'HLT_CscCluster_Loose': 566,
             # 'HLT_CscCluster_Medium': 567,
             # 'HLT_CscCluster_Tight': 568,
             'HLT_L1CSCCluster_DTCluster50': 569,
             # 'HLT_L1CSCCluser_DTCluster75': 570,
         }
-        self.hlt_aliases = {k : f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
-        hlt_aa = self.ms.arrays(list(self.hlt_aliases.keys()), aliases=self.hlt_aliases, entry_stop=self.nev)
-        for k, v in self.hlt_info.items():
-            self.ms_read[k] = hlt_aa[k]
+
+        ##########
+
+        self.ms_read = { }
+        self.ms = upr.open(path=self.file_name + ':' + self.tree_name, array_cache='100 kB')
+        self.ms_read['sel_evt'] = self.ms['met'].array(entry_stop=self.nev) > 0
 
         if len(self.ms_read['sel_evt']) != self.nev:
             self.nev = len(self.ms_read['sel_evt'])
             alert(f'Extracted {self.nev=:,}', '!')
 
+        self.hlt_aliases = {k : f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
+        self.ms_read['HLT_L1CSCCluster_DTCluster50'] = self.ms.arrays('HLT_L1CSCCluster_DTCluster50', aliases=self.hlt_aliases, entry_stop=self.nev)['HLT_L1CSCCluster_DTCluster50'] > 0
+
+        self.ms_read['sel_csc'] = self.ms['cscRechitClusterSize'].array(entry_stop=self.nev) > 0
+        self.ms_read['sel_dt'] = self.ms['dtRechitClusterSize'].array(entry_stop=self.nev) > 0
+        self.ms_read['nCscRechitClusters'] = np.sum(self.ms_read['sel_csc'], axis=1)
+        self.ms_read['nDtRechitClusters'] = np.sum(self.ms_read['sel_dt'], axis=1)
+
     def __getitem__(self, key):
+        # hlt_aa = self.ms.arrays(list(self.hlt_aliases.keys()), , entry_stop=self.nev)
+        # for k, v in self.hlt_info.items():
+        #     self.ms_read[k] = hlt_aa[k]
+
         if isinstance(key, str):
             key = self._fix_key(key)
 
@@ -360,14 +370,16 @@ class MuonSystemAwkward:
                 if key in self.ms_read:
                     arr = self.ms_read[sel]
                 else:
-                    arr = self.ms[key].array(cut=sel, entry_stop=self.nev)
+                    arr = self.ms[key].array(entry_stop=self.nev)
+                    # arr = self.ms.arrays(key, cut=sel, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
             else:
                 if key in self.ms_read:
                     arr = self.ms_read[key]
                 else:
                     arr = self.ms[key].array(entry_stop=self.nev)
-
+                    # arr = self.ms.arrays(key, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
             return arr
+
         else:
             alert('BROKEN - Filters MuonSystem', '!', 'r')
             imp = self.implicit
@@ -559,7 +571,7 @@ class MuonSystemAwkward:
         csc_phi, csc_eta = self['cscRechitClusterPhi'], self['cscRechitClusterEta']
         dt_phi, dt_eta = self['dtRechitClusterPhi'], self['dtRechitClusterEta']
         sel_csc, sel_dt, met_phi = self['sel_csc'], self['sel_dt'], self['metPhi']
-        
+
         tag_dphi, tag_deta, tag_dr = _delta_kins(csc_phi, csc_eta, dt_phi, dt_eta, met_phi, sel_csc, sel_dt, tag)
 
         self['tag'] = tag
@@ -572,7 +584,8 @@ class MuonSystemAwkward:
 
     def cut_hlt(self, invert=False):
         self.cut, pcut = False, self.cut
-        self.filter(self['HLT_CscCluster_Loose'] | self['HLT_L1CSCCluster_DTCluster50'], system='evt')
+        # self.filter(self['HLT_CscCluster_Loose'] | self['HLT_L1CSCCluster_DTCluster50'], system='evt')
+        self.filter(self['HLT_L1CSCCluster_DTCluster50'], system='evt')
         self.cut = pcut
         return self
 
@@ -591,18 +604,34 @@ class MuonSystemAwkward:
             self.filter(sel_t, system='csc')
 
         if 'dt' in system:
-            sel_t = (self['dtRechitCluster_match_RPCBx_dPhi0p5'] == 1)
+            sel_t = (self['dtRechitCluster_match_RPCBx_dPhi0p5'] == 0)
             if cut_rpc_hits:
                 sel_t = (sel_t & (self['dtRechitCluster_match_RPChits_dPhi0p5'] > 0))
             if invert:
                 sel_t = not sel_t
             self.filter(sel_t, system='dt')
-        
+
         self.cut = pcut
         return self
 
     def cut_l1(self, invert=False):
         self.cut, pcut = False, self.cut
+
+        csc_z, csc_size =  self['cscRechitClusterZ'], self['cscRechitClusterSize']
+        csc_r = np.sqrt(self['cscRechitClusterX']**2 + self['cscRechitClusterY']**2)
+        first_in_plateau = (
+            ( (csc_r>100) & (csc_r<275) & (np.abs(csc_z)>580) & (np.abs(csc_z)<632) & (csc_size>=500) ) |
+            ( (csc_r>139) & (csc_r<345) & (np.abs(csc_z)>789) & (np.abs(csc_z)<850) & (csc_size>=500) ) |
+            ( (csc_r>160) & (csc_r<345) & (np.abs(csc_z)>915) & (np.abs(csc_z)<970) & (csc_size>=500) ) |
+            ( (csc_r>178) & (csc_r<345) & (np.abs(csc_z)>1002) & (np.abs(csc_z)<1063) & (csc_size>=500) ) |
+            ( (csc_r>275) & (csc_r<465) & (np.abs(csc_z)>668) & (np.abs(csc_z)<724) & (csc_size>=200) ) |
+            ( (csc_r>505) & (csc_r<700) & (np.abs(csc_z)>668) & (np.abs(csc_z)<724) & (csc_size>=200) ) |
+            ( (csc_r>357) & (csc_r<700) & (np.abs(csc_z)>791) & (np.abs(csc_z)<850) & (csc_size>=200) ) |
+            ( (csc_r>357) & (csc_r<700) & (np.abs(csc_z)>911) & (np.abs(csc_z)<970) & (csc_size>=200) ) |
+            ( (csc_r>357) & (csc_r<700) & (np.abs(csc_z)>1002) & (np.abs(csc_z)<1063) & (csc_size>=200) )
+        )
+        self.filter(first_in_plateau, system='csc')
+
         self.cut = pcut
         return self
 

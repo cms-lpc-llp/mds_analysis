@@ -95,32 +95,31 @@ if __name__ == '__main__':
     #!!!!!!!!!!!!!!!!!!!!!!!!!#
 
     print('')
-    print('--- Filtering MuonSystems ---')
-    print(f'   In | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
+    print('+---------- Filtering MuonSystems ----------+')
+    print(f'|    In | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
-    ms_mc.match_mc()
-    print(f'Match | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
+    ms_mc.match_mc('csc,dt')
+    print(f'| Match | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
-    ms_mc.cut_hlt()
+    # ms_mc.cut_hlt()
     ms_r3.cut_hlt()
-    print(f'  HLT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
+    print(f'|   HLT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
-    # ms_mc.cut_l1() #! Broken rn
-    # ms_r3.cut_l1()
-    # print(f'Events In | {ms_mc.count()=:>10,} | {ms_r3.count()=:>10,}')
+    ms_mc.cut_l1()
+    ms_r3.cut_l1()
+    print(f'|    L1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     ms_mc.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
     ms_r3.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
-    print(f'   IT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
-
-    ms_mc.f((ms_mc['nCsc']==1) & (ms_mc['nDt']==1))
-    ms_r3.f((ms_r3['nCsc']==1) & (ms_r3['nDt']==1))
-    print(f'CSCDT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
+    print(f'|    IT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     ms_mc.tag(tags='cscdt')
     ms_r3.tag(tags='cscdt')
+    print(f'| CSCDT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+
     ms_r3.blind('dphi')
-    print(f' dPhi | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,}')
+    print(f'|  dPhi | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+    print('+-------------------------------------------+')
     print('')
 
     #!!! TURNING CUTS ON !!!!#
