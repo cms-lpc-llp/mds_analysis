@@ -50,6 +50,10 @@ def EstimateDispersion(aux, w=None):
 def create_TH1D(
     x, name="h", title=None, binning=[None, None, None], weights=None, h2clone=None, axis_title=None, bin_list=False
 ):
+    
+    if name == 'h':
+        name += str(np.random.randint(999999999))
+    x = np.ravel(x)
     if title is None:
         title = name
     if h2clone == None:

@@ -302,7 +302,7 @@ def make_cluster_eff_1D(ms, det, xl='z', cuts=False):
 class MuonSystemAwkward:
     """Handler for working with muon system ntuples using an Awkward arrays"""
 
-    def __init__(self, file_name, nev=None, is_mc=False, tree_name='MuonSystem', implicit: bool=True) -> None:
+    def __init__(self, file_name, name='MuonSystem', nev=None, is_mc=False, tree_name='MuonSystem', implicit: bool=True) -> None:
         """Initialize a new instance of MuonSystemAwkward"""
         
         print(f'Building MuonSystemAwkward (\'{tree_name}\') -')
@@ -311,6 +311,7 @@ class MuonSystemAwkward:
         ##########
 
         self.file_name  = file_name
+        self.name = name
         self.tree_name = tree_name
         self.is_mc = is_mc
         self.nev = nev
@@ -342,10 +343,11 @@ class MuonSystemAwkward:
 
         if len(self.ms_read['sel_evt']) != self.nev:
             self.nev = len(self.ms_read['sel_evt'])
-            alert(f'Extracted {self.nev=:,}', '!')
+        print(f'  Extracted {self.nev:,} events')
 
-        self.hlt_aliases = {k : f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
-        self.ms_read['HLT_L1CSCCluster_DTCluster50'] = self.ms.arrays('HLT_L1CSCCluster_DTCluster50', aliases=self.hlt_aliases, entry_stop=self.nev)['HLT_L1CSCCluster_DTCluster50'] > 0
+        # ! I cannot figure out how to load HLTDecision without overflowing memory
+        # self.hlt_aliases = {k : f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
+        # self.ms_read['HLT_L1CSCCluster_DTCluster50'] = self.ms.arrays('HLT_L1CSCCluster_DTCluster50', aliases=self.hlt_aliases, entry_stop=self.nev)['HLT_L1CSCCluster_DTCluster50']
 
         self.ms_read['sel_csc'] = self.ms['cscRechitClusterSize'].array(entry_stop=self.nev) > 0
         self.ms_read['sel_dt'] = self.ms['dtRechitClusterSize'].array(entry_stop=self.nev) > 0
@@ -360,24 +362,40 @@ class MuonSystemAwkward:
         if isinstance(key, str):
             key = self._fix_key(key)
 
-            if self.cut:
-                sel = self.ms_read['sel_evt']
-                if 'csc' in key[:3]:
-                    sel = (sel & self.ms_read['sel_csc'])
-                if 'dt' in key[:2]:
-                    sel = (sel & self.ms_read['sel_dt'])
-
-                if key in self.ms_read:
-                    arr = self.ms_read[sel]
-                else:
-                    arr = self.ms[key].array(entry_stop=self.nev)
-                    # arr = self.ms.arrays(key, cut=sel, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
+            if key in self.ms_read:
+                arr = self.ms_read[key]
+            elif key in self.ms:
+                arr = self.ms[key].array(entry_stop=self.nev)
+                # arr = self.ms.arrays(key, cut=sel, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
             else:
-                if key in self.ms_read:
-                    arr = self.ms_read[key]
+                self.cut, pcut = False, self.cut
+                if key == 'cscRechitClusterMe11Ratio':
+                    arr = (self['cscRechitClusterNRechitChamberPlus11'] + self['cscRechitClusterNRechitChamberMinus11']) / self['cscRechitClusterSize']
+                elif key == 'cscRechitClusterMe12Ratio':
+                    arr = (self['cscRechitClusterNRechitChamberPlus12'] + self['cscRechitClusterNRechitChamberMinus12']) / self['cscRechitClusterSize']
+                elif key == 'dtRechitClusterMb1Ratio':
+                    arr = self['dtRechitClusterNHitStation1'] / self['dtRechitClusterSize']
                 else:
-                    arr = self.ms[key].array(entry_stop=self.nev)
-                    # arr = self.ms.arrays(key, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
+                    raise ValueError(f'Invalid key \'{key}\'.')
+
+                # arr = self.ms.arrays(
+                #     key,
+                #     aliases={
+                #         'cscRechitClusterMe11Ratio' : 
+                #         '(cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberMinus11) / cscRechitClusterSize',
+                #         'cscRechitClusterMe12Ratio' :
+                #         '(cscRechitClusterNRechitChamberPlus12 + cscRechitClusterNRechitChamberMinus12) / cscRechitClusterSize',
+                #     },
+                #     entry_stop=self.nev)[key]
+                self.cut = pcut
+
+            if self.cut:
+                if 'csc' in key[:3]:
+                    arr = arr[self.ms_read['sel_csc']]
+                elif 'dt' in key[:2]:
+                    arr = arr[self.ms_read['sel_dt']]
+                arr = arr[self.ms_read['sel_evt']]
+
             return arr
 
         else:
@@ -409,6 +427,13 @@ class MuonSystemAwkward:
             key = 'nLeptons'
         if 'nJet' == key:
             key = 'nJets'
+
+        if 'dPhi' == key:
+            key = 'tag_dPhi'
+        if 'dEta' == key:
+            key = 'tag_dEta'
+        if 'dR' == key:
+            key = 'tag_dR'
 
         return key
 
@@ -515,25 +540,23 @@ class MuonSystemAwkward:
 
                 p0, p1, e0, e1 = 0, met_phi[i], 0, 0
                 c0, c1, d0, d1 = -1, -1, -1, -1
-                # Ew but works, (np.argwhere(sel_csc[i]) not compatible with compiled ArrayView(?))
+                # eh, (np.argwhere(sel_csc[i]) not compatible with compiled ArrayView(?))
                 for j, v in enumerate(sel_csc[i]):
                     if v:
                         if c0 == -1:
                             c0 = j
-                        else:
+                        elif c1 == -1:
                             c1 = j
-                # Ew but works, (np.argwhere(sel_dt[i]) not compatible with compiled ArrayView(?))
+                        else:
+                            raise ValueError('aw no 1')
                 for j, v in enumerate(sel_dt[i]):
                     if v:
-                        if c0 == -1:
+                        if d0 == -1:
                             d0 = j
-                        else:
+                        elif d1 == -1:
                             d1 = j
-
-                # if len(sel_csc[i]):
-                #     cidxs = np.arange(len(sel_csc[i])) * sel_csc[i]
-                # if len(sel_dt[i]):
-                #     didxs = np.arange(len(sel_dt[i])) * sel_dt[i]
+                        else:
+                            raise ValueError('aw no 2')
 
                 if tag[i] == 20:
                     p0, e0 = csc_phi[i][c0], csc_eta[i][c0]
@@ -542,6 +565,8 @@ class MuonSystemAwkward:
                     p0, e0 = dt_phi[i][d0], dt_eta[i][d0]
                     p1, e1 = dt_phi[i][d1], dt_eta[i][d1]
                 if tag[i] == 11:
+                    if c0 == -1 or d0 == -1 or c1 != -1 or d1 != -1:
+                        raise ValueError('aw no 3')
                     p0, e0 = csc_phi[i][c0], csc_eta[i][c0]
                     p1, e1 = dt_phi[i][d0], dt_eta[i][d0]
                 if tag[i] == 10:
@@ -549,12 +574,10 @@ class MuonSystemAwkward:
                 if tag[i] ==  1:
                     p0, e0 = dt_phi[i][d0], dt_eta[i][d0]
 
-                dphi[i] = np.abs(p0 - p1)
-                dphi[i] -= 2 * np.pi * (dphi[i] > 2 * np.pi)
+                dphi[i] = min(2*np.pi - np.abs(p0 - p1), np.abs(p0 - p1))
                 deta[i] = np.abs(e0 - e1)
                 dr[i] = np.sqrt(dphi[i]*dphi[i] + deta[i]*deta[i])
             return dphi, deta, dr
-            # return ak.JaggedArray(dPhi, dEta, dR)
 
         tags = tags.split(',')
 
