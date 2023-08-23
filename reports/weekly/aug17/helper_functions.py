@@ -131,18 +131,15 @@ def alert(msg: str, form: str='-', c: str='w'):
     if form == '!':
         print('!' * (len(msg) + 6))
         print('!! ' + msg + ' !!')
-        print('!' * (len(msg) + 6) + ('\033[0m' if c!='w' else ''))
+        print('!' * (len(msg) + 6))
     elif form == '#':
-        # print('#' * (len(msg) + 6))
-        print('##' + ('=' * (len(msg) + 2)) + '##')
+        print('#' * (len(msg) + 6))
         print('## ' + msg + ' ##')
-        print('##' + ('=' * (len(msg) + 2)) + '##' + ('\033[0m' if c!='w' else ''))
-        # print('#' * (len(msg) + 6) + ('\033[0m' if c!='w' else ''))
-    elif form == '=':
-        print('##' + ('=' * (len(msg) + 2)) + '##')
-        print('## ' + msg + ' ##')
-        print('##' + ('=' * (len(msg) + 2)) + '##' + ('\033[0m' if c!='w' else ''))
+        print('#' * (len(msg) + 6))
     else:# form == '-':
         print('+' + ('-' * (len(msg) + 2)) + '+')
         print('| ' + msg + ' |')
-        print('+' + ('-' * (len(msg) + 2)) + '+' + ('\033[0m' if c!='w' else ''))
+        print('+' + ('-' * (len(msg) + 2)) + '+')
+
+    if c != 'w':
+        print('\033[00m)', end='')

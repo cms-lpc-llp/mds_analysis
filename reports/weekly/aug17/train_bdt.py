@@ -1,22 +1,8 @@
 """train_bdt.py
 
-To run : 'python train_bdt.py {n_events}'
-use n_events=-1 for all events
+To run with all events :
+'python train_bdt.py -1'
 """
-
-__author__ = 'Paul Simmerling'
-__email__ = 'psimmerl@caltech.edu'
-__credits__ = [
-    'Paul Simmerling', 
-    'Christina Wang', 
-    'Lisa Benato', 
-    'Si Xie',
-    'Cristian Pena',
-    'Martin Kwok',
-    'Pedro Fernandez Manteca',
-    'Maria Spiropulu',
-]
-
 import os
 import sys
 import pathlib
@@ -47,84 +33,38 @@ from src import CMS_lumi, tdrstyle
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import roc_curve
 
-#############################
-# Parameters -- make a yaml #
-#############################
-save_dstat = 'ca_0p6'
-save_date = 'aug24'
-OUT_DIR = f'reports/weekly/{save_date}'
+############
 
-LUMI = 23.02*1000
-N_EVENTS = -1
-CUT = True
-ROOT_BATCH = True
+# tag_dR
+# tag_dEta
+# tag_dPhi
 
-gc = []
-#############################
-
-def hist1D(x_labels, bins, systems, out_dir=OUT_DIR):
-    for ix, xl in enumerate(x_labels):
-        cn = 'c'+str(np.random.randint(999999999))
-        c = TCanvas(cn,cn, 800, 800)
-        leg = []
-        lat = TLatex()
-        lat.SetTextAlign(11)
-        lat.SetTextSize(0.04)
-        hmin, hmax = 999, -1
-
-        for ims, ms in enumerate(systems):
-            k, var, weight = ms.name, ms[xl], ms['weight']
-
-            h = create_TH1D(
-                var,
-                axis_title=[xl, 'fraction of events'],
-                binning=bins[ix],
-                weights=weight
-            )
-            h.SetLineColor(std_color_list[ims])
-
-            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
-            leg.append((k, std_color_list[ims]))
-
-            if h.Integral()>0:
-                h.Scale(1./h.Integral())
-
-            hmax = max(hmax, h.GetMaximum())
-            hmin = min(hmin, h.GetMinimum(0))
-
-            # h.SetMinimum(1e-3)
-            # h.SetMaximum(4e-1)
-            h.Draw('hist same')
-            gc.append(h)
-
-        for ileg, (text, color) in enumerate(leg):
-            lat.SetTextColor(color)
-            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
-
-        gc[-1].SetMaximum(hmax)
-        gc[-2].SetMaximum(hmax)
-        gc[-1].SetMinimum(hmin)
-        gc[-2].SetMinimum(hmin)
-
-        c.SetLogy()
-        c.SetGrid()
-        c.SetRightMargin(0.04)
-
-        if not ROOT_BATCH:
-            c.Draw()
-
-        c.Print(f'{out_dir}/{xl}.png')
+############
 
 
 if __name__ == '__main__':
-    alert('Starting train_bdt.py', '=', 'm')
+    print('+-----------------------+')
+    print('| Starting train_bdt.py |')
+    print('+-----------------------+\n')
 
+    #############################
+    # Parameters -- make a yaml #
+    #############################
+    save_dstat = 'ca_0p6'
+    save_date = 'aug24'
+    OUT_DIR = f'reports/weekly/{save_date}'
+
+    LUMI = 23.02*1000
+    N_EVENTS = 100_000
+    CUT = True
+    ROOT_BATCH = True
+
+    gc = []
     if ROOT_BATCH:
         SetBatch(ROOT_BATCH)
-
     #############################
 
     tdrstyle.setTDRStyle()
@@ -169,7 +109,7 @@ if __name__ == '__main__':
 
     print('')
     print('+-------------------------------------------+')
-    print('|    Filtering MuonSystems (CSC>0 & DT>0)   |')
+    print('|           Filtering MuonSystems           |')
     print('+-------+-----------------+-----------------+')
     print(f'|    In | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
@@ -182,32 +122,19 @@ if __name__ == '__main__':
     # print(f'|   HLT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     # ms_mc.f(ms_mc['dtRechitClusterNHitStation1'] == 0, 'dt')
-    # ms_r3.f(ms_r3['dtRechitClusterNHitStation1'] == 0, 'dt')
     # print(f'|   MB1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
-
-    ms_mc.f(ms_mc['cscRechitClusterMe11Ratio'] + ms_mc['cscRechitClusterMe12Ratio'] == 0, 'csc')
-    ms_r3.f(ms_r3['cscRechitClusterMe11Ratio'] + ms_r3['cscRechitClusterMe12Ratio'] == 0, 'csc')
-    print(f'|  ME11 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     ms_mc.cut_l1()
     ms_r3.cut_l1()
     print(f'|    L1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
-    # ms_mc.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
-    # ms_r3.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
-    # print(f'|    IT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
-
-    ms_mc.cut_time('csc', cut_csc_spread=True, cut_rpc_hits=True, invert=False)
-    ms_r3.cut_time('csc', cut_csc_spread=True, cut_rpc_hits=True, invert=False)
-    print(f'| CSCIT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
-
-    ms_mc.cut_time('dt', cut_csc_spread=True, cut_rpc_hits=True, invert=False)
-    ms_r3.cut_time('dt', cut_csc_spread=True, cut_rpc_hits=True, invert=True)
-    print(f'| DTIOT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+    ms_mc.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
+    ms_r3.cut_time('csc,dt', cut_csc_spread=True, cut_rpc_hits=True)
+    print(f'|    IT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     ms_mc.tag(tags='cscdt')
     ms_r3.tag(tags='cscdt')
-    print(f'|  2tag | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+    print(f'| CSCDT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     # ms_r3.blind('dphi')
     # print(f'|  dPhi | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
@@ -222,11 +149,82 @@ if __name__ == '__main__':
     ms_mc.cut, ms_r3.cut = True, True
     #!!!!!!!!!!!!!!!!!!!!!!!!#
 
-    ######################################################
-    ######################################################
-    ######################################################
+    print('\t+--------------+')
+    print('\t| Making Plots |')
+    print('\t+--------------+')
 
-    alert('Making CSC Plots', form='-', c='g')
+
+    xls = ['tag_dEta',
+           'tag_dPhi',
+           'tag_dR',
+           'nCsc',
+           'nDt',
+           'met',
+           'runNum']
+    bins = [[32,0,3.5],
+            [32,0,np.pi],
+            [32,0,5],
+            [6,-0.5,5.5],
+            [6,-0.5,5.5],
+            [30,0,500],
+            [2741,360019, 362760]]
+
+
+    for ix, xl in enumerate(xls):
+        cn = 'c'+str(np.random.randint(999999999))
+        c = TCanvas(cn,cn, 800, 800)
+        leg = []
+        lat = TLatex()
+        lat.SetTextAlign(11)
+        lat.SetTextSize(0.04)
+        hmin, hmax = 999, -1
+
+        for ims, ms in enumerate([ms_r3, ms_mc]):
+            k, var, weight = ms.name, ms[xl], ms['weight']
+
+            h = create_TH1D(
+                var,
+                axis_title=[xl, 'fraction of events'],
+                binning=bins[ix],
+                weights=weight
+            )
+            h.SetLineColor(std_color_list[ims])
+
+            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
+            leg.append((k, std_color_list[ims]))
+
+            if h.Integral()>0:
+                h.Scale(1./h.Integral())
+
+            hmax = max(hmax, h.GetMaximum())
+            hmin = min(hmin, h.GetMinimum(0))
+
+            # h.SetMinimum(1e-3)
+            # h.SetMaximum(4e-1)
+            h.Draw('hist same')
+            gc.append(h)
+
+        for ileg, (text, color) in enumerate(leg):
+            lat.SetTextColor(color)
+            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
+
+        gc[-1].SetMaximum(hmax)
+        gc[-2].SetMaximum(hmax)
+        gc[-1].SetMinimum(hmin)
+        gc[-2].SetMinimum(hmin)
+
+        c.SetLogy()
+        c.SetGrid()
+        c.SetRightMargin(0.04)
+
+        if not ROOT_BATCH:
+            c.Draw()
+
+        c.Print(f'{OUT_DIR}/{xl}.png')
+
+    print('\t+------------------+')
+    print('\t| Making CSC Plots |')
+    print('\t+------------------+')
 
     xls = [
         'cscMuonVetoPt',
@@ -241,6 +239,7 @@ if __name__ == '__main__':
         'cscMe11Ratio',
         'cscMe12Ratio'
     ]
+
     bins = [[50,0,100],
             [50,0,100],
             [25,-np.pi,np.pi],
@@ -321,7 +320,9 @@ if __name__ == '__main__':
 
         c.Print(f'{OUT_DIR}/{xl}.png')
 
-    alert('Making DT Plots', form='-', c='g')
+    print('\t+-----------------+')
+    print('\t| Making DT Plots |')
+    print('\t+-----------------+')
 
     xls = [
         'dtJetVetoPt',
@@ -335,6 +336,7 @@ if __name__ == '__main__':
         'dtNHitStation1',
         'dtMb1Ratio',
     ]
+
     bins = [[50,0,100],
             [50,0,100],
             [25,-np.pi,np.pi],
@@ -410,122 +412,46 @@ if __name__ == '__main__':
 
         c.Print(f'{OUT_DIR}/{xl}.png')
 
-    alert('Making Event/2tag Plots', form='-', c='g')
-
-    xls = ['tag_dEta',
-           'tag_dPhi',
-           'tag_dR',
-           'nCsc',
-           'nDt',
-           'met',
-           'runNum']
-    bins = [[32,0,3.5],
-            [32,0,np.pi],
-            [32,0,5],
-            [6,-0.5,5.5],
-            [6,-0.5,5.5],
-            [30,0,500],
-            [2741,360019, 362760]]
-
-    for ix, xl in enumerate(xls):
-        cn = 'c'+str(np.random.randint(999999999))
-        c = TCanvas(cn,cn, 800, 800)
-        leg = []
-        lat = TLatex()
-        lat.SetTextAlign(11)
-        lat.SetTextSize(0.04)
-        hmin, hmax = 999, -1
-
-        for ims, ms in enumerate([ms_r3, ms_mc]):
-            k, var, weight = ms.name, ms[xl], ms['weight']
-
-            h = create_TH1D(
-                var,
-                axis_title=[xl, 'fraction of events'],
-                binning=bins[ix],
-                weights=weight
-            )
-            h.SetLineColor(std_color_list[ims])
-
-            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
-            leg.append((k, std_color_list[ims]))
-
-            if h.Integral()>0:
-                h.Scale(1./h.Integral())
-
-            hmax = max(hmax, h.GetMaximum())
-            hmin = min(hmin, h.GetMinimum(0))
-
-            # h.SetMinimum(1e-3)
-            # h.SetMaximum(4e-1)
-            h.Draw('hist same')
-            gc.append(h)
-
-        for ileg, (text, color) in enumerate(leg):
-            lat.SetTextColor(color)
-            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
-
-        gc[-1].SetMaximum(hmax)
-        gc[-2].SetMaximum(hmax)
-        gc[-1].SetMinimum(hmin)
-        gc[-2].SetMinimum(hmin)
-
-        c.SetLogy()
-        c.SetGrid()
-        c.SetRightMargin(0.04)
-
-        if not ROOT_BATCH:
-            c.Draw()
-
-        c.Print(f'{OUT_DIR}/{xl}.png')
 
     ######################################################
     ######################################################
     ######################################################
+    ######################################################
 
-    alert('Training BDT', form='-', c='g')
+    print('\t+--------------+')
+    print('\t| Training BDT |')
+    print('\t+--------------+')
 
     # Convert to Numpy array
     feats_csc = [
-        # 'cscSize',
         'cscPhi',
         'cscEta',
-        # 'cscX',
-        # 'cscY',
-        'cscZ',
-        'cscR',
         'cscNStation10',
         'cscAvgStation10',
-        # 'cscMaxStation',
+        'cscMaxStation',
         # 'cscMe11Ratio',
         # 'cscMe12Ratio',
-        'cscJetVetoPt',
-        'cscMuonVetoPt',
+        # 'cscJetVetoPt',
+        # 'cscMuonVetoPt',
     ]
     feats_dt = [
-        # 'dtSize',
         'dtPhi',
         'dtEta',
-        # 'dtX',
-        # 'dtY',
-        'dtZ',
-        'dtR',
         'dtNStation10',
         'dtAvgStation10',
-        # 'dtMaxStation',
-        'dtMb1Ratio',
-        'dtJetVetoPt',
-        'dtMuonVetoPt',
+        'dtMaxStation',
+        # 'dtMb1Ratio',
+        # 'dtJetVetoPt',
+        # 'dtMuonVetoPt',
     ]
-    feats_2tag = [
-        'tag_dR',
-        'tag_dEta',
-        'tag_dPhi',
-    ]
+    # feats_2tag = [
+    #     'tag_dR',
+    #     'tag_dEta',
+    #     'tag_dPhi',
+    # ]
 
-    #! Disbaled rn
-    mc_blinded_idxs = ms_mc['tag_dPhi'] > -1# 0.5
-    r3_blinded_idxs = ms_r3['tag_dPhi'] > -1#< 0.5
+    mc_blinded_idxs = ms_mc['tag_dPhi'] > 0.5
+    r3_blinded_idxs = ms_r3['tag_dPhi'] > 0.5
 
     X_csc = np.array([np.r_[
         np.ravel(ms_mc[feat][mc_blinded_idxs]),
@@ -535,135 +461,98 @@ if __name__ == '__main__':
         np.ravel(ms_mc[feat][mc_blinded_idxs]),
         np.ravel(ms_r3[feat][r3_blinded_idxs])
         ] for feat in feats_dt]).T
-    
-    y = np.r_[
+    y_csc = np.r_[
+        np.ones(len(ms_mc['sel_evt'][mc_blinded_idxs]), dtype=bool), 
+        np.zeros(len(ms_r3['sel_evt'][r3_blinded_idxs]), dtype=bool)
+        ]
+    y_dt = np.r_[
         np.ones(len(ms_mc['sel_evt'][mc_blinded_idxs]), dtype=bool),
         np.zeros(len(ms_r3['sel_evt'][r3_blinded_idxs]), dtype=bool)
         ]
-    w = np.r_[
-        np.ravel(ms_mc['weight'][mc_blinded_idxs]),
-        np.ravel(ms_r3['weight'][r3_blinded_idxs])
-        ]
-
-    X_csc, X_dt = np.abs(X_csc), np.abs(X_dt)
-
-    print(X_csc.shape, X_dt.shape, y.shape, np.sum(y))
-
-    # n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*min(np.sum(y_csc), len(y_csc)-np.sum(y_csc)))
-    n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*len(y))
-    # n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*min(np.sum(y_csc), len(y_csc)-np.sum(y_csc)))
-    n_estimators = int(n_estimators)
-    print(f'{n_estimators=}')
-
-    clf_csc = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
-    clf_dt = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
-    # clf_csc = GradientBoostingClassifier(random_state=42, n_estimators=500, max_depth=10)
-    # clf_dt = GradientBoostingClassifier(random_state=42, n_estimators=500, max_depth=10)
-
-    X_trn_csc, X_tst_csc, X_trn_dt, X_tst_dt, y_trn, y_tst, w_trn, w_tst = train_test_split(X_csc, X_dt, y, w, test_size=0.1, random_state=42)
+    print(X_csc.shape, X_dt.shape, y_csc.shape, y_dt.shape, np.sum(y_csc), np.sum(y_dt))
 
     sclr_csc, sclr_dt = StandardScaler(), StandardScaler()
+    gbt_csc, gbt_dt = GradientBoostingClassifier(), GradientBoostingClassifier()
+
+    X_trn_csc, X_tst_csc, y_trn_csc, y_tst_csc = train_test_split(X_csc, y_csc, test_size=0.1)
+    X_trn_dt, X_tst_dt, y_trn_dt, y_tst_dt = train_test_split(X_dt, y_dt, test_size=0.1)
+
     X_trn_csc = sclr_csc.fit_transform(X_trn_csc)
     X_tst_csc = sclr_csc.transform(X_tst_csc)
 
     X_trn_dt = sclr_dt.fit_transform(X_trn_dt)
     X_tst_dt = sclr_dt.transform(X_tst_dt)
 
-    clf_csc.fit(X_trn_csc, y_trn, w_trn)
-    clf_dt.fit(X_trn_dt, y_trn, w_trn)
+    gbt_csc.fit(X_trn_csc, y_trn_csc)
+    gbt_dt.fit(X_trn_dt, y_trn_dt)
 
-    try:
-        pred_csc = clf_csc.decision_function(X_csc)
-        pred_dt = clf_dt.decision_function(X_dt)
-    except:
-        pred_csc = clf_csc.predict_proba(X_csc)
-        pred_dt = clf_dt.predict_proba(X_dt)
+    pred_csc = gbt_csc.decision_function(X_csc)
+    pred_dt = gbt_dt.decision_function(X_dt)
 
-    for fts, clf in [(feats_csc, clf_csc), (feats_dt, clf_dt)]:
-        fts, wts = np.asarray(fts), clf.feature_importances_
-        idxs = np.argsort(wts)[::-1]
-        for ift, (ft, wt) in enumerate(zip(fts[idxs], wts[idxs])):
-            print(f'| {ift:>2} - {ft:>16} | {wt:>6.4f} |')
-        print('')
+    print('\t+------------------+')
+    print('\t| Making ROC Plots |')
+    print('\t+------------------+')
+    bkgs = {}
+    sigs = {}
+    aucs = {}
+    bkg_effs = {}
+    sig_effs = {}
+    names = ['tag_dPhi', 'cscSize', 'dtSize', 'GBT_CSC', 'GBT_DT']
 
-    ######################################################
-    ######################################################
-    ######################################################
-
-    alert('Making ROC Plots', form='-', c='g')
-
-    bkgs, sigs, aucs = {}, {}, {}
-    bkg_effs, sig_effs = {}, {}
-    names = ['tag_dPhi', 'cscSize', 'dtSize', 'cscNStation10', 'dtNStation10', 'GBT_CSC', 'GBT_DT']
-
-    print('+-----------------------------------------------------------------------------------+')
-    print('|                    Evaluating Signal/Background Discriminators                    |')
-    print('+------------------+-------------+-------------+-----------+-----------+------------+')
-    denom_r3 = r3_blinded_idxs #ms_r3['tag_dPhi'] > 0.5
-    denom_mc = mc_blinded_idxs #ms_mc['tag_dPhi'] > 0.5
-    wmc, wr3 = w[y], w[~y]
     for i, name in enumerate(names):
-        bkgs[name], sigs[name], aucs[name] = [], [], 0
-        bkg_effs[name], sig_effs[name] = [], []
+        bkgs[name] = []
+        sigs[name] = []
+        aucs[name] = 0
+        bkg_effs[name] = []
+        sig_effs[name] = []
+        denom_r3 = r3_blinded_idxs #ms_r3['tag_dPhi'] > 0.5
+        denom_mc = mc_blinded_idxs #ms_mc['tag_dPhi'] > 0.5
+        wmc, wr3 = ms_mc['weight'][denom_mc], ms_r3['weight'][denom_r3]
         if 'GBT_CSC' in name:
-            vmc, vr3 = pred_csc[y], pred_csc[~y]
+            vmc, vr3 = pred_csc[y_csc], pred_csc[~y_csc]
         elif 'GBT_DT' in name:
-            vmc, vr3 = pred_dt[y], pred_dt[~y]
+            vmc, vr3 = pred_dt[y_dt], pred_dt[~y_dt]
         else:
-            vmc, vr3 = ms_mc[name][denom_mc], ms_r3[name][denom_r3]
+            vmc, vr3 = np.ravel(ms_mc[name][denom_mc]), np.ravel(ms_r3[name][denom_r3])
 
-        vmc, vr3 = np.asarray(vmc), np.asarray(vr3)
-        if len(vmc.shape) == 2:
-            vmc, vr3 = vmc[:,0], vr3[:,0]
 
-        #  if name == 'tag_dPhi':
-        #     threshold = np.arange(0,np.pi,np.pi/50)
-        # elif 'GBT' in name:
-        #     _min, _max = np.min(np.r_[vmc,vr3]),np.max(np.r_[vmc,vr3])
-        #     threshold = np.arange(_min,_max,(_max-_min)/100)
-        # else:
-        #     threshold = np.arange(0,1000,1)
-        _min, _max = np.min(np.r_[vmc,vr3]),np.max(np.r_[vmc,vr3])
-        threshold = np.arange(_min,_max,(_max-_min)/200)
-
+        if name == 'tag_dPhi':
+            threshold = np.arange(0,3.2,0.01)
+        elif 'GBT' in name:
+            _min, _max = np.min(np.r_[vmc,vr3]),np.max(np.r_[vmc,vr3])
+            threshold = np.arange(_min,_max,(_max-_min)/100)
+        else:
+            threshold = np.arange(0,1000,1)
         for th in threshold:
-            cond = vr3 > th
-            # cond = np.abs(vr3) > th
+            cond = np.abs(vr3) > th
             bkg_effs[name].append(np.sum(wr3[cond])/np.sum(wr3))
             bkgs[name].append(np.sum(wr3[cond]))
 
-            cond = vmc > th
+            cond = np.abs(vmc) > th
             sig_effs[name].append(np.sum(wmc[cond])/np.sum(wmc))
             sigs[name].append(np.sum(wmc[cond]))
 
-        print(np.r_[vmc, vr3].shape, np.r_[vmc, vr3])
         sig_effs[name] = np.array(sig_effs[name])
         bkg_effs[name] = np.array(bkg_effs[name])
         sigs[name] = np.array(sigs[name])
-        bkgs[name] = np.array(bkgs[name])
-        aucs[name] = roc_auc_score(y_true=np.r_[np.ones_like(vmc), np.zeros_like(vr3)],
-                                   y_score=np.r_[vmc, vr3],
-                                   sample_weight=np.r_[wmc, wr3])
+        bkgs[name] = np.array(bkg_effs[name])
 
-        sigs[name] = sigs[name][bkg_effs[name]>0]
-        bkgs[name] = bkgs[name][bkg_effs[name]>0]
         sig_effs[name] = sig_effs[name][bkg_effs[name]>0]
         bkg_effs[name] = bkg_effs[name][bkg_effs[name]>0]
 
+        print(bkgs[name])
+        idx = np.argmax(sigs[name] / (np.sqrt(bkgs[name])))# if bkgs[name] else 1))
+        if isinstance(idx, np.array):
+            alert(f'idx not single index ({idx=})', '#', 'r')
+            idx = idx[0]
+        if idx >= len(sig_eff):
+            alert(f'idx too long ({idx=}, {len(sig_eff)=})', '#', 'r')
+            idx = len(sig_eff) - 1
+
         sig, bkg, sig_eff, bkg_eff, auc = sigs[name], bkgs[name], sig_effs[name], bkg_effs[name], aucs[name]
-
-        idx = np.argmax(sig / (np.sqrt(bkg)))# if bkg else 1))
-        # if isinstance(idx, np.ndarray):
-        #     alert(f'idx is a list ({idx=})', '#', 'r')
-        #     idx = idx[0]
-        # if idx >= len(sig_eff):
-        #     alert(f'idx too long ({idx=}, {len(sig_eff)=})', '#', 'r')
-        #     idx = len(sig_eff) - 1
-
         sig, bkg, sig_eff, bkg_eff = sig[idx], bkg[idx], sig_eff[idx], bkg_eff[idx]
 
-        print(f'| {name:>16} | S: {sig:>8.2f} | B: {bkg:>8.2f} | SE: {sig_eff:>5.3f} | BE: {bkg_eff:>5.3f} | AUC: {auc:5.3f} |')
-    print('+------------------+-------------+-------------+-----------+-----------+------------+')
+        print(f'| {name:>8} | S: {sig:>7,} | B: {bkg:>7,} | SE: {sig_eff:>5.3f} | BE: {bkg_eff:>5.3f} | AUC: {auc:5.3f} |')
 
 
     cn = 'c'+str(np.random.randint(999999999))
@@ -679,13 +568,12 @@ if __name__ == '__main__':
         graph[v].SetLineWidth(5)
         graph[v].SetLineColor(std_color_list[i])
         leg.append([v, std_color_list[i]])
-        # graph[v].SetMaximum(50)
+        graph[v].SetMaximum(50)
         graph[v].Draw('ac' if i == 0 else 'c same')
 
     for ileg, (text, color) in enumerate(leg):
         lat.SetTextColor(color)
-        # lat.DrawLatexNDC(0.94, 0.92 - ileg*0.04, text)
-        lat.DrawLatexNDC(0.94, 0.92 - ileg*(0.92-0.08)/(len(leg)+1), text)
+        lat.DrawLatexNDC(0.94, 0.92 - ileg*0.04, text)
 
     # c.SetLogy()
     c.SetGrid()
@@ -696,8 +584,9 @@ if __name__ == '__main__':
 
     c.Print(f'{OUT_DIR}/rocs.png')
 
-    ######################################################
-    ######################################################
-    ######################################################
+    print(bkg_effs['GBT_DT'],     sig_effs['GBT_DT'], )
 
-    alert('Finished train_bdt.py', '=', 'm')
+
+    print('+-----------------------+')
+    print('| Finished train_bdt.py |')
+    print('+-----------------------+')

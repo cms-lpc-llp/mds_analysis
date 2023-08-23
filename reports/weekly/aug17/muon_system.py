@@ -19,11 +19,10 @@ __credits__ = [
     'Paul Simmerling', 
     'Christina Wang', 
     'Lisa Benato', 
-    'Si Xie',
-    'Cristian Pena',
-    'Martin Kwok',
-    'Pedro Fernandez Manteca',
-    'Maria Spiropulu',
+    'Si Xie', 
+    'Cristian Pena', 
+    'Martin Kwok', 
+    'Pedro ',
 ]
 
 import sys
@@ -303,12 +302,12 @@ def make_cluster_eff_1D(ms, det, xl='z', cuts=False):
 class MuonSystemAwkward:
     """Handler for working with muon system ntuples using an Awkward arrays"""
 
-    def __init__(self, file_name, name='MuonSystem', tree_name='MuonSystem', nev=None, is_mc=False, cache=False, implicit: bool=True) -> None:
+    def __init__(self, file_name, name='MuonSystem', nev=None, is_mc=False, tree_name='MuonSystem', implicit: bool=True) -> None:
         """Initialize a new instance of MuonSystemAwkward"""
-
+        
         print(f'Building MuonSystemAwkward (\'{tree_name}\') -')
         print(f'  \'{file_name}\'')
-
+        
         ##########
 
         self.file_name  = file_name
@@ -316,15 +315,14 @@ class MuonSystemAwkward:
         self.tree_name = tree_name
         self.is_mc = is_mc
         self.nev = nev
-        self.cache = cache
 
         ##########
-
+        
         self.implicit = implicit
         self.cut = True
 
         ##########
-
+        
         self.hlt_info = {
             # 'HLT_CaloMET60_DTCluster50': 562,
             # 'HLT_CaloMET60_DTClusterNoMB1S50': 563,
@@ -377,13 +375,18 @@ class MuonSystemAwkward:
                     arr = (self['cscRechitClusterNRechitChamberPlus12'] + self['cscRechitClusterNRechitChamberMinus12']) / self['cscRechitClusterSize']
                 elif key == 'dtRechitClusterMb1Ratio':
                     arr = self['dtRechitClusterNHitStation1'] / self['dtRechitClusterSize']
-                elif key == 'cscRechitClusterR':
-                    arr = np.sqrt(self['cscRechitClusterX']**2 + self['cscRechitClusterY']**2)
-                elif key == 'dtRechitClusterR':
-                    arr = np.sqrt(self['dtRechitClusterX']**2 + self['dtRechitClusterY']**2)
                 else:
                     raise ValueError(f'Invalid key \'{key}\'.')
 
+                # arr = self.ms.arrays(
+                #     key,
+                #     aliases={
+                #         'cscRechitClusterMe11Ratio' : 
+                #         '(cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberMinus11) / cscRechitClusterSize',
+                #         'cscRechitClusterMe12Ratio' :
+                #         '(cscRechitClusterNRechitChamberPlus12 + cscRechitClusterNRechitChamberMinus12) / cscRechitClusterSize',
+                #     },
+                #     entry_stop=self.nev)[key]
                 self.cut = pcut
 
             if self.cut:
@@ -392,9 +395,6 @@ class MuonSystemAwkward:
                 elif 'dt' in key[:2]:
                     arr = arr[self.ms_read['sel_dt']]
                 arr = arr[self.ms_read['sel_evt']]
-
-            if self.cache and key not in self.ms_read:
-                self.ms_read[key] = arr
 
             return arr
 
@@ -456,10 +456,10 @@ class MuonSystemAwkward:
 
     def set_implicit(self, implicit: bool=True) -> bool:
         """Set's the cut/filter method for the class.
-
+        
         args:
             implicit : set's filter to cut implicitly or return a new filtered copy of the class
-
+            
         returns:
             class filther method"""
         if not implicit:
@@ -470,12 +470,22 @@ class MuonSystemAwkward:
 
     def filter(self, sel, system='evt', has_clusters=True):
         self.ms_read[f'sel_{system}'] = (self.ms_read[f'sel_{system}'] & sel)
+        # for k, v in self.ms_dict.items():
+        #     if 'sel_' in k:
+        #         continue
+ 
+        #     if self.implicit:
+        #         if system == 'evt' or system == k[:len(system)]:
+        #             self.ms_dict[k] = v[sel]
+        #     else: #TODO
+        #         alert('Non-implicit behavior does not work (yet)')
+        #         # make new ms_dict -> copy MuonSystemAwkward into new object w/ new dict
+        #         pass
 
         if system != 'evt':
             self._fix_n_column(system=system)
             if has_clusters:
-                # self.filter(self.ms_read['nCscRechitClusters'] + self.ms_read['nDtRechitClusters'] > 0, system='evt')
-                self.filter((self.ms_read['nCscRechitClusters']>0) & (self.ms_read['nDtRechitClusters']>0), system='evt')
+                self.filter(self.ms_read['nCscRechitClusters'] + self.ms_read['nCscRechitClusters'] > 0, system='evt')
 
         return self
 
@@ -613,7 +623,7 @@ class MuonSystemAwkward:
             if cut_csc_spread:
                 sel_t = (sel_t & (self['cscRechitClusterTimeSpreadWeightedAll'] < 20))
             if invert:
-                sel_t = ~sel_t
+                sel_t = not sel_t
             self.filter(sel_t, system='csc')
 
         if 'dt' in system:
@@ -621,7 +631,7 @@ class MuonSystemAwkward:
             if cut_rpc_hits:
                 sel_t = (sel_t & (self['dtRechitCluster_match_RPChits_dPhi0p5'] > 0))
             if invert:
-                sel_t = ~sel_t
+                sel_t = not sel_t
             self.filter(sel_t, system='dt')
 
         self.cut = pcut
@@ -629,31 +639,6 @@ class MuonSystemAwkward:
 
     def cut_l1(self, invert=False):
         self.cut, pcut = False, self.cut
-
-        # first_in_ME11 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>100, cscClusterR<275), np.abs(cscClusterZ)>580), np.abs(cscClusterZ)<632) 
-        # first_in_ME12 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>275, cscClusterR<465), np.abs(cscClusterZ)>668), np.abs(cscClusterZ)<724)
-        # first_in_ME13 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>505, cscClusterR<700), np.abs(cscClusterZ)>668), np.abs(cscClusterZ)<724)
-        # first_in_ME21 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>139, cscClusterR<345), np.abs(cscClusterZ)>789), np.abs(cscClusterZ)<850)
-        # first_in_ME22 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>357, cscClusterR<700), np.abs(cscClusterZ)>791), np.abs(cscClusterZ)<850)
-        # first_in_ME31 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>160, cscClusterR<345), np.abs(cscClusterZ)>915), np.abs(cscClusterZ)<970)
-        # first_in_ME32 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>357, cscClusterR<700), np.abs(cscClusterZ)>911), np.abs(cscClusterZ)<970)
-        # first_in_ME41 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>178, cscClusterR<345), np.abs(cscClusterZ)>1002), np.abs(cscClusterZ)<1063)
-        # first_in_ME42 = np.logical_and(np.logical_and(np.logical_and(cscClusterR>357, cscClusterR<700), np.abs(cscClusterZ)>1002), np.abs(cscClusterZ)<1063)
-        
-        # first_in_plateau_ME11 = np.logical_and(first_in_ME11, cscClusterSize>=500)
-        # first_in_plateau_ME21 = np.logical_and(first_in_ME21, cscClusterSize>=500)
-        # first_in_plateau_ME31 = np.logical_and(first_in_ME31, cscClusterSize>=500)
-        # first_in_plateau_ME41 = np.logical_and(first_in_ME41, cscClusterSize>=500)
-
-        # first_in_plateau_ME12 = np.logical_and(first_in_ME12, cscClusterSize>=200)
-        # first_in_plateau_ME13 = np.logical_and(first_in_ME13, cscClusterSize>=200)
-        # first_in_plateau_ME22 = np.logical_and(first_in_ME22, cscClusterSize>=200)
-        # first_in_plateau_ME32 = np.logical_and(first_in_ME32, cscClusterSize>=200)
-        # first_in_plateau_ME42 = np.logical_and(first_in_ME42, cscClusterSize>=200)
-        
-        # first_in_plateau = first_in_plateau_ME11 | first_in_plateau_ME12 | first_in_plateau_ME13 | first_in_plateau_ME21 | first_in_plateau_ME22 | \
-        # first_in_plateau_ME31 | first_in_plateau_ME32 | first_in_plateau_ME41 | first_in_plateau_ME42
-        
 
         csc_z, csc_size =  self['cscRechitClusterZ'], self['cscRechitClusterSize']
         csc_r = np.sqrt(self['cscRechitClusterX']**2 + self['cscRechitClusterY']**2)
@@ -672,6 +657,9 @@ class MuonSystemAwkward:
 
         self.cut = pcut
         return self
+
+
+
 
 # class MuonSystemAwkward:
 #     """Handler for working with muon system ntuples using an Awkward arrays"""
