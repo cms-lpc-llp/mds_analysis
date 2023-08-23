@@ -120,7 +120,7 @@ def hist1D(x_labels, bins, systems, out_dir=OUT_DIR):
 
 
 if __name__ == '__main__':
-    alert('Starting train_bdt.py', '=', 'm')
+    alert('Starting train_bdt.py', '=', 'c')
 
     if ROOT_BATCH:
         SetBatch(ROOT_BATCH)
@@ -181,13 +181,13 @@ if __name__ == '__main__':
     # ms_r3.cut_hlt()
     # print(f'|   HLT | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
-    # ms_mc.f(ms_mc['dtRechitClusterNHitStation1'] == 0, 'dt')
-    # ms_r3.f(ms_r3['dtRechitClusterNHitStation1'] == 0, 'dt')
-    # print(f'|   MB1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
-
     ms_mc.f(ms_mc['cscRechitClusterMe11Ratio'] + ms_mc['cscRechitClusterMe12Ratio'] == 0, 'csc')
     ms_r3.f(ms_r3['cscRechitClusterMe11Ratio'] + ms_r3['cscRechitClusterMe12Ratio'] == 0, 'csc')
-    print(f'|  ME11 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+    print(f'|   ME1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
+
+    ms_mc.f(ms_mc['dtRechitClusterNHitStation1'] == 0, 'dt')
+    ms_r3.f(ms_r3['dtRechitClusterNHitStation1'] == 0, 'dt')
+    print(f'|   MB1 | MC : {ms_mc.count():>10,} | R3 : {ms_r3.count():>10,} |')
 
     ms_mc.cut_l1()
     ms_r3.cut_l1()
@@ -226,258 +226,259 @@ if __name__ == '__main__':
     ######################################################
     ######################################################
 
-    alert('Making CSC Plots', form='-', c='g')
+    alert('SKIPPING PLOTS', form='+', c='r')
+    # alert('Making CSC Plots', form='-', c='g')
 
-    xls = [
-        'cscMuonVetoPt',
-        'cscJetVetoPt',
-        'cscPhi',
-        'cscEta',
-        'cscSize',
-        'cscNStation10',
-        'cscMaxChamber',
-        'cscAvgStation10',
-        'cscMaxStation',
-        'cscMe11Ratio',
-        'cscMe12Ratio'
-    ]
-    bins = [[50,0,100],
-            [50,0,100],
-            [25,-np.pi,np.pi],
-            [50,0.8,2.5],
-            [50,0,2000],
-            [6,-0.5,5.5],
-            [50,0,50],
-            [50,0,5],
-            [6,-0.5,5.5],
-            [50,0,1],
-            [50,0,1]]
+    # xls = [
+    #     'cscMuonVetoPt',
+    #     'cscJetVetoPt',
+    #     'cscPhi',
+    #     'cscEta',
+    #     'cscSize',
+    #     'cscNStation10',
+    #     'cscMaxChamber',
+    #     'cscAvgStation10',
+    #     'cscMaxStation',
+    #     'cscMe11Ratio',
+    #     'cscMe12Ratio'
+    # ]
+    # bins = [[50,0,100],
+    #         [50,0,100],
+    #         [25,-np.pi,np.pi],
+    #         [50,0.8,2.5],
+    #         [50,0,2000],
+    #         [6,-0.5,5.5],
+    #         [50,0,50],
+    #         [50,0,5],
+    #         [6,-0.5,5.5],
+    #         [50,0,1],
+    #         [50,0,1]]
 
-    for ix, xl in enumerate(xls):
-        cn = 'c'+str(np.random.randint(999999999))
-        c = TCanvas(cn,cn, 800, 800)
-        leg = []
-        lat = TLatex()
-        lat.SetTextAlign(11)
-        lat.SetTextSize(0.04)
-        hmin, hmax = 999, -1
+    # for ix, xl in enumerate(xls):
+    #     cn = 'c'+str(np.random.randint(999999999))
+    #     c = TCanvas(cn,cn, 800, 800)
+    #     leg = []
+    #     lat = TLatex()
+    #     lat.SetTextAlign(11)
+    #     lat.SetTextSize(0.04)
+    #     hmin, hmax = 999, -1
 
-        for ims, ms in enumerate([ms_r3, ms_mc]):
-            k, var, weight = ms.name, ms[xl], ms['weight']
-            if xl == 'cscEta':
-                var = np.abs(var)
+    #     for ims, ms in enumerate([ms_r3, ms_mc]):
+    #         k, var, weight = ms.name, ms[xl], ms['weight']
+    #         if xl == 'cscEta':
+    #             var = np.abs(var)
 
-            # cond = np.abs(cscClusterSize[k][:,0])>1000
-            # cond = np.abs(cscClusterEta[k][:,0])>1.6
+    #         # cond = np.abs(cscClusterSize[k][:,0])>1000
+    #         # cond = np.abs(cscClusterEta[k][:,0])>1.6
 
-            # cond = np.abs(cscClusterEta[k][:,0])<1.2
-            #! Why did you do dPhi > -0.5?
-            cond = (ms['tag_dPhi'] > 0.5) & (ms['dtSize'][:,0]<100)
-            # cond = np.logical_and(np.abs(cscClusterEta[k][:,0])<1.6, np.abs(cscClusterEta[k][:,0])>1.2)
-            # 0.9 1.2
-            # 1.2 1.6
-            # cond = np.logical_and(cond, np.abs(dPhi[k])>1.5)
-            # cond = np.logical_and(cond, np.abs(cscClusterSize[k][:,0])>300)
-            if not ms.is_mc:
-                var, weight = var[cond], weight[cond]
+    #         # cond = np.abs(cscClusterEta[k][:,0])<1.2
+    #         #! Why did you do dPhi > -0.5?
+    #         cond = (ms['tag_dPhi'] > 0.5) & (ms['dtSize'][:,0]<100)
+    #         # cond = np.logical_and(np.abs(cscClusterEta[k][:,0])<1.6, np.abs(cscClusterEta[k][:,0])>1.2)
+    #         # 0.9 1.2
+    #         # 1.2 1.6
+    #         # cond = np.logical_and(cond, np.abs(dPhi[k])>1.5)
+    #         # cond = np.logical_and(cond, np.abs(cscClusterSize[k][:,0])>300)
+    #         if not ms.is_mc:
+    #             var, weight = var[cond], weight[cond]
 
-            h = create_TH1D(
-                var,
-                axis_title=[xl, 'fraction of events'],
-                binning=bins[ix],
-                weights=weight
-            )
-            h.SetLineColor(std_color_list[ims])
+    #         h = create_TH1D(
+    #             var,
+    #             axis_title=[xl, 'fraction of events'],
+    #             binning=bins[ix],
+    #             weights=weight
+    #         )
+    #         h.SetLineColor(std_color_list[ims])
 
-            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
-            leg.append((k, std_color_list[ims]))
+    #         # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
+    #         leg.append((k, std_color_list[ims]))
 
-            if h.Integral()>0:
-                h.Scale(1./h.Integral())
+    #         if h.Integral()>0:
+    #             h.Scale(1./h.Integral())
 
-            hmax = max(hmax, h.GetMaximum())
-            hmin = min(hmin, h.GetMinimum(0))
+    #         hmax = max(hmax, h.GetMaximum())
+    #         hmin = min(hmin, h.GetMinimum(0))
 
-            # h.SetMinimum(1e-3)
-            # h.SetMaximum(4e-1)
-            h.Draw('hist same')
-            gc.append(h)
+    #         # h.SetMinimum(1e-3)
+    #         # h.SetMaximum(4e-1)
+    #         h.Draw('hist same')
+    #         gc.append(h)
 
-        for ileg, (text, color) in enumerate(leg):
-            lat.SetTextColor(color)
-            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
+    #     for ileg, (text, color) in enumerate(leg):
+    #         lat.SetTextColor(color)
+    #         lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
 
-        gc[-1].SetMaximum(hmax)
-        gc[-2].SetMaximum(hmax)
-        gc[-1].SetMinimum(hmin)
-        gc[-2].SetMinimum(hmin)
+    #     gc[-1].SetMaximum(hmax)
+    #     gc[-2].SetMaximum(hmax)
+    #     gc[-1].SetMinimum(hmin)
+    #     gc[-2].SetMinimum(hmin)
 
-        c.SetLogy()
-        c.SetGrid()
-        c.SetRightMargin(0.04)
+    #     c.SetLogy()
+    #     c.SetGrid()
+    #     c.SetRightMargin(0.04)
 
-        if not ROOT_BATCH:
-            c.Draw()
+    #     if not ROOT_BATCH:
+    #         c.Draw()
 
-        c.Print(f'{OUT_DIR}/{xl}.png')
+    #     c.Print(f'{OUT_DIR}/{xl}.png')
 
-    alert('Making DT Plots', form='-', c='g')
+    # alert('Making DT Plots', form='-', c='g')
 
-    xls = [
-        'dtJetVetoPt',
-        'dtMuonVetoPt',
-        'dtPhi',
-        'dtEta',
-        'dtSize',
-        'dt_match_RPCBx_dPhi0p5',
-        'dtNStation10',
-        'dtMaxStation',
-        'dtNHitStation1',
-        'dtMb1Ratio',
-    ]
-    bins = [[50,0,100],
-            [50,0,100],
-            [25,-np.pi,np.pi],
-            [50,0,1.3],
-            [50,0,500],
-            [20,-10,10],
-            [6,-0.5,5.5],
-            [6,-0.5,5.5],
-            [50,0,50],
-            [50,0,1]]
+    # xls = [
+    #     'dtJetVetoPt',
+    #     'dtMuonVetoPt',
+    #     'dtPhi',
+    #     'dtEta',
+    #     'dtSize',
+    #     'dt_match_RPCBx_dPhi0p5',
+    #     'dtNStation10',
+    #     'dtMaxStation',
+    #     'dtNHitStation1',
+    #     'dtMb1Ratio',
+    # ]
+    # bins = [[50,0,100],
+    #         [50,0,100],
+    #         [25,-np.pi,np.pi],
+    #         [50,0,1.3],
+    #         [50,0,500],
+    #         [20,-10,10],
+    #         [6,-0.5,5.5],
+    #         [6,-0.5,5.5],
+    #         [50,0,50],
+    #         [50,0,1]]
 
-    for ix, xl in enumerate(xls):
-        cn = 'c'+str(np.random.randint(999999999))
-        c = TCanvas(cn,cn, 800, 800)
-        leg = []
-        lat = TLatex()
-        lat.SetTextAlign(11)
-        lat.SetTextSize(0.04)
-        hmin, hmax = 999, -1
+    # for ix, xl in enumerate(xls):
+    #     cn = 'c'+str(np.random.randint(999999999))
+    #     c = TCanvas(cn,cn, 800, 800)
+    #     leg = []
+    #     lat = TLatex()
+    #     lat.SetTextAlign(11)
+    #     lat.SetTextSize(0.04)
+    #     hmin, hmax = 999, -1
 
-        for ims, ms in enumerate([ms_r3, ms_mc]):
-            k, var, weight = ms.name, ms[xl], ms['weight']
-            if xl == 'cscEta':
-                var = np.abs(var)
+    #     for ims, ms in enumerate([ms_r3, ms_mc]):
+    #         k, var, weight = ms.name, ms[xl], ms['weight']
+    #         if xl == 'cscEta':
+    #             var = np.abs(var)
 
-            # if k == 'data':sel_dtcluster =  dtClusterSize[k]<80
-            # else: sel_dtcluster = dtClusterSize[k]>=50
-            # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterTime[k] == 0)
-            # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterJetVetoPt[k] < 10)
-            # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterMuonVetoPt[k] < 10)
+    #         # if k == 'data':sel_dtcluster =  dtClusterSize[k]<80
+    #         # else: sel_dtcluster = dtClusterSize[k]>=50
+    #         # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterTime[k] == 0)
+    #         # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterJetVetoPt[k] < 10)
+    #         # sel_dtcluster = np.logical_and(sel_dtcluster, dtClusterMuonVetoPt[k] < 10)
 
-            cond = (ms['tag_dPhi'] > 0.5) & (ms['cscSize'][:,0]<300)
-            if not ms.is_mc:
-                var, weight = var[cond], weight[cond]
+    #         cond = (ms['tag_dPhi'] > 0.5) & (ms['cscSize'][:,0]<300)
+    #         if not ms.is_mc:
+    #             var, weight = var[cond], weight[cond]
 
-            h = create_TH1D(
-                var,
-                axis_title=[xl, 'fraction of events'],
-                binning=bins[ix],
-                weights=weight
-            )
-            h.SetLineColor(std_color_list[ims])
+    #         h = create_TH1D(
+    #             var,
+    #             axis_title=[xl, 'fraction of events'],
+    #             binning=bins[ix],
+    #             weights=weight
+    #         )
+    #         h.SetLineColor(std_color_list[ims])
 
-            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
-            leg.append((k, std_color_list[ims]))
+    #         # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
+    #         leg.append((k, std_color_list[ims]))
 
-            if h.Integral()>0:
-                h.Scale(1./h.Integral())
+    #         if h.Integral()>0:
+    #             h.Scale(1./h.Integral())
 
-            hmax = max(hmax, h.GetMaximum())
-            hmin = min(hmin, h.GetMinimum(0))
+    #         hmax = max(hmax, h.GetMaximum())
+    #         hmin = min(hmin, h.GetMinimum(0))
 
-            # h.SetMinimum(1e-3)
-            # h.SetMaximum(4e-1)
-            h.Draw('hist same')
-            gc.append(h)
+    #         # h.SetMinimum(1e-3)
+    #         # h.SetMaximum(4e-1)
+    #         h.Draw('hist same')
+    #         gc.append(h)
 
-        for ileg, (text, color) in enumerate(leg):
-            lat.SetTextColor(color)
-            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
+    #     for ileg, (text, color) in enumerate(leg):
+    #         lat.SetTextColor(color)
+    #         lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
 
-        gc[-1].SetMaximum(hmax)
-        gc[-2].SetMaximum(hmax)
-        gc[-1].SetMinimum(hmin)
-        gc[-2].SetMinimum(hmin)
+    #     gc[-1].SetMaximum(hmax)
+    #     gc[-2].SetMaximum(hmax)
+    #     gc[-1].SetMinimum(hmin)
+    #     gc[-2].SetMinimum(hmin)
 
-        c.SetLogy()
-        c.SetGrid()
-        c.SetRightMargin(0.04)
+    #     c.SetLogy()
+    #     c.SetGrid()
+    #     c.SetRightMargin(0.04)
 
-        if not ROOT_BATCH:
-            c.Draw()
+    #     if not ROOT_BATCH:
+    #         c.Draw()
 
-        c.Print(f'{OUT_DIR}/{xl}.png')
+    #     c.Print(f'{OUT_DIR}/{xl}.png')
 
-    alert('Making Event/2tag Plots', form='-', c='g')
+    # alert('Making Event/2tag Plots', form='-', c='g')
 
-    xls = ['tag_dEta',
-           'tag_dPhi',
-           'tag_dR',
-           'nCsc',
-           'nDt',
-           'met',
-           'runNum']
-    bins = [[32,0,3.5],
-            [32,0,np.pi],
-            [32,0,5],
-            [6,-0.5,5.5],
-            [6,-0.5,5.5],
-            [30,0,500],
-            [2741,360019, 362760]]
+    # xls = ['tag_dEta',
+    #        'tag_dPhi',
+    #        'tag_dR',
+    #        'nCsc',
+    #        'nDt',
+    #        'met',
+    #        'runNum']
+    # bins = [[32,0,3.5],
+    #         [32,0,np.pi],
+    #         [32,0,5],
+    #         [6,-0.5,5.5],
+    #         [6,-0.5,5.5],
+    #         [30,0,500],
+    #         [2741,360019, 362760]]
 
-    for ix, xl in enumerate(xls):
-        cn = 'c'+str(np.random.randint(999999999))
-        c = TCanvas(cn,cn, 800, 800)
-        leg = []
-        lat = TLatex()
-        lat.SetTextAlign(11)
-        lat.SetTextSize(0.04)
-        hmin, hmax = 999, -1
+    # for ix, xl in enumerate(xls):
+    #     cn = 'c'+str(np.random.randint(999999999))
+    #     c = TCanvas(cn,cn, 800, 800)
+    #     leg = []
+    #     lat = TLatex()
+    #     lat.SetTextAlign(11)
+    #     lat.SetTextSize(0.04)
+    #     hmin, hmax = 999, -1
 
-        for ims, ms in enumerate([ms_r3, ms_mc]):
-            k, var, weight = ms.name, ms[xl], ms['weight']
+    #     for ims, ms in enumerate([ms_r3, ms_mc]):
+    #         k, var, weight = ms.name, ms[xl], ms['weight']
 
-            h = create_TH1D(
-                var,
-                axis_title=[xl, 'fraction of events'],
-                binning=bins[ix],
-                weights=weight
-            )
-            h.SetLineColor(std_color_list[ims])
+    #         h = create_TH1D(
+    #             var,
+    #             axis_title=[xl, 'fraction of events'],
+    #             binning=bins[ix],
+    #             weights=weight
+    #         )
+    #         h.SetLineColor(std_color_list[ims])
 
-            # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
-            leg.append((k, std_color_list[ims]))
+    #         # print(k, h.Integral(), np.sum(weight[np.abs(var)>1.5])/np.sum(weight))
+    #         leg.append((k, std_color_list[ims]))
 
-            if h.Integral()>0:
-                h.Scale(1./h.Integral())
+    #         if h.Integral()>0:
+    #             h.Scale(1./h.Integral())
 
-            hmax = max(hmax, h.GetMaximum())
-            hmin = min(hmin, h.GetMinimum(0))
+    #         hmax = max(hmax, h.GetMaximum())
+    #         hmin = min(hmin, h.GetMinimum(0))
 
-            # h.SetMinimum(1e-3)
-            # h.SetMaximum(4e-1)
-            h.Draw('hist same')
-            gc.append(h)
+    #         # h.SetMinimum(1e-3)
+    #         # h.SetMaximum(4e-1)
+    #         h.Draw('hist same')
+    #         gc.append(h)
 
-        for ileg, (text, color) in enumerate(leg):
-            lat.SetTextColor(color)
-            lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
+    #     for ileg, (text, color) in enumerate(leg):
+    #         lat.SetTextColor(color)
+    #         lat.DrawLatexNDC(0.80-0.1*ileg,0.92,text)
 
-        gc[-1].SetMaximum(hmax)
-        gc[-2].SetMaximum(hmax)
-        gc[-1].SetMinimum(hmin)
-        gc[-2].SetMinimum(hmin)
+    #     gc[-1].SetMaximum(hmax)
+    #     gc[-2].SetMaximum(hmax)
+    #     gc[-1].SetMinimum(hmin)
+    #     gc[-2].SetMinimum(hmin)
 
-        c.SetLogy()
-        c.SetGrid()
-        c.SetRightMargin(0.04)
+    #     c.SetLogy()
+    #     c.SetGrid()
+    #     c.SetRightMargin(0.04)
 
-        if not ROOT_BATCH:
-            c.Draw()
+    #     if not ROOT_BATCH:
+    #         c.Draw()
 
-        c.Print(f'{OUT_DIR}/{xl}.png')
+    #     c.Print(f'{OUT_DIR}/{xl}.png')
 
     ######################################################
     ######################################################
@@ -503,7 +504,8 @@ if __name__ == '__main__':
         'cscMuonVetoPt',
     ]
     feats_dt = [
-        # 'dtSize',
+        'tag_dR',
+        'dtSize',
         'dtPhi',
         'dtEta',
         # 'dtX',
@@ -513,7 +515,7 @@ if __name__ == '__main__':
         'dtNStation10',
         'dtAvgStation10',
         # 'dtMaxStation',
-        'dtMb1Ratio',
+        # 'dtMb1Ratio',
         'dtJetVetoPt',
         'dtMuonVetoPt',
     ]
@@ -547,20 +549,20 @@ if __name__ == '__main__':
 
     X_csc, X_dt = np.abs(X_csc), np.abs(X_dt)
 
-    print(X_csc.shape, X_dt.shape, y.shape, np.sum(y))
+    print(X_csc.shape, X_dt.shape, y.shape, np.sum(y)/y.shape[0])
 
     # n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*min(np.sum(y_csc), len(y_csc)-np.sum(y_csc)))
     n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*len(y))
     # n_estimators = np.sqrt(min(len(feats_csc), len(feats_dt))*min(np.sum(y_csc), len(y_csc)-np.sum(y_csc)))
-    n_estimators = int(n_estimators)
+    n_estimators = 500#int(n_estimators)
     print(f'{n_estimators=}')
 
-    clf_csc = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
-    clf_dt = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
-    # clf_csc = GradientBoostingClassifier(random_state=42, n_estimators=500, max_depth=10)
-    # clf_dt = GradientBoostingClassifier(random_state=42, n_estimators=500, max_depth=10)
+    # clf_csc = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
+    # clf_dt = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=2)
+    clf_csc = GradientBoostingClassifier(n_estimators=n_estimators, random_state=42)#, max_depth=10)
+    clf_dt = GradientBoostingClassifier(n_estimators=n_estimators, random_state=42)#, max_depth=10)
 
-    X_trn_csc, X_tst_csc, X_trn_dt, X_tst_dt, y_trn, y_tst, w_trn, w_tst = train_test_split(X_csc, X_dt, y, w, test_size=0.1, random_state=42)
+    X_trn_csc, X_tst_csc, X_trn_dt, X_tst_dt, y_trn, y_tst, w_trn, w_tst = train_test_split(X_csc, X_dt, y, w, test_size=2, random_state=42)
 
     sclr_csc, sclr_dt = StandardScaler(), StandardScaler()
     X_trn_csc = sclr_csc.fit_transform(X_trn_csc)
@@ -576,8 +578,8 @@ if __name__ == '__main__':
         pred_csc = clf_csc.decision_function(X_csc)
         pred_dt = clf_dt.decision_function(X_dt)
     except:
-        pred_csc = clf_csc.predict_proba(X_csc)
-        pred_dt = clf_dt.predict_proba(X_dt)
+        pred_csc = clf_csc.predict_proba(X_csc)[:,1]
+        pred_dt = clf_dt.predict_proba(X_dt)[:,1]
 
     for fts, clf in [(feats_csc, clf_csc), (feats_dt, clf_dt)]:
         fts, wts = np.asarray(fts), clf.feature_importances_
@@ -614,7 +616,11 @@ if __name__ == '__main__':
 
         vmc, vr3 = np.asarray(vmc), np.asarray(vr3)
         if len(vmc.shape) == 2:
-            vmc, vr3 = vmc[:,0], vr3[:,0]
+            if vmc.shape[1] == 1:
+                vmc, vr3 = vmc[:,0], vr3[:,0]
+            else:
+                print(f'too many columns, expected 1 saw {vmc.shape[1]}. (using col 0)')
+                vmc, vr3 = vmc[:,0], vr3[:,0]
 
         #  if name == 'tag_dPhi':
         #     threshold = np.arange(0,np.pi,np.pi/50)
@@ -636,7 +642,6 @@ if __name__ == '__main__':
             sig_effs[name].append(np.sum(wmc[cond])/np.sum(wmc))
             sigs[name].append(np.sum(wmc[cond]))
 
-        print(np.r_[vmc, vr3].shape, np.r_[vmc, vr3])
         sig_effs[name] = np.array(sig_effs[name])
         bkg_effs[name] = np.array(bkg_effs[name])
         sigs[name] = np.array(sigs[name])
@@ -700,4 +705,4 @@ if __name__ == '__main__':
     ######################################################
     ######################################################
 
-    alert('Finished train_bdt.py', '=', 'm')
+    alert('Finished train_bdt.py', '=', 'c')

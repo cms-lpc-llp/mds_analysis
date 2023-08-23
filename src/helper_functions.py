@@ -120,8 +120,8 @@ def alert(msg: str, form: str='-', c: str='w'):
         'r' : '\033[91m', # Red
         'g' : '\033[92m', # Green
         'y' : '\033[93m', # Yellow
-        'm' : '\033[94m', # LightPurple
-        'p' : '\033[95m', # Purple
+        'b' : '\033[94m', # Blue
+        'm' : '\033[95m', # Purple/Magenta
         'c' : '\033[96m', # Cyan
         'lg' : '\033[97m', # LightGray
         'k' : '\033[98m', # Black
@@ -133,15 +133,15 @@ def alert(msg: str, form: str='-', c: str='w'):
         print('!! ' + msg + ' !!')
         print('!' * (len(msg) + 6) + ('\033[0m' if c!='w' else ''))
     elif form == '#':
-        # print('#' * (len(msg) + 6))
-        print('##' + ('=' * (len(msg) + 2)) + '##')
+        print('#' * (len(msg) + 6))
+        print('#' * (len(msg) + 6))
         print('## ' + msg + ' ##')
-        print('##' + ('=' * (len(msg) + 2)) + '##' + ('\033[0m' if c!='w' else ''))
-        # print('#' * (len(msg) + 6) + ('\033[0m' if c!='w' else ''))
+        print('#' * (len(msg) + 6))
+        print('#' * (len(msg) + 6) + ('\033[0m' if c!='w' else ''))
     elif form == '=':
-        print('##' + ('=' * (len(msg) + 2)) + '##')
-        print('## ' + msg + ' ##')
-        print('##' + ('=' * (len(msg) + 2)) + '##' + ('\033[0m' if c!='w' else ''))
+        print('#' + ('=' * (len(msg) + 2)) + '#')
+        print('# ' + msg + ' #')
+        print('#' + ('=' * (len(msg) + 2)) + '#' + ('\033[0m' if c!='w' else ''))
     else:# form == '-':
         print('+' + ('-' * (len(msg) + 2)) + '+')
         print('| ' + msg + ' |')
