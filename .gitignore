@@ -1,6 +1,10 @@
 llp_env/
 venv/
 .vscode/
+*.png
+*.jpg
+*.jpeg
+*.gif
 *.pyc
 *.swp
 *.root

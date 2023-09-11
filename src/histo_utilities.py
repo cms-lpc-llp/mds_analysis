@@ -1,6 +1,7 @@
 import numpy as np
 import ROOT as rt
-#import root_numpy as rtnp
+
+# import root_numpy as rtnp
 import matplotlib.pyplot as plt
 from array import array
 
@@ -50,8 +51,7 @@ def EstimateDispersion(aux, w=None):
 def create_TH1D(
     x, name="h", title=None, binning=[None, None, None], weights=None, h2clone=None, axis_title=None, bin_list=False
 ):
-    
-    if name == 'h':
+    if name == "h":
         name += str(np.random.randint(999999999))
     x = np.ravel(x)
     if title is None:
@@ -81,13 +81,13 @@ def create_TH1D(
         h.SetTitle(title)
         h.Reset()
 
-    #rtnp.fill_hist(h, x, weights=weights)
+    # rtnp.fill_hist(h, x, weights=weights)
     for i in range(len(x)):
         if weights is None:
             h.Fill(x[i])
         else:
-            h.Fill(x[i],weights[i])
-        
+            h.Fill(x[i], weights[i])
+
     if axis_title is not None:
         h.SetXTitle(axis_title[0])
         h.SetYTitle(axis_title[1])
@@ -165,8 +165,10 @@ def create_prof1D(x, y, name="h", title=None, binning=[None, None, None], h2clon
 def create_TH2D(
     sample, name="h", title=None, binning=[None, None, None, None, None, None], weights=None, axis_title=None
 ):
+    if name == "h":
+        name += str(np.random.randint(999999999))
     if title is None:
-        title = name
+        title = ""
     if sample.shape[0] == 0:
         for i in range(len(binning)):
             if binning[i] == None:
@@ -216,12 +218,12 @@ def create_TH2D(
             array("f", binning[binning[-2] : -2]),
         )
 
-    #rtnp.fill_hist(h, sample, weights=weights)
+    # rtnp.fill_hist(h, sample, weights=weights)
     for i in range(len(sample)):
         if weights is None:
-            h.Fill(sample[i,0],sample[i,1])
+            h.Fill(sample[i, 0], sample[i, 1])
         else:
-            h.Fill(sample[i,0],sample[i,1],weights[i])
+            h.Fill(sample[i, 0], sample[i, 1], weights[i])
     if axis_title is not None:
         h.SetXTitle(axis_title[0])
         h.SetYTitle(axis_title[1])
@@ -678,16 +680,16 @@ def histo2D_projectionFit(
 
 
 def create_TGraph(x, y, ex=[], ey=[], axis_title=["", ""]):
-    # x = array("d", x)
-    # y = array("d", y)
-    # ex = array("d", ex)
-    # ey = array("d", ey)
-    # if not len(x) == len(y):
-    #   print("length of x and y are not equal!")
-    # if not len(ex) == len(ey):
-    #   print("length of ex and ey are not equal!")
-    # if len(ex) > 0 and not len(x) == len(ex):
-    #   print("leng of ex and x are not equal!")
+    x = array("d", x)
+    y = array("d", y)
+    ex = array("d", ex)
+    ey = array("d", ey)
+    if not len(x) == len(y):
+      print("length of x and y are not equal!")
+    if not len(ex) == len(ey):
+      print("length of ex and ey are not equal!")
+    if len(ex) > 0 and not len(x) == len(ex):
+      print("leng of ex and x are not equal!")
 
     if len(ex) == 0:
         gr = rt.TGraph(len(x), x, y)
