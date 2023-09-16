@@ -1,6 +1,7 @@
 #!/bin/bash
 
-BASE_DIR="/home/psimmerl/LLP/mdc_analysis/reports/weekly/2023-09-07"
+BASE_DIR="/home/psimmerl/LLP/mdc_analysis/reports/weekly/2023-09-14"
+# alias python="/home/psimmerl/mambaforge/envs/ROOT/bin/python"
 
 if [ $# -ge 1 ]; then
     NEV="$1"
@@ -11,35 +12,41 @@ fi
 if [ $# -ge 2 ]; then
     LAB="_$2"
 else
-    # LAB="_test"
     LAB=""
 fi
 
-# pkill python
-# time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "$LAB" | tee "$BASE_DIR/$LAB.out"
+# ************ #
 
-
-# All Events
+LAB="DTOOT"
 
 pkill python
-time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u "train_bdt copy.py" "$NEV" "standard$LAB"  | tee "$BASE_DIR/standard$LAB.out"
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "standard_$LAB" "$LAB" | tee "$BASE_DIR/standard_$LAB.out"
 
 pkill python
-time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u "train_bdt copy.py" "$NEV" "neither$LAB"  | tee "$BASE_DIR/neither$LAB.out"
-
-# pkill python
-# time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u "train_bdt copy.py" "$NEV" "both$LAB"  | tee "$BASE_DIR/both$LAB.out"
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "halo_$LAB" "$LAB" | tee "$BASE_DIR/halo_$LAB.out"
 
 pkill python
-time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u "train_bdt copy.py" "$NEV" "halo$LAB"  | tee "$BASE_DIR/halo$LAB.out"
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "dphi_$LAB" "$LAB" | tee "$BASE_DIR/dphi_$LAB.out"
 
-# pkill python
-# time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u "train_bdt copy.py" "$NEV" "dphi$LAB"  | tee "$BASE_DIR/dphi$LAB.out"
+pkill python
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "neither_$LAB" "$LAB" | tee "$BASE_DIR/neither_$LAB.out"
 
-# # pkill python
-# # time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "bdt$LAB" | tee "$BASE_DIR/bdt$LAB.out"
+##
 
+LAB="BLINDSR"
 
+pkill python
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "standard_$LAB" "$LAB" | tee "$BASE_DIR/standard_$LAB.out"
 
+pkill python
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "halo_$LAB" "$LAB" | tee "$BASE_DIR/halo_$LAB.out"
+
+pkill python
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "dphi_$LAB" "$LAB" | tee "$BASE_DIR/dphi_$LAB.out"
+
+pkill python
+time /home/psimmerl/mambaforge/envs/ROOT/bin/python -u train_bdt.py "$NEV" "neither_$LAB" "$LAB" | tee "$BASE_DIR/neither_$LAB.out"
+
+# ************ #
 
 

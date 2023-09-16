@@ -81,7 +81,7 @@ class MuonSystemAwkward:
         """Initialize a new instance of MuonSystemAwkward"""
 
         print(f"Building MuonSystemAwkward '{name}' -")
-        print(f"  is mc  = {is_mc}")
+        print(f"  is_mc  = {is_mc}")
         print(f"  events = {nev}")
         print(f"  tree   = '{tree_name}'")
         print(f"  file   = '{file_name}'")
@@ -118,18 +118,6 @@ class MuonSystemAwkward:
         if not self.implicit:
             raise NotImplementedError("Non-implicit cuts do not work yet.")
 
-        self.hlt_info = {
-            # 'HLT_CaloMET60_DTCluster50': 562,
-            # 'HLT_CaloMET60_DTClusterNoMB1S50': 563,
-            # 'HLT_L1MET_DTCluster50': 564,
-            # 'HLT_L1MET_DTClusterNoMB1S50': 565,
-            # 'HLT_CscCluster_Loose': 566,
-            # 'HLT_CscCluster_Medium': 567,
-            # 'HLT_CscCluster_Tight': 568,
-            "HLT_L1CSCCluster_DTCluster50": 569,
-            # 'HLT_L1CSCCluser_DTCluster75': 570,
-        }
-
         ##########
 
         self.ms_read = {}
@@ -140,8 +128,36 @@ class MuonSystemAwkward:
             self.nev = len(self.ms_read["sel_evt"])
         print(f"  Extracted {self.nev:,} events")
 
+        ##########
+
+        # self.aliases = {
+        #         "cscRechitClusterMe11Ratio" : "(cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberMinus11) / cscRechitClusterSize",
+        #         "cscRechitClusterMe12Ratio" : "(cscRechitClusterNRechitChamberPlus12 + cscRechitClusterNRechitChamberMinus12) / cscRechitClusterSize",
+        #         "dtRechitClusterMb1Ratio" : "dtRechitClusterNHitStation1 / dtRechitClusterSize",
+        #         "cscRechitClusterR" : "sqrt(cscRechitClusterX**2 + cscRechitClusterY**2)",
+        #         "dtRechitClusterR" : "sqrt(dtRechitClusterX**2 + dtRechitClusterY**2)",
+        #         "tag_dPhi": ,
+        #         "tag_dEta": ,
+        #         "tag_dR": ,
+        #     }
+        
+        # hlt_info = {
+        #     'HLT_CaloMET60_DTCluster50': 562,
+        #     'HLT_CaloMET60_DTClusterNoMB1S50': 563,
+        #     'HLT_L1MET_DTCluster50': 564,
+        #     'HLT_L1MET_DTClusterNoMB1S50': 565,
+        #     'HLT_CscCluster_Loose': 566,
+        #     'HLT_CscCluster_Medium': 567,
+        #     'HLT_CscCluster_Tight': 568,
+        #     "HLT_L1CSCCluster_DTCluster50": 569,
+        #     'HLT_L1CSCCluser_DTCluster75': 570,
+        # }
+
+        # self.aliases = self.aliases | {k: f"HLTDecision[:{self.nev},c]" for k,c in hlt_info.items()}
+
+        ##########
+
         # ! I cannot figure out how to load HLTDecision without overflowing memory
-        # self.hlt_aliases = {k: f'HLTDecision[:{self.nev if self.nev else ""},{v}]' for k, v in self.hlt_info.items()}
         # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms.arrays(
         #     "HLT_L1CSCCluster_DTCluster50", aliases=self.hlt_aliases, entry_stop=self.nev
         # )["HLT_L1CSCCluster_DTCluster50"]
@@ -156,8 +172,12 @@ class MuonSystemAwkward:
         # for k, v in self.hlt_info.items():
         #     self.ms_read[k] = hlt_aa[k]
 
+        mods = [""]
         if isinstance(key, str):
             key = self._fix_key(key)
+
+            if "." in key:
+                key, mods = key.split(".")[0], key.split(".")[1:]
 
             if key in self.ms_read:
                 arr = self.ms_read[key]
@@ -165,9 +185,13 @@ class MuonSystemAwkward:
                 arr = np.sum(self.ms_read["sel_csc"], axis=1)
             elif "nDt" in key:
                 arr = np.sum(self.ms_read["sel_dt"], axis=1)
-            elif key in self.ms:
+            elif key in self.ms:# or key in self.aliases:
                 arr = self.ms[key].array(entry_stop=self.nev)
-                # arr = self.ms.arrays(key, cut=sel, aliases=self.hlt_aliases, entry_stop=self.nev)[key]
+                # arr = self.ms.arrays(key, aliases=self.aliases, entry_stop=self.nev)[key]
+            # else:
+            #     raise ValueError(f"Invalid key '{key}'.")
+            # elif key in self.aliases:
+            #     arr
             else:
                 # self.cut, pcut = False, self.cut
                 if key == "cscRechitClusterMe11Ratio":
@@ -202,6 +226,13 @@ class MuonSystemAwkward:
 
             if self.cache and key not in self.ms_read:
                 self.ms_read[key] = arr
+
+            if "abs" in mods:
+                arr = np.abs(arr)
+            if "log" in mods:
+                arr = np.log(arr)
+            if "log10" in mods:
+                arr = np.log10(arr)
 
             return arr
 
@@ -261,7 +292,10 @@ class MuonSystemAwkward:
 
     def count(self, use_weight=True):
         if use_weight:
-            return np.sum(self["weight"][self["sel_evt"]])
+            if self.cut:
+                return np.sum(self["weight"])
+            else:
+                return np.sum(self["weight"][self["sel_evt"]])
         return np.sum(self["sel_evt"])
 
     # def set_implicit(self, implicit: bool = True) -> bool:

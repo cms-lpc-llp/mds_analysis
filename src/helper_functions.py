@@ -207,7 +207,7 @@ class Table:
 
         ###
 
-        self.rv_join = " +/- "
+        self.rv_join = " "
         if "rv_join" in kwargs:
             self.rv_join = kwargs["rv_join"]
 

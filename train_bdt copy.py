@@ -70,10 +70,10 @@ CUTS = [
     # "JET",
     # "MUON",
     # "BDT",
-    "HALO",
+    # "HALO",
     "1CSC1DT",
     "BLINDSR",
-    "DPHI",
+    # "DPHI",
 ]
 
 TRAIN_BDT = False
@@ -84,7 +84,7 @@ SECTIONS = [
     "EVENT",
     "2D",
     "ABCD",
-    "ROCS",
+    "ROC",
 ]
 # **************************** #
 #! Paths are absolute so I know *exactly* what is being read/written
@@ -112,6 +112,7 @@ BOT_MARGIN, TOP_MARGIN = 0.025, 0.1
 
 gc = []
 # **************************** #
+
 
 def create_hists(values, bins, names, titles, weights=1, colors=None, styles=None, log=None, norm=False, canvas=None):
     if not isinstance(names, (list, tuple)):
@@ -157,25 +158,13 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
 
     RAND_NUM = f".{SAVE_STAT}.{np.random.randint(999999999)}"
     if canvas is None:
+        canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, len(values)*800, 800)
         if hist_type == "2D":
-            canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, len(names)*800, 800)
             canvas.Divide(len(values), 1)
-        else:
-            canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, 800, 800)
-        canvas.SetGrid()
-        canvas.SetRightMargin(0.04)
 
     lat = rt.TLatex()
     lat.SetTextAlign(21)  # left,cent,right=1,2,3 , bot,cent,top=1,2,3
     lat.SetTextSize(0.06)
-
-    legend = rt.TLegend(0.17, 0.91 - 0.04 * len(names), 0.21 + 0.016 * (max([len(n) for n in names]) + 11), 0.94)
-    legend.SetTextFont(62)
-    legend.SetTextSize(0.03)
-    legend.SetBorderSize(0)
-    legend.SetFillColorAlpha(1, 0.3)
-    legend.SetEntrySeparation(0.01)
-
     hmin, hmax = 1e9, -1
 
     for n, v, w, c, s in zip(names, values, weights, colors, styles):
@@ -215,10 +204,7 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
             lat.DrawLatexNDC(0.5, 0.96, hist.GetName().split(".")[0])
         else:
             hist.Draw("hist same")
-            le = legend.AddEntry(hist, hist.GetName().split(".")[0], "PE")
         
-    if hist_type == "1D":
-        legend.Draw()
 
     if logx:
         canvas.SetLogx()
@@ -227,10 +213,13 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
     if logz or (log and hist_type == "2D"):
         canvas.SetLogz()
 
+    canvas.SetGrid()
+    canvas.SetRightMargin(0.04)
+
     if not ROOT_BATCH:
         canvas.Draw()
 
-    return canvas, legend, hists
+    return canvas, hists
 
 
 # ************************************************************ #
@@ -249,6 +238,7 @@ def main():
         CUTS.remove("BLINDSR")
 
     if len(sys.argv) > 2:
+        print(sys.argv)
         if "standard" in sys.argv[2]:
             pass
         elif "neither" in sys.argv[2]:
@@ -262,8 +252,9 @@ def main():
             ms_nocut = MuonSystemAwkward(FN_R3, name="NoDPhiCut", nev=N_EVENTS, is_mc=False, lumi=LUMI)
             mss.append(ms_nocut)
         elif "both" in sys.argv[2]:
-            ms_cut = MuonSystemAwkward(ff_r3, name="NoHaloNoDPhiCuts", nev=N_EVENTS, is_mc=False, lumi=LUMI)
-            mss.append(ms_cut)
+            pass
+            # ms_cut = MuonSystemAwkward(ff_r3, name="halo&dphi", nev=N_EVENTS, is_mc=False, lumi=LUMI)
+            # mss.append(ms_cut)
 
     # ************************************************************ #
 
@@ -326,7 +317,7 @@ def main():
                 case "DTIT":
                     ms.cut_time("dt", invert=(not mc and BLIND_TYPE == "DTOOT"))
                 case "HALO":
-                    if "NoHalo" in msn:
+                    if "NoHaloCut" in msn:
                         was_cut = False
                     else:
                         ms.cut_halo(invert="Halo" in msn)
@@ -338,7 +329,7 @@ def main():
                     else:
                         was_cut=False
                 case "DPHI":
-                    if "NoDPhi" in msn:
+                    if "NoDPhiCut" in msn:
                         was_cut = False
                     else:
                         ms.f(0.4 < ms["tag_dPhi"], invert="dphi" in msn.lower())
@@ -436,7 +427,7 @@ def main():
                 weights = [w[c] for c, w in zip(conds, weights)]
                 values = [v[c] for c, v in zip(conds, values)]
 
-            canvas, legend, hists = create_hists(
+            canvas, hists = create_hists(
                 values, _bins, names, [xl, "events"], weights, colors, styles=None, log=None, norm=False
             )
 
@@ -497,7 +488,7 @@ def main():
                 weights = [w[c] for c, w in zip(conds, weights)]
                 values = [v[c] for c, v in zip(conds, values)]
 
-            canvas, legend, hists = create_hists(
+            canvas, hists = create_hists(
                 values, _bins, names, [xl, "events"], weights, colors, styles=None, log=None, norm=False
             )
 
@@ -549,7 +540,7 @@ def main():
                 weights = [w[c] for c, w in zip(conds, weights)]
                 values = [v[c] for c, v in zip(conds, values)]
 
-            canvas, legend, hists = create_hists(
+            canvas, hists = create_hists(
                 values, _bins, names, [xl, "events"], weights, colors, styles=None, log=None, norm=False
             )
 
@@ -632,7 +623,7 @@ def main():
                 weights = [w[c] for c, w in zip(conds, weights)]
                 values = [v[c] for c, v in zip(conds, values)]
 
-            canvas, legend, hists = create_hists(
+            canvas, hists = create_hists(
                 values, _bins, names, [xl, yl, "events"], weights, colors, styles=None, log=None, norm=False
             )
 
@@ -673,7 +664,7 @@ def main():
                 weights = [w[c] for c, w in zip(conds, weights)]
                 values = [v[c] for c, v in zip(conds, values)]
 
-            canvas, legend, hists = create_hists(
+            canvas, hists = create_hists(
                 values, _bins, names, [xl, yl, "events"], weights, colors, styles=None, log=None, norm=False
             )
             for ms, hh in zip(mss, hists):
@@ -693,6 +684,9 @@ def main():
             if VERBOSE:
                 print(f"Saved 'ABCD_{_bins[0]*100:03.0f}_{SAVE_STAT}.png'")
 
+    # **************************** #
+
+    if "ABCD" in SECTIONS:
         print("")
         alert("Performing ABCD Calculations", form="-", c="g")
 
@@ -872,6 +866,7 @@ def main():
                 d_cond = lambda th: (size < th) & (dphi < ABCD_DPHI)
 
             _a, _ae, _pa, _pae = [], [], [], [] 
+            ymax = 0
             for th in ths:
                 a = np.sum(wt[a_cond(th)])
                 b = np.sum(wt[b_cond(th)])
@@ -885,6 +880,7 @@ def main():
                 _ae.append(ae)
                 _pa.append(pa)
                 _pae.append(pae)
+                ymax = max(ymax, a+ae, pa+pae)
             _a, _ae, _pa, _pae = np.asarray(_a), np.asarray(_ae), np.asarray(_pa), np.asarray(_pae)
 
             cn = "c" + str(np.random.randint(999999999))
@@ -902,28 +898,19 @@ def main():
             gr_m = create_TGraph(ths, _a, [0] * len(ths), _ae, graph_axis_labels)
             gr_p = create_TGraph(ths, _pa, [0] * len(ths), _pae, graph_axis_labels)
 
+            gr_m.SetMinimum(0)
+            gr_p.SetMinimum(0)
+            gr_m.SetMaximum(ymax)
+            gr_p.SetMaximum(ymax)
 
-            for igr, gr in enumerate([gr_m, gr_p]):
-                gr.SetMinimum(0)
-                gr.SetMaximum(max(np.max(_a+_ae), np.max(_pa+_pae))*(1 + TOP_MARGIN))
-
-                gr.SetLineColor(std_color_list[igr])
-                gr.SetLineWidth(4)
-                gr.SetLineStyle(9 if igr else 1)  # '--' if meas else '-'
-
-                gr.SetMarkerColor(std_color_list[igr])
-                gr.SetMarkerSize(2.5 if igr else 2)
-                gr.SetMarkerStyle(47 if igr else 20)  # x if meas else o
-
-                gr.Draw(("" if igr else "A") + "PE4 same")
-
-                leg.AddEntry(gr, "predicted" if igr else "measured", "PE")
+            gr_m.Draw("APE4 same")
+            gr_p.Draw("PE4 same")
 
             leg.Draw()
             if not ROOT_BATCH:
                 c.Draw()
 
-            canvas.Print(f"{OUT_DIR}/closure_scan_{label}_{SAVE_STAT}.png")
+            c.Print(f"{OUT_DIR}/closure_scan_{label}_{SAVE_STAT}.png")
             if VERBOSE:
                 print(f"Saved 'closure_scan_{label}_{SAVE_STAT}.png'")
 
@@ -1095,7 +1082,7 @@ def main():
 
             clf_table.add_row(name, [auc, sig / np.sqrt(bkg), th, sig, sig_eff, bkg, bkg_eff])
 
-        clf_table.sort(lambda x: x[-2].replace(",",""))
+        clf_table.sort(lambda x: x[-2])
         clf_table.print()
         # **************************** #
 

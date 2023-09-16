@@ -1,0 +1,73 @@
+[96m#=======================#
+# Starting train_bdt.py #
+#=======================#[0m
+[96m  VERBOSE      = True[0m
+[96m  SAVE_STAT    = 'BLINDSR'[0m
+[96m  OUT_DIR      = 'reports/weekly/2023-09-14/dphi_BLINDSR'[0m
+[96m  BLIND_TYPE   = 'BLINDSR'[0m
+[96m  TRAIN_BDT    = False[0m
+[96m  TEST_SIZE    = 0.8[0m
+[96m  N_EVENTS     = 2,000,000[0m
+[96m  DATA_VERSION = 6[0m
+[96m  LUMI         = 23,020.0[0m
+[96m  DATA_DIR     = 'LOCAL'[0m
+
+[92m+------------------------+
+| Building MuonSystem(s) |
++------------------------+[0m
+Building MuonSystemAwkward 'Signal' -
+  is_mc  = True
+  events = 2000000
+  tree   = 'MuonSystem'
+  file   = '/home/psimmerl/LLP/mdc_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root'
+  Extracted 1,851,400 events
+Building MuonSystemAwkward 'Data' -
+  is_mc  = False
+  events = 2000000
+  tree   = 'MuonSystem'
+  file   = '/home/psimmerl/LLP/mdc_analysis/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root'
+  Extracted 2,000,000 events
+Building MuonSystemAwkward 'NoDPhiCut' -
+  is_mc  = False
+  events = 2000000
+  tree   = 'MuonSystem'
+  file   = '/home/psimmerl/LLP/mdc_analysis/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root'
+  Extracted 2,000,000 events
+
+[92m+-----------------------+
+| Cutting MuonSystem(s) |
++-----------------------+[0m
+Finished cut 'match'
+Finished cut 'CSC&DT>0'
+Finished cut 'L1'
+Finished cut 'CSCIT'
+Finished cut 'DTIT'
+Finished cut 'ME1'
+Finished cut 'MB1'
+Finished cut 'HALO'
+Finished cut '1CSC1DT'
+Finished cut 'BLINDSR'
+Finished cut 'DPHI'
++-------------------------------------------------------------------------+
+|           MuonSystem Cuts (req. CSC>0 & DT>0 after each cut)            |
++----------++-------------------+--------------------+--------------------+
+|          ||   Signal (eff.)   |    Data (eff.)     |  NoDPhiCut (eff.)  |
++----------++-------------------+--------------------+--------------------+
+| read     ||       1,135,129.9 |        2,000,000.0 |        2,000,000.0 |
+| match    ||          21,268.8 |                    |                    |
++----------++-------------------+--------------------+--------------------+
+| CSC&DT>0 || 21,268.8 (1.0000) | 122,577.0 (1.0000) | 122,577.0 (1.0000) |
+| L1       ||  7,637.4 (0.3658) |  33,512.0 (0.5515) |  33,512.0 (0.5515) |
+| CSCIT    ||  7,577.6 (0.9713) |  24,285.0 (0.6314) |  24,285.0 (0.6314) |
+| DTIT     ||  7,453.7 (0.9835) |   4,750.0 (0.2299) |   4,750.0 (0.2299) |
+| ME1      ||  3,841.2 (0.5075) |   4,312.0 (0.7789) |   4,312.0 (0.7789) |
+| MB1      ||    985.3 (0.2720) |      92.0 (0.2764) |      92.0 (0.2764) |
+| HALO     ||    729.7 (0.7464) |      71.0 (0.6878) |      71.0 (0.6878) |
+| 1CSC1DT  ||    729.7 (0.0343) |      70.0 (0.0006) |      70.0 (0.0006) |
+| BLINDSR  ||                   |      70.0 (1.0000) |      70.0 (1.0000) |
+| DPHI     ||    710.4 (0.0334) |      49.0 (0.0004) |                    |
++----------++-------------------+--------------------+--------------------+
+
+[92m+------------------+
+| Making CSC Plots |
++------------------+[0m
