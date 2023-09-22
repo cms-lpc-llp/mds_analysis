@@ -123,6 +123,8 @@ class MuonSystemAwkward:
         self.ms_read = {}
         self.ms = upr.open(path=self.file_name + ":" + self.tree_name)  # , array_cache='100 kB')
         self.ms_read["sel_evt"] = ak.ones_like(self.ms["met"].array(entry_stop=self.nev), dtype=bool)
+        self.ms_read["sel_csc"] = ak.ones_like(self.ms["cscRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
+        self.ms_read["sel_dt"] = ak.ones_like(self.ms["dtRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
 
         if len(self.ms_read["sel_evt"]) != self.nev:
             self.nev = len(self.ms_read["sel_evt"])
@@ -158,12 +160,17 @@ class MuonSystemAwkward:
         ##########
 
         # ! I cannot figure out how to load HLTDecision without overflowing memory
+        dev = 100_000
+        hlt = np.array([], dtype=bool)
+        for i in range(0, nev//dev + 1):
+            # hlt = np.r_[hlt, ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev)[:,569]]
+            hlt = np.r_[hlt, np.take(self.ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev), 569, 1)]
+        self.ms_read["HLT_L1CSCCluster_DTCluster50"] = hlt
+        # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms["HLTDecision"].array(entry_stop=self.nev)[:,569]
         # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms.arrays(
         #     "HLT_L1CSCCluster_DTCluster50", aliases=self.hlt_aliases, entry_stop=self.nev
         # )["HLT_L1CSCCluster_DTCluster50"]
 
-        self.ms_read["sel_csc"] = ak.ones_like(self.ms["cscRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
-        self.ms_read["sel_dt"] = ak.ones_like(self.ms["dtRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
         # self.ms_read["nCscRechitClusters"] = np.sum(self.ms_read["sel_csc"], axis=1)
         # self.ms_read["nDtRechitClusters"] = np.sum(self.ms_read["sel_dt"], axis=1)
 
@@ -227,11 +234,14 @@ class MuonSystemAwkward:
             if self.cache and key not in self.ms_read:
                 self.ms_read[key] = arr
 
-            if "abs" in mods:
+            #TODO: for loop through mods so it's in order and chainable (move to front?)
+            if "abs" in mods: 
                 arr = np.abs(arr)
             if "log" in mods:
                 arr = np.log(arr)
             if "log10" in mods:
+                arr = np.log10(arr)
+            if "sqrt" in mods:
                 arr = np.log10(arr)
 
             return arr
@@ -482,13 +492,33 @@ class MuonSystemAwkward:
 
     def cut_jet(self, system="csc,dt", invert=False, **kwargs):
         self.cut, pcut = False, self.cut
-
+        if "csc" in system:
+            sel = self["cscRechitClusterJetVetoPt"] < 10#30
+            if invert:
+                sel_t = ~sel_t
+            self = self.filter(sel, system="csc", **kwargs)
+        if "dt" in system:
+            sel = self["dtRechitClusterJetVetoPt"] < 10#50
+            if invert:
+                sel_t = ~sel_t
+            self = self.filter(sel, system="dt", **kwargs)
         self.cut = pcut
         return self
     
     def cut_muon(self, system="csc,dt", invert=False, **kwargs):
         self.cut, pcut = False, self.cut
-
+        if "csc" in system:
+            sel = self["cscRechitClusterMuonVetoPt"] < 30
+            sel = sel & (self["cscRechitClusterMuonVetoGlobal"] == 0)
+            if invert:
+                sel_t = ~sel_t
+            self = self.filter(sel, system="csc", **kwargs)
+        if "dt" in system:
+            sel = self["dtRechitClusterJetVetoPt"] < 50
+            sel = sel & (self["dtRechitClusterMuonVetoPt"] == 0)
+            if invert:
+                sel_t = ~sel_t
+            self = self.filter(sel, system="dt", **kwargs)
         self.cut = pcut
         return self
 
@@ -519,18 +549,21 @@ class MuonSystemAwkward:
     def cut_l1(self, invert=False, **kwargs):
         self.cut, pcut = False, self.cut
 
-        csc_z, csc_size = self["cscRechitClusterZ"], self["cscRechitClusterSize"]
+        csc_z, csc_size = np.abs(self["cscRechitClusterZ"]), self["cscRechitClusterSize"]
         csc_r = np.sqrt(self["cscRechitClusterX"] ** 2 + self["cscRechitClusterY"] ** 2)
         first_in_plateau = (
-            ((csc_r > 100) & (csc_r < 275) & (np.abs(csc_z) > 580) & (np.abs(csc_z) < 632) & (csc_size >= 500))
-            | ((csc_r > 139) & (csc_r < 345) & (np.abs(csc_z) > 789) & (np.abs(csc_z) < 850) & (csc_size >= 500))
-            | ((csc_r > 160) & (csc_r < 345) & (np.abs(csc_z) > 915) & (np.abs(csc_z) < 970) & (csc_size >= 500))
-            | ((csc_r > 178) & (csc_r < 345) & (np.abs(csc_z) > 1002) & (np.abs(csc_z) < 1063) & (csc_size >= 500))
-            | ((csc_r > 275) & (csc_r < 465) & (np.abs(csc_z) > 668) & (np.abs(csc_z) < 724) & (csc_size >= 200))
-            | ((csc_r > 505) & (csc_r < 700) & (np.abs(csc_z) > 668) & (np.abs(csc_z) < 724) & (csc_size >= 200))
-            | ((csc_r > 357) & (csc_r < 700) & (np.abs(csc_z) > 791) & (np.abs(csc_z) < 850) & (csc_size >= 200))
-            | ((csc_r > 357) & (csc_r < 700) & (np.abs(csc_z) > 911) & (np.abs(csc_z) < 970) & (csc_size >= 200))
-            | ((csc_r > 357) & (csc_r < 700) & (np.abs(csc_z) > 1002) & (np.abs(csc_z) < 1063) & (csc_size >= 200))
+            ((csc_r > 100) & (csc_r < 275) & (csc_z > 580) & (csc_z < 632) & (csc_size >= 500)) # ME 11
+            | ((csc_r > 275) & (csc_r < 465) & (csc_z > 668) & (csc_z < 724) & (csc_size >= 200)) # ME 12
+            | ((csc_r > 505) & (csc_r < 700) & (csc_z > 668) & (csc_z < 724) & (csc_size >= 200)) # ME 13
+            #
+            | ((csc_r > 139) & (csc_r < 345) & (csc_z > 789) & (csc_z < 850) & (csc_size >= 500)) # ME 21
+            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 791) & (csc_z < 850) & (csc_size >= 200)) # ME 22
+            #
+            | ((csc_r > 160) & (csc_r < 345) & (csc_z > 915) & (csc_z < 970) & (csc_size >= 500)) # ME 31
+            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 911) & (csc_z < 970) & (csc_size >= 200)) # ME 32
+            #
+            | ((csc_r > 178) & (csc_r < 345) & (csc_z > 1002) & (csc_z < 1063) & (csc_size >= 500)) # ME 41
+            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 1002) & (csc_z < 1063) & (csc_size >= 200)) # ME 42
         )
         self.filter(first_in_plateau, system="csc", **kwargs)
 

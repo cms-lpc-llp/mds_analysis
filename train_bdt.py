@@ -73,6 +73,7 @@ CUTS = [
     "HALO",
     "1CSC1DT",
     "BLINDSR",
+    # "DR",
     "DPHI",
 ]
 
@@ -88,7 +89,7 @@ SECTIONS = [
 ]
 # **************************** #
 #! Paths are absolute so I know *exactly* what is being read/written
-OUT_DIR = "reports/weekly/2023-09-14"
+OUT_DIR = "reports/weekly/2023-09-21b"
 T2_OUT_DIR = "/storage/af/user/psimmerl/LLP/mdc_analysis"  # os.getcwd()
 LOCAL_OUT_DIR = "/home/psimmerl/LLP/mdc_analysis"  # os.getcwd()
 # **************************** #
@@ -113,6 +114,7 @@ BOT_MARGIN, TOP_MARGIN = 0.025, 0.1
 gc = []
 # **************************** #
 
+
 def create_hists(values, bins, names, titles, weights=1, colors=None, styles=None, log=None, norm=False, canvas=None):
     if not isinstance(names, (list, tuple)):
         (
@@ -121,8 +123,8 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
         ) = [
             values
         ], [names]
-    
-    if len(titles) == 3: # values[0].shape[1] == 2
+
+    if len(titles) == 3:  # values[0].shape[1] == 2
         hist_type = "2D"
     else:
         hist_type = "1D"
@@ -158,12 +160,15 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
     RAND_NUM = f".{SAVE_STAT}.{np.random.randint(999999999)}"
     if canvas is None:
         if hist_type == "2D":
-            canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, len(names)*800, 800)
-            canvas.Divide(len(values), 1)
+            canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, len(names) * 800, 800)
+            canvas.Divide(len(names), 1)
+            for ic in range(len(names)):
+                canvas.cd(ic+1).SetGrid()
+                canvas.cd(ic+1).SetRightMargin(0.04)
         else:
             canvas = rt.TCanvas("c" + RAND_NUM, "c" + RAND_NUM, 800, 800)
-        canvas.SetGrid()
-        canvas.SetRightMargin(0.04)
+            canvas.SetGrid()
+            canvas.SetRightMargin(0.04)
 
     lat = rt.TLatex()
     lat.SetTextAlign(21)  # left,cent,right=1,2,3 , bot,cent,top=1,2,3
@@ -173,7 +178,7 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
     legend.SetTextFont(62)
     legend.SetTextSize(0.03)
     legend.SetBorderSize(0)
-    legend.SetFillColorAlpha(1, 0.3)
+    legend.SetFillColorAlpha(1, 0.2)
     legend.SetEntrySeparation(0.01)
 
     hmin, hmax = 1e9, -1
@@ -184,6 +189,8 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
         else:
             hist = create_TH2D(v, name=n + RAND_NUM, axis_title=titles, binning=bins, weights=w)
         hist.SetLineColor(c)
+        hist.SetMarkerColor(c)
+        # hist.SetFillColorAlpha(c, 0.3)
         if s is not None:
             hist.SetLineStyle(c)
 
@@ -216,7 +223,7 @@ def create_hists(values, bins, names, titles, weights=1, colors=None, styles=Non
         else:
             hist.Draw("hist same")
             le = legend.AddEntry(hist, hist.GetName().split(".")[0], "PE")
-        
+
     if hist_type == "1D":
         legend.Draw()
 
@@ -255,14 +262,13 @@ def main():
             CUTS.remove("HALO")
             CUTS.remove("DPHI")
         elif "halo" in sys.argv[2]:
-            CUTS.remove("DPHI")
             ms_nocut = MuonSystemAwkward(FN_R3, name="NoHaloCut", nev=N_EVENTS, is_mc=False, lumi=LUMI)
             mss.append(ms_nocut)
         elif "dphi" in sys.argv[2]:
             ms_nocut = MuonSystemAwkward(FN_R3, name="NoDPhiCut", nev=N_EVENTS, is_mc=False, lumi=LUMI)
             mss.append(ms_nocut)
         elif "both" in sys.argv[2]:
-            ms_cut = MuonSystemAwkward(ff_r3, name="NoHaloNoDPhiCuts", nev=N_EVENTS, is_mc=False, lumi=LUMI)
+            ms_cut = MuonSystemAwkward(FN_R3, name="NoHaloNoDPhiCuts", nev=N_EVENTS, is_mc=False, lumi=LUMI)
             mss.append(ms_cut)
 
     # ************************************************************ #
@@ -295,10 +301,10 @@ def main():
             match cut:
                 case "match":
                     if mc:
-                        ms.match_mc("csc,dt", has_clusters=True)
+                        ms.match_mc("csc,dt")
                     else:
                         was_cut = False
-                case "CSC&DT>0":
+                case "CSC&DT>0": # just applies has_clusters=True
                     ms.f((ms["nCsc"] > 0) & (ms["nDt"] > 0), has_clusters=False)
                     raw_counts[ims] = ms.count()
 
@@ -319,6 +325,10 @@ def main():
                     ms.f(ms["cscMe11Ratio"] + ms["cscMe12Ratio"] == 0, "csc")
                 case "MB1":
                     ms.f(ms["dtNHitStation1"] == 0, "dt")
+                case "JET":
+                    ms.cut_jet("csc,dt", invert=False)
+                case "MUON":
+                    ms.cut_muon("csc,dt", invert=False)
                 case "L1":
                     ms.cut_l1()
                 case "CSCIT":
@@ -336,7 +346,7 @@ def main():
                     if not mc:
                         ms.f((ms["dtSize"] < ABCD_DTSIZE) | (ms["tag_dPhi"] < ABCD_DPHI), "dt")
                     else:
-                        was_cut=False
+                        was_cut = False
                 case "DPHI":
                     if "NoDPhi" in msn:
                         was_cut = False
@@ -427,7 +437,7 @@ def main():
             xl = xl.split(".")[0]
 
             if "SIZE" in BLIND_TYPE:
-                conds = [wt>0 for wt in weights]
+                conds = [wt > 0 for wt in weights]
                 if "dt" in xl and "csc" not in xl:
                     conds = [c if ms.is_mc else c & (ms["cscSize"][:, 0] < 300) for c, ms in zip(conds, mss)]
                 else:
@@ -454,9 +464,9 @@ def main():
             "dtJetVetoPt",
             "dtMuonVetoPt",
             "dtR",
-            "dtZ",
-            "dtPhi",
-            "dtEta",
+            "dtZ.abs",
+            "dtPhi.abs",
+            "dtEta.abs",
             "dtSize",
             "dt_match_RPCBx_dPhi0p5",
             "dtNStation10",
@@ -488,7 +498,7 @@ def main():
             xl = xl.split(".")[0]
 
             if "SIZE" in BLIND_TYPE:
-                conds = [wt>0 for wt in weights]
+                conds = [wt > 0 for wt in weights]
                 if "dt" in xl and "csc" not in xl:
                     conds = [c if ms.is_mc else c & (ms["cscSize"][:, 0] < 300) for c, ms in zip(conds, mss)]
                 else:
@@ -540,7 +550,7 @@ def main():
             xl = xl.split(".")[0]
 
             if "SIZE" in BLIND_TYPE:
-                conds = [wt>0 for wt in weights]
+                conds = [wt > 0 for wt in weights]
                 if "dt" in xl and "csc" not in xl:
                     conds = [c if ms.is_mc else c & (ms["cscSize"][:, 0] < 300) for c, ms in zip(conds, mss)]
                 else:
@@ -623,7 +633,7 @@ def main():
             xl, yl = xl.split(".")[0], yl.split(".")[0]
 
             if "SIZE" in BLIND_TYPE:
-                conds = [wt>0 for wt in weights]
+                conds = [wt > 0 for wt in weights]
                 if ("dt" in xl or "dt" in yl) and ("csc" not in xl and "csc" not in yl):
                     conds = [c if ms.is_mc else c & (ms["cscSize"][:, 0] < 300) for c, ms in zip(conds, mss)]
                 else:
@@ -665,7 +675,7 @@ def main():
             xl, yl = xl.split(".")[0], yl.split(".")[0]
 
             if "SIZE" in BLIND_TYPE:
-                conds = [wt>0 for wt in weights]
+                conds = [wt > 0 for wt in weights]
                 conds = [
                     c if ms.is_mc else c & ((ms["dtSize"][:, 0] < ABCD_DTSIZE) | (ms["tag_dPhi"] < ABCD_DPHI))
                     for c, ms in zip(conds, mss)
@@ -677,17 +687,19 @@ def main():
                 values, _bins, names, [xl, yl, "events"], weights, colors, styles=None, log=None, norm=False
             )
             for ms, hh in zip(mss, hists):
-                abcds[ms.name].append([
-                    _bins[0],
-                    hh.GetBinContent(2,2), # A
-                    hh.GetBinError(2,2),
-                    hh.GetBinContent(2,1), # B
-                    hh.GetBinError(2,1),
-                    hh.GetBinContent(1,1), # C
-                    hh.GetBinError(1,1),
-                    hh.GetBinContent(1,2), # D
-                    hh.GetBinError(1,2),
-                ])
+                abcds[ms.name].append(
+                    [
+                        _bins[0],
+                        hh.GetBinContent(2, 2),  # A
+                        hh.GetBinError(2, 2),
+                        hh.GetBinContent(2, 1),  # B
+                        hh.GetBinError(2, 1),
+                        hh.GetBinContent(1, 1),  # C
+                        hh.GetBinError(1, 1),
+                        hh.GetBinContent(1, 2),  # D
+                        hh.GetBinError(1, 2),
+                    ]
+                )
 
             canvas.Print(f"{OUT_DIR}/ABCD_{_bins[0]*100:03.0f}_{SAVE_STAT}.png")
             if VERBOSE:
@@ -696,15 +708,17 @@ def main():
         print("")
         alert("Performing ABCD Calculations", form="-", c="g")
 
+        tables = []
+
         abcd_table_sig = Table(
-            cols=["Pred A", "A", "B", "C", "D", "CL"],
+            cols=["Pred A", "A", "B", "C", "D", "X2"],
             header="ABCD (X: dPhi, Y: dtSize)",
             rv_decimals=2,
             rv_join=" ± ",
             rl_label=["", "dPhi"],
         )
         abcd_table_bkg = Table(
-            cols=["Pred A", "A", "B", "C", "D", "CL"],
+            cols=["Pred A", "A", "B", "C", "D", "X2"],
             header="ABCD (X: dPhi, Y: dtSize)",
             rv_decimals=2,
             rv_join=" ± ",
@@ -715,7 +729,7 @@ def main():
         table_rows_bkg = [["", None]] * n_abcd * len(mss)
 
         abcd_graphs = {}
-        graph_axis_labels = ["Minimum |#Delta#phi_{CSC,DT}|", "#scale[0.5]{#int} L"]
+        graph_axis_labels = ["Minimum |#Delta#phi_{CSC,DT}|", "events in SR (A)"]  # "#scale[0.5]{#int} L"]
         hmin_bkg, hmax_bkg = 1e9, -1
         hmin_sig, hmax_sig = 1e9, -1
 
@@ -726,10 +740,11 @@ def main():
             ths, _as, aes, pas, paes = [], [], [], [], []
             for ith, (th, a, ae, b, be, _c, ce, d, de) in enumerate(abcd):
                 pa, pae = 0, 0
-                if b > 0 and _c > 0 and d > 0: #TODO: Clean
+                if b > 0 and _c > 0 and d > 0:  # TODO: Clean
                     pa = d * b / _c
                     pae = pa * ((be / b) ** 2 + (ce / _c) ** 2 + (de / d) ** 2) ** (1 / 2)
-                    cl = abs((a - pa) / (ae**2 + pae**2) ** (1 / 2))
+                    cl = (a - pa)**2 / (ae**2 + pae**2) # chisq?
+                    # cl = abs((a - pa) / (ae**2 + pae**2) ** (1 / 2))
                     if ("SIZE" in BLIND_TYPE or "BLINDSR" in BLIND_TYPE) and not ms.is_mc:
                         vals = [[pa, pae], "   ", [b, be], [_c, ce], [d, de], ""]
                     else:
@@ -835,7 +850,7 @@ def main():
         for table, rows in [(abcd_table_sig, table_rows_sig), (abcd_table_bkg, table_rows_bkg)]:
             last_spacer = 0
             for irow, (label, vals) in enumerate([row for row in rows if row[1] is not None]):
-                if label[1] != "" and irow:# and rows[irow-1][0][0] == "":
+                if label[1] != "" and irow:  # and rows[irow-1][0][0] == "":
                     if irow - last_spacer > 1:
                         table.add_spacer()
                     last_spacer = irow
@@ -845,41 +860,69 @@ def main():
         # ********** #
 
         wt = np.asarray(ms_r3["weight"])
-        size = np.asarray(ms_r3["dtSize"][:,0])
+        dtsize = np.asarray(ms_r3["dtSize"][:, 0])
         dphi = np.asarray(ms_r3["tag_dPhi"])
-            
-        for label in ("min_dphi", "dphi", "dtsize"):
-            if label == "min_dphi":
-                graph_axis_labels = ["Minimum |#Delta#phi_{CSC,DT}|", "#scale[0.5]{#int} L"]
-                ths = np.linspace(0, 1.2, 100)
-                a_cond = lambda th: (size > ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (th < dphi)
-                b_cond = lambda th: (size < ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (th < dphi)
-                c_cond = lambda th: (size > ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (th < dphi)
-                d_cond = lambda th: (size < ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (th < dphi)
-            elif label == "dphi":
-                graph_axis_labels = ["|#Delta#phi_{CSC,DT}|", "#scale[0.5]{#int} L"]
-                ths = np.linspace(1.0, 2.0, 100)
-                a_cond = lambda th: (size > ABCD_DTSIZE) & (dphi > th)
-                b_cond = lambda th: (size < ABCD_DTSIZE) & (dphi > th)
-                c_cond = lambda th: (size > ABCD_DTSIZE) & (dphi < th)
-                d_cond = lambda th: (size < ABCD_DTSIZE) & (dphi < th)
-            elif label == "dtsize":
-                graph_axis_labels = ["DT_{SIZE}", "#scale[0.5]{#int} L"]
-                ths = np.linspace(100, 200, 100)
-                a_cond = lambda th: (size > th) & (dphi > ABCD_DPHI)
-                b_cond = lambda th: (size < th) & (dphi > ABCD_DPHI)
-                c_cond = lambda th: (size > th) & (dphi < ABCD_DPHI)
-                d_cond = lambda th: (size < th) & (dphi < ABCD_DPHI)
 
-            _a, _ae, _pa, _pae = [], [], [], [] 
+        for label in ("dphi", "dtsize", "min_dphi", "min_cscsize", "dtastn_lower", "dtastn_upper"):
+            if label == "dphi":
+                graph_axis_labels = ["|#Delta#phi_{CSC,DT}| ABCD Boundary", "events in SR"]  # "#scale[0.5]{#int} L"]
+                ths = np.linspace(1.3, 1.7, 100)
+                a_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi > _th)
+                b_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi > _th)
+                c_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi < _th)
+                d_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi < _th)
+            elif label == "dtsize":
+                graph_axis_labels = ["DT_{SIZE} ABCD Boundary", "events in SR"]  # "#scale[0.5]{#int} L"]
+                ths = np.linspace(100, 200, 100)
+                a_cond = lambda _th: (dtsize > _th) & (dphi > ABCD_DPHI)
+                b_cond = lambda _th: (dtsize < _th) & (dphi > ABCD_DPHI)
+                c_cond = lambda _th: (dtsize < _th) & (dphi < ABCD_DPHI)
+                d_cond = lambda _th: (dtsize > _th) & (dphi < ABCD_DPHI)
+            elif label == "min_dphi":
+                graph_axis_labels = ["|#Delta#phi_{CSC,DT}| Lower Cutoff", "events in SR"]  # "#scale[0.5]{#int} L"]
+                if "DPHI" in CUTS:
+                    ths = np.linspace(0.4, 1.2, 100)
+                else:
+                    ths = np.linspace(0.0, 1.2, 100)
+                a_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (_th < dphi)
+                b_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (_th < dphi)
+                c_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (_th < dphi)
+                d_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (_th < dphi)
+            elif label == "min_cscsize":
+                graph_axis_labels = ["CSC_{SIZE} Lower Cutoff", "events in SR"]  # "#scale[0.5]{#int} L"]
+                var = np.asarray(ms_r3["cscSize"][:, 0])
+                ths = np.linspace(100, 300, 100)
+                a_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var > _th)
+                b_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var > _th)
+                c_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var > _th)
+                d_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var > _th)
+            elif label == "dtastn_lower":
+                graph_axis_labels = ["DT Avg Station Lower Cutoff", "events in SR"]  # "#scale[0.5]{#int} L"]
+                var = np.asarray(ms_r3["dtAvgStation10"][:, 0])
+                ths = np.linspace(1, 4, 100)
+                a_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var > _th)
+                b_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var > _th)
+                c_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var > _th)
+                d_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var > _th)
+            elif label == "dtastn_upper":
+                graph_axis_labels = ["DT Avg Station Upper Cutoff", "events in SR"]  # "#scale[0.5]{#int} L"]
+                var = np.asarray(ms_r3["dtAvgStation10"][:, 0])
+                ths = np.linspace(1, 4, 100)
+                a_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var < _th)
+                b_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi > ABCD_DPHI) & (var < _th)
+                c_cond = lambda _th: (dtsize < ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var < _th)
+                d_cond = lambda _th: (dtsize > ABCD_DTSIZE) & (dphi < ABCD_DPHI) & (var < _th)
+
+            _a, _ae, _pa, _pae = [], [], [], []
             for th in ths:
                 a = np.sum(wt[a_cond(th)])
                 b = np.sum(wt[b_cond(th)])
                 c = np.sum(wt[c_cond(th)])
                 d = np.sum(wt[d_cond(th)])
                 pa, pae, ae, be, ce, de = 0, 0, np.sqrt(a), np.sqrt(b), np.sqrt(c), np.sqrt(d)
-                if b > 0 and c > 0 and d > 0: #TODO: Clean
-                    pa = d * b / c
+                # a/b = d/c, a = bd/c
+                if b * c * d > 0:
+                    pa = b * d / c
                     pae = pa * ((be / b) ** 2 + (ce / c) ** 2 + (de / d) ** 2) ** (1 / 2)
                 _a.append(a)
                 _ae.append(ae)
@@ -892,32 +935,40 @@ def main():
             canvas.SetGrid()
             canvas.SetRightMargin(0.04)
 
-            leg = rt.TLegend(0.17, 0.91 - 0.04 * (2 * 1), 0.21 + 0.016 * (9 + 11), 0.94)
+            if BLIND_TYPE == "BLINDSR":
+                leg = rt.TLegend(0.17, 0.89, 0.35, 0.94)
+            else:
+                leg = rt.TLegend(0.17, 0.84, 0.35, 0.94)
+
             leg.SetTextFont(62)
             leg.SetTextSize(0.03)
             leg.SetBorderSize(0)
-            leg.SetFillColorAlpha(1, 0.3)
+            leg.SetFillColorAlpha(1, 0.2)
             leg.SetEntrySeparation(0.01)
 
-            gr_m = create_TGraph(ths, _a, [0] * len(ths), _ae, graph_axis_labels)
-            gr_p = create_TGraph(ths, _pa, [0] * len(ths), _pae, graph_axis_labels)
-
+            gr_m = create_TGraph(ths, _a, [ths[1] - ths[0]] * len(ths), _ae, graph_axis_labels)
+            gr_p = create_TGraph(ths, _pa, [ths[1] - ths[0]] * len(ths), _pae, graph_axis_labels)
 
             for igr, gr in enumerate([gr_m, gr_p]):
                 gr.SetMinimum(0)
-                gr.SetMaximum(max(np.max(_a+_ae), np.max(_pa+_pae))*(1 + TOP_MARGIN))
+                gr.SetMaximum(max(np.max(_a + _ae), np.max(_pa + _pae)) * (1 + TOP_MARGIN))
 
-                gr.SetLineColor(std_color_list[igr])
+                gr.SetLineColor(rt.kRed if igr else rt.kBlack)
+                gr.SetMarkerColor(rt.kRed if igr else rt.kBlack)
+                gr.SetFillColorAlpha(rt.kRed if igr else rt.kBlack, 0.3)
+
                 gr.SetLineWidth(4)
-                gr.SetLineStyle(9 if igr else 1)  # '--' if meas else '-'
-
-                gr.SetMarkerColor(std_color_list[igr])
                 gr.SetMarkerSize(2.5 if igr else 2)
+                # gr.SetLineStyle(9 if igr else 1)  # '--' if meas else '-'
                 gr.SetMarkerStyle(47 if igr else 20)  # x if meas else o
-
-                gr.Draw(("" if igr else "A") + "PE4 same")
-
-                leg.AddEntry(gr, "predicted" if igr else "measured", "PE")
+                
+                if BLIND_TYPE == "BLINDSR":
+                    if igr:
+                        gr.Draw("A CE4")
+                        leg.AddEntry(gr, "predicted", "PE")
+                else:
+                    gr.Draw(("same" if igr else "A") + " CE4")
+                    leg.AddEntry(gr, "predicted" if igr else "measured", "PE")
 
             leg.Draw()
             if not ROOT_BATCH:
@@ -1044,12 +1095,14 @@ def main():
 
         bkgs, sigs, aucs = {}, {}, {}
         bkg_effs, sig_effs = {}, {}
-        names = ["tag_dPhi", "tag_dEta", "tag_dR", "dtPhi.abs", "cscSize", "dtSize", "cscNStation10", "dtNStation10"]
+        names = ["met", "tag_dPhi", "tag_dEta", "tag_dR", "dtPhi.abs", "cscSize", "dtSize", "cscNStation10", "dtNStation10"]
 
         if TRAIN_BDT:
             names.extend(["GBT_CSC", "GBT_DT"])
 
-        clf_table = Table(["AUC", "S/√[B]", "Thresh", "Sig", "Sig Eff", "Bkg", "Bkg Eff"], "Evaluating Discriminators", 3)
+        clf_table = Table(
+            ["AUC", "S/√[B]", "Thresh", "Sig", "Sig Eff", "Bkg", "Bkg Eff"], "Evaluating Discriminators", 3
+        )
 
         wmc, wr3 = ms_mc["weight"], ms_r3["weight"]
         for i, name in enumerate(names):
@@ -1095,7 +1148,7 @@ def main():
 
             clf_table.add_row(name, [auc, sig / np.sqrt(bkg), th, sig, sig_eff, bkg, bkg_eff])
 
-        clf_table.sort(lambda x: x[-2].replace(",",""))
+        clf_table.sort(lambda x: x[-2].replace(",", ""))
         clf_table.print()
         # **************************** #
 
@@ -1136,6 +1189,10 @@ def main():
 
     # ************************************************************ #
     # ************************************************************ #
+    # ************************************************************ #
+    # print("")
+    # alert("Getting run number of high hit clusters", form="-", c="g")
+
     # ************************************************************ #
 
 
