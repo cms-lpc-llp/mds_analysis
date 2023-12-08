@@ -19,7 +19,7 @@ FN_R3 = "DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi"
 # **************************** #
 if "TIER2" in DATA_DIR:
     OUT_DIR = f"{T2_OUT_DIR}/{OUT_DIR}"
-    FN_MC = f"{T2_DATA_DIR}/MC_Summer22EE/v1/sixie/v{DATA_VERSION}/normalized/{FN_R3}.root"
+    FN_MC = f"{T2_DATA_DIR}/MC_Summer22EE/v1/sixie/v{DATA_VERSION}/normalized/{FN_MC}.root"
     FN_R3 = f"{T2_DATA_DIR}/Data2022/v{DATA_VERSION}/normalized/{FN_R3}.root"
 else:
     OUT_DIR = f"{LOCAL_OUT_DIR}/{OUT_DIR}"
@@ -31,9 +31,22 @@ else:
 # rt.EnableImplicitMT()
 
 rdfn = "r3"
-rdf = rt.RDataFrame("MuonSystem", FN_MC if rdfn == "mc" else FN_R3)
-columns = [n for n in rdf.GetColumnNames()]
-columns.remove("HLTDecision")
-rdf = rdf.Filter("HLTDecision[569] && (nCscRechitClusters > 0 || nDtRechitClusters > 0)")
+for rdfn in ("mc", "r3"):
+    rdf = rt.RDataFrame("MuonSystem", FN_MC if rdfn == "mc" else FN_R3)
+    count_raw, wtsum_raw = rdf.Count(), rdf.Sum("weight") 
 
-rdf.Snapshot("MuonSystem_HLT569", f"data/processed/{rdfn}_hlt569.rdf", columns)
+    print(f"loaded rdf {rdfn}")
+    columns = [n for n in rdf.GetColumnNames()]
+    columns.remove("HLTDecision")
+    rdf = rdf.Filter("HLTDecision[569] && (nCscRechitClusters > 0 || nDtRechitClusters > 0)")
+
+    print(f"snapshotting rdf {rdfn}")
+    rdf.Snapshot("MuonSystem", f"data/processed/{rdfn}_hlt569.rdf", columns)
+
+    count_cut, wtsum_cut = rdf.Count(), rdf.Sum("weight") 
+    print(f"  Count  Raw = {count_raw.GetValue():,.0f}")
+    print(f"  Count  Cut = {count_cut.GetValue():,.0f}")
+    print(f"  Weight Raw = {wtsum_raw.GetValue():,.3f}")
+    print(f"  Weight Cut = {wtsum_cut.GetValue():,.3f}")
+
+    print(f"finished rdf {rdfn}\n")

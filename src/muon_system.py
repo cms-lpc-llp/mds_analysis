@@ -490,32 +490,33 @@ class MuonSystemAwkward:
         self.cut = pcut
         return self
 
-    def cut_jet(self, system="csc,dt", invert=False, **kwargs):
+    def cut_jet(self, system="csc,dt", csc_pt=10, dt_pt=10, invert=False, **kwargs):
         self.cut, pcut = False, self.cut
         if "csc" in system:
-            sel = self["cscRechitClusterJetVetoPt"] < 10#30
+            sel = self["cscRechitClusterJetVetoPt"] < csc_pt
             if invert:
                 sel_t = ~sel_t
             self = self.filter(sel, system="csc", **kwargs)
         if "dt" in system:
-            sel = self["dtRechitClusterJetVetoPt"] < 10#50
+            sel = self["dtRechitClusterJetVetoPt"] < dt_pt
             if invert:
                 sel_t = ~sel_t
             self = self.filter(sel, system="dt", **kwargs)
         self.cut = pcut
         return self
     
-    def cut_muon(self, system="csc,dt", invert=False, **kwargs):
+    def cut_muon(self, system="csc,dt", csc_pt=30, dt_pt=50, invert=False, **kwargs):
         self.cut, pcut = False, self.cut
         if "csc" in system:
-            sel = self["cscRechitClusterMuonVetoPt"] < 30
-            sel = sel & (self["cscRechitClusterMuonVetoGlobal"] == 0)
+            sel = self["cscRechitClusterMuonVetoPt"] < csc_pt
+            # sel = sel | (self["cscRechitClusterMuonVetoGlobal"] == 0)
             if invert:
                 sel_t = ~sel_t
             self = self.filter(sel, system="csc", **kwargs)
+            
         if "dt" in system:
-            sel = self["dtRechitClusterJetVetoPt"] < 50
-            sel = sel & (self["dtRechitClusterMuonVetoPt"] == 0)
+            sel = self["dtRechitClusterMuonVetoPt"] < dt_pt
+            # sel = sel | (self["dtRechitClusterMuonVetoLooseId"] == 0)
             if invert:
                 sel_t = ~sel_t
             self = self.filter(sel, system="dt", **kwargs)

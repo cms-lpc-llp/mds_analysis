@@ -1,0 +1,220 @@
+[96m#=======================#
+# Starting train_bdt.py #
+#=======================#[0m
+[96m  VERBOSE      = True[0m
+[96m  SAVE_STAT    = 'BLINDSR'[0m
+[96m  OUT_DIR      = 'reports/weekly/2023-09-21c/nodtstn_BLINDSR'[0m
+[96m  BLIND_TYPE   = 'BLINDSR'[0m
+[96m  TRAIN_BDT    = False[0m
+[96m  TEST_SIZE    = 0.8[0m
+[96m  N_EVENTS     = -1[0m
+[96m  DATA_VERSION = 6[0m
+[96m  LUMI         = 23,020.0[0m
+[96m  DATA_DIR     = 'LOCAL'[0m
+
+[92m+------------------------+
+| Building MuonSystem(s) |
++------------------------+[0m
+Building MuonSystemAwkward 'Signal' -
+  is_mc  = True
+  events = -1
+  tree   = 'MuonSystem'
+  file   = '/home/psimmerl/LLP/mdc_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root'
+  Extracted 1,851,400 events
+Building MuonSystemAwkward 'Data' -
+  is_mc  = False
+  events = -1
+  tree   = 'MuonSystem_HLT569'
+  file   = '/home/psimmerl/LLP/mdc_analysis/data/raw/../processed/r3_hlt569.rdf'
+  Extracted 1,038,214 events
+
+[92m+-----------------------+
+| Cutting MuonSystem(s) |
++-----------------------+[0m
+Finished cut 'match'
+Finished cut 'HLT'
+Finished cut 'CSC&DT>0'
+Finished cut 'L1'
+Finished cut 'CSCIT'
+Finished cut 'DTIT'
+Finished cut 'MB1'
+Finished cut 'JET'
+Finished cut 'HALO'
+Finished cut '1CSC1DT'
+Finished cut 'BLINDSR'
+Finished cut 'DPHI'
++----------------------------------------------------+
+| MuonSystem Cuts (req. CSC>0 & DT>0 after each cut) |
++----------++-------------------+--------------------+
+|          ||   Signal (eff.)   |    Data (eff.)     |
++----------++-------------------+--------------------+
+| read     ||       1,135,129.9 |        1,038,214.0 |
+| match    ||          21,268.8 |                    |
++----------++-------------------+--------------------+
+| HLT      ||          21,268.8 |        1,038,214.0 |
+| CSC&DT>0 || 21,268.8 (1.0000) | 470,008.0 (1.0000) |
+| L1       ||  7,637.4 (0.3658) |  27,679.0 (0.0453) |
+| CSCIT    ||  7,577.6 (0.9713) |  15,963.0 (0.3971) |
+| DTIT     ||  7,453.7 (0.9835) |   2,828.0 (0.2473) |
+| MB1      ||  1,886.6 (0.2720) |     821.0 (0.3724) |
+| JET      ||  1,405.1 (0.6138) |     199.0 (0.4764) |
+| HALO     ||  1,023.9 (0.7464) |     143.0 (0.6942) |
+| 1CSC1DT  ||  1,023.9 (0.0481) |     142.0 (0.0003) |
+| BLINDSR  ||                   |     141.0 (1.0000) |
+| DPHI     ||  1,001.0 (0.0471) |      99.0 (0.0002) |
++----------++-------------------+--------------------+
+
+[92m+------------------+
+| Making CSC Plots |
++------------------+[0m
+Saved 'cscMuonVetoPt_BLINDSR.png'
+Saved 'cscJetVetoPt_BLINDSR.png'
+Saved 'cscR_BLINDSR.png'
+Saved 'cscZ_BLINDSR.png'
+Saved 'cscPhi_BLINDSR.png'
+Saved 'cscEta_BLINDSR.png'
+Saved 'cscSize_BLINDSR.png'
+Saved 'cscNStation10_BLINDSR.png'
+Saved 'cscMaxChamber_BLINDSR.png'
+Saved 'cscAvgStation10_BLINDSR.png'
+Saved 'cscMaxStation_BLINDSR.png'
+Saved 'cscMe11Ratio_BLINDSR.png'
+Saved 'cscMe12Ratio_BLINDSR.png'
+
+[92m+-----------------+
+| Making DT Plots |
++-----------------+[0m
+Saved 'dtJetVetoPt_BLINDSR.png'
+Saved 'dtMuonVetoPt_BLINDSR.png'
+Saved 'dtR_BLINDSR.png'
+Saved 'dtZ_BLINDSR.png'
+Saved 'dtPhi_BLINDSR.png'
+Saved 'dtEta_BLINDSR.png'
+Saved 'dtSize_BLINDSR.png'
+Saved 'dt_match_RPCBx_dPhi0p5_BLINDSR.png'
+Saved 'dtNStation10_BLINDSR.png'
+Saved 'dtAvgStation10_BLINDSR.png'
+Saved 'dtMaxStation_BLINDSR.png'
+Saved 'dtNHitStation1_BLINDSR.png'
+Saved 'dtMb1Ratio_BLINDSR.png'
+
+[92m+-------------------------+
+| Making Event/2tag Plots |
++-------------------------+[0m
+Saved 'tag_dEta_BLINDSR.png'
+Saved 'tag_dPhi_BLINDSR.png'
+Saved 'tag_dR_BLINDSR.png'
+Saved 'nCsc_BLINDSR.png'
+Saved 'nDt_BLINDSR.png'
+Saved 'met_BLINDSR.png'
+Saved 'runNum_BLINDSR.png'
+Saved 'cscR-dtR_BLINDSR.png'
+
+[92m+-----------------+
+| Making 2D Plots |
++-----------------+[0m
+Saved 'cscPhi_cscR_BLINDSR.png'
+Saved 'cscPhi_cscEta_BLINDSR.png'
+Saved 'cscEta_cscR_BLINDSR.png'
+Saved 'dtPhi_dtR_BLINDSR.png'
+Saved 'dtPhi_dtEta_BLINDSR.png'
+Saved 'dtEta_dtR_BLINDSR.png'
+Saved 'cscR_dtR_BLINDSR.png'
+Saved 'cscPhi_dtPhi_BLINDSR.png'
+Saved 'cscEta_dtEta_BLINDSR.png'
+Saved 'tag_dPhi_met_BLINDSR.png'
+Saved 'tag_dPhi_tag_dEta_BLINDSR.png'
+Saved 'tag_dPhi_tag_dR_BLINDSR.png'
+Saved 'tag_dEta_tag_dR_BLINDSR.png'
+Saved 'tag_dPhi_cscSize_BLINDSR.png'
+Saved 'tag_dPhi_cscPhi_BLINDSR.png'
+Saved 'tag_dPhi_cscEta_BLINDSR.png'
+Saved 'tag_dPhi_dtSize_BLINDSR.png'
+Saved 'tag_dPhi_dtPhi_BLINDSR.png'
+Saved 'tag_dPhi_dtEta_BLINDSR.png'
+
+[92m+-------------------+
+| Making ABCD Plots |
++-------------------+[0m
+Saved 'ABCD_040_BLINDSR.png'
+Saved 'ABCD_050_BLINDSR.png'
+Saved 'ABCD_060_BLINDSR.png'
+Saved 'ABCD_070_BLINDSR.png'
+Saved 'ABCD_080_BLINDSR.png'
+Saved 'ABCD_090_BLINDSR.png'
+Saved 'ABCD_100_BLINDSR.png'
+
+[92m+------------------------------+
+| Performing ABCD Calculations |
++------------------------------+[0m
+Saved 'closure_sig_BLINDSR.png'
+Saved 'closure_bkg_BLINDSR.png'
++-----------------------------------------------------------------------------------------------------------+
+|                                         ABCD (X: dPhi, Y: dtSize)                                         |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+|        | dPhi ||     Pred A     |       A        |       B        |       C       |       D        |  X2  |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.40 || 446.96 ± 42.29 | 333.46 ± 14.19 | 209.62 ± 11.25 | 146.19 ± 9.40 | 311.71 ± 13.72 | 6.47 |
+| Data   |      ||    2.49 ± 1.17 |                |    6.00 ± 2.45 |  65.00 ± 8.06 |   27.00 ± 5.20 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.50 || 441.07 ± 41.91 | 333.46 ± 14.19 | 209.62 ± 11.25 | 144.98 ± 9.36 | 305.07 ± 13.58 | 5.92 |
+| Data   |      ||    2.06 ± 0.98 |                |    6.00 ± 2.45 |  64.00 ± 8.00 |   22.00 ± 4.69 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.60 || 437.66 ± 41.68 | 333.46 ± 14.19 | 209.62 ± 11.25 | 144.38 ± 9.34 | 301.44 ± 13.49 | 5.60 |
+| Data   |      ||    1.81 ± 0.88 |                |    6.00 ± 2.45 |  63.00 ± 7.94 |   19.00 ± 4.36 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.70 || 439.75 ± 42.10 | 333.46 ± 14.19 | 209.62 ± 11.25 | 141.96 ± 9.26 | 297.82 ± 13.41 | 5.72 |
+| Data   |      ||    1.77 ± 0.86 |                |    6.00 ± 2.45 |  61.00 ± 7.81 |   18.00 ± 4.24 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.80 || 428.16 ± 41.11 | 333.46 ± 14.19 | 209.62 ± 11.25 | 141.96 ± 9.26 | 289.96 ± 13.23 | 4.74 |
+| Data   |      ||    1.63 ± 0.81 |                |    6.00 ± 2.45 |  59.00 ± 7.68 |   16.00 ± 4.00 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 0.90 || 427.41 ± 41.29 | 333.46 ± 14.19 | 209.62 ± 11.25 | 139.54 ± 9.18 | 284.53 ± 13.11 | 4.63 |
+| Data   |      ||    1.50 ± 0.76 |                |    6.00 ± 2.45 |  56.00 ± 7.48 |   14.00 ± 3.74 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
+| Signal | 1.00 || 429.35 ± 41.65 | 333.46 ± 14.19 | 209.62 ± 11.25 | 137.73 ± 9.12 | 282.11 ± 13.05 | 4.75 |
+| Data   |      ||    1.47 ± 0.75 |                |    6.00 ± 2.45 |  53.00 ± 7.28 |   13.00 ± 3.61 |      |
++--------+------++----------------+----------------+----------------+---------------+----------------+------+
++-----------------------------------------------------------------------------------+
+|                             ABCD (X: dPhi, Y: dtSize)                             |
++------+------++-------------+-----+-------------+--------------+--------------+----+
+|      | dPhi ||   Pred A    |  A  |      B      |      C       |      D       | X2 |
++------+------++-------------+-----+-------------+--------------+--------------+----+
+| Data | 0.40 || 2.49 ± 1.17 |     | 6.00 ± 2.45 | 65.00 ± 8.06 | 27.00 ± 5.20 |    |
+| Data | 0.50 || 2.06 ± 0.98 |     | 6.00 ± 2.45 | 64.00 ± 8.00 | 22.00 ± 4.69 |    |
+| Data | 0.60 || 1.81 ± 0.88 |     | 6.00 ± 2.45 | 63.00 ± 7.94 | 19.00 ± 4.36 |    |
+| Data | 0.70 || 1.77 ± 0.86 |     | 6.00 ± 2.45 | 61.00 ± 7.81 | 18.00 ± 4.24 |    |
+| Data | 0.80 || 1.63 ± 0.81 |     | 6.00 ± 2.45 | 59.00 ± 7.68 | 16.00 ± 4.00 |    |
+| Data | 0.90 || 1.50 ± 0.76 |     | 6.00 ± 2.45 | 56.00 ± 7.48 | 14.00 ± 3.74 |    |
+| Data | 1.00 || 1.47 ± 0.75 |     | 6.00 ± 2.45 | 53.00 ± 7.28 | 13.00 ± 3.61 |    |
++------+------++-------------+-----+-------------+--------------+--------------+----+
+Saved 'closure_scan_dphi_BLINDSR.png'
+Saved 'closure_scan_dtsize_BLINDSR.png'
+Saved 'closure_scan_min_dphi_BLINDSR.png'
+Saved 'closure_scan_min_cscsize_BLINDSR.png'
+Saved 'closure_scan_dtastn_lower_BLINDSR.png'
+Saved 'closure_scan_dtastn_upper_BLINDSR.png'
+
+[92m+------------------+
+| Making ROC Plots |
++------------------+[0m
++-------------------------------------------------------------------------------------+
+|                              Evaluating Discriminators                              |
++---------------++-------+---------+---------+-----------+---------+--------+---------+
+|               ||  AUC  | S/√[B]  | Thresh  |    Sig    | Sig Eff |  Bkg   | Bkg Eff |
++---------------++-------+---------+---------+-----------+---------+--------+---------+
+| dtNStation10  || 0.270 |  49.753 |   1.000 |   433.739 |   0.433 | 76.000 |   0.768 |
+| cscNStation10 || 0.609 |  97.838 |   1.000 |   517.708 |   0.517 | 28.000 |   0.283 |
+| dtPhi.abs     || 0.493 | 100.540 |   0.401 | 1,000.356 |   0.999 | 99.000 |   1.000 |
+| cscSize       || 0.627 | 104.389 | 260.540 |   860.817 |   0.860 | 68.000 |   0.687 |
+| tag_dEta      || 0.533 | 104.867 |   0.493 |   949.615 |   0.949 | 82.000 |   0.828 |
+| dtSize        || 0.720 | 122.429 |  80.950 |   724.298 |   0.724 | 35.000 |   0.354 |
+| met           || 0.651 | 144.378 |  84.269 |   144.378 |   0.144 |  1.000 |   0.010 |
+| tag_dR        || 0.838 | 185.872 |   2.975 |   587.780 |   0.587 | 10.000 |   0.101 |
+| tag_dPhi      || 0.870 | 283.206 |   2.895 |   400.514 |   0.400 |  2.000 |   0.020 |
++---------------++-------+---------+---------+-----------+---------+--------+---------+
+Saved 'rocs_BLINDSR.png'
+
+[96m#=======================#
+# Finished train_bdt.py #
+#=======================#[0m

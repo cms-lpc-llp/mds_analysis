@@ -1,6 +1,7 @@
 llp_env/
 venv/
 .vscode/
+data/*datacard*
 *.png
 *.jpg
 *.jpeg
@@ -10,6 +11,7 @@ venv/
 *.root
 *.pkl
 *.csv
+*.csv:Zone.Identifier
 *.npy
 *.tar.gz
 *.tar.xz
