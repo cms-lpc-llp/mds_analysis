@@ -48,16 +48,16 @@ if "TIER2" in DATA_DIR:
     FN_MC = f"{T2_DATA_DIR}/MC_Summer22EE/v1/sixie/v{DATA_VERSION}/normalized/{FN_R3}.root"
     FN_R3 = f"{T2_DATA_DIR}/Data2022/v{DATA_VERSION}/normalized/{FN_R3}.root"
 
-    FN_HLT_MC = f"{LOCAL_DATA_DIR}/../processed/mc_hlt569.rdf"  #! BROKEN
-    FN_HLT_R3 = f"{LOCAL_DATA_DIR}/../processed/r3_hlt569.rdf"  #! BROKEN
+    FN_HLT_MC = f"{LOCAL_DATA_DIR}/../processed/mc_hlt569.root"  #! BROKEN
+    FN_HLT_R3 = f"{LOCAL_DATA_DIR}/../processed/r3_hlt569.root"  #! BROKEN
 else:
     OUT_DIR = f"{LOCAL_OUT_DIR}/{OUT_DIR}"
 
     FN_MC = f"{LOCAL_DATA_DIR}/{FN_MC}_v{DATA_VERSION}.root"
     FN_R3 = f"{LOCAL_DATA_DIR}/{FN_R3}_v{DATA_VERSION}.root"
 
-    FN_HLT_MC = f"{LOCAL_DATA_DIR}/../processed/mc_hlt569.rdf"
-    FN_HLT_R3 = f"{LOCAL_DATA_DIR}/../processed/r3_hlt569.rdf"
+    FN_HLT_MC = f"{LOCAL_DATA_DIR}/../processed/mc_hlt569.root"
+    FN_HLT_R3 = f"{LOCAL_DATA_DIR}/../processed/r3_hlt569.root"
 
 pathlib.Path(OUT_DIR).mkdir(parents=True, exist_ok=True)
 # **************************** #
@@ -421,7 +421,8 @@ for min_met, max_met in zip(min_mets, max_mets):  # [0] + mets[:-1], [1e99] + me
             if np.median(mss[0]["tag_dPhi"]) < np.pi / 2:
                 ABCD_FLIP_S2B = True
                 alert(f"MOST SIG NEAR dPHI=0 -- SETTING {ABCD_FLIP_S2B=}", "g")
-            elif min_met >= 100:
+            # elif min_met >= 100:
+            elif min_met >= 75:
                 ABCD_FLIP_S2B = True
                 alert(f"FORCING ABCD FLIP TO {ABCD_FLIP_S2B=}", "g")
             else:
@@ -438,7 +439,8 @@ for min_met, max_met in zip(min_mets, max_mets):  # [0] + mets[:-1], [1e99] + me
         #     max_mets.append(min_met)
         old_sbs[split_met] = {"sqrt[|s|.|b|]": np.sqrt(np.sum(weights[0])) * np.sum(weights[1])}
 
-        NEV_SMEAR = max([100_000] + [w.shape[0] for w in weights])
+        NEV_SMEAR = max([10 * w.shape[0] for w in weights])
+        # NEV_SMEAR = max([100_000] + [w.shape[0] for w in weights])
         print(f"{NEV_SMEAR=:,.0f}")
 
         nth_sz, nth_df = (200 - 50) // 1 + 1, (315 - 40) // 1 + 1  # 31, 19
@@ -709,7 +711,8 @@ for min_met, max_met in zip(min_mets, max_mets):  # [0] + mets[:-1], [1e99] + me
             continue
 
         s2b = s2bs[-1]
-        lv, pv, le, pe = find_CI_limit(abcd_sig, abcd_obs, do_verbose=False)
+        # lv, pv, le, pe = find_CI_limit(abcd_sig, abcd_obs, do_verbose=False)
+        lv, pv, le, pe = 0, 0, 0, 0
         limits.append(lv)
         elimits.append(le)
 

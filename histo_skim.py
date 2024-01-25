@@ -93,14 +93,14 @@ SECTIONS = [
 # **************************** #
 #! Paths are absolute so I know *exactly* what is being read/written
 OUT_DIR = "reports/weekly/2023-09-21c"
-T2_OUT_DIR = "/storage/af/user/psimmerl/LLP/mdc_analysis"  # os.getcwd()
-LOCAL_OUT_DIR = "/home/psimmerl/LLP/mdc_analysis"  # os.getcwd()
+T2_OUT_DIR = "/storage/af/user/psimmerl/mds_analysis"  # os.getcwd()
+LOCAL_OUT_DIR = "/home/psimmerl/mds_analysis"  # os.getcwd()
 # **************************** #
 DATA_VERSION = "6"
 LUMI = 23.02 * 1000
 
 T2_DATA_DIR = "/storage/cms/store/user/christiw/displacedJetMuonAnalyzer/Run3/V1p19"
-LOCAL_DATA_DIR = "/home/psimmerl/LLP/mdc_analysis/data/raw"  # os.getcwd() + "/data/raw"
+LOCAL_DATA_DIR = "/home/psimmerl/mds_analysis/data/raw"  # os.getcwd() + "/data/raw"
 DATA_DIR = "TIER2" if "caltech" in uname()[1] else "LOCAL"
 
 FN_MC = "ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted"
