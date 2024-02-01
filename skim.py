@@ -154,7 +154,7 @@ COLUMNS_OUT = [
     # 'cscRechitCluster_match_gLLP_minDeltaR',
     # 'cscRechitCluster_match_gLLP_phi',
     #
-    'ctau',
+    # 'ctau',
     #
     'dtRechitClusterAvgStation10',
     'dtRechitClusterEta',
@@ -284,8 +284,8 @@ if __name__ == '__main__':
     #   - multithreading
 
     # ROOT MT causes the code to crash (not enough memory?)
-    # rt.EnableImplicitMT()
-    # print('  Enabled ROOT\'s implicit multithreading')
+    rt.EnableImplicitMT()
+    print('  Enabled ROOT\'s implicit multithreading (sometimes causes a crash)')
 
     print('')
 
@@ -337,7 +337,7 @@ if __name__ == '__main__':
             # print(key, 'MATCH')
             rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}_match_gLLP && (abs({C}_match_gLLP_eta) < 3) && ({C}_match_gLLP_decay_r < 800) && (400 < abs({C}_match_gLLP_decay_z)) && (abs({C}_match_gLLP_decay_z) < 1200) )')
             rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}_match_gLLP && (200 < {D}_match_gLLP_decay_r) && ({D}_match_gLLP_decay_r < 800) && (abs({D}_match_gLLP_decay_z) < 700) )')
-            
+
         # ec,cc,dc = rdf.Count(), rdf.Sum(f'{C}Flag'), rdf.Sum(f'{D}Flag')
         # ec,cc,dc=ec.GetValue(),cc.GetValue(),dc.GetValue()
         # print(f' 1 | {ec=:,}, {cc=:,}, {dc=:,}')
@@ -454,10 +454,12 @@ if __name__ == '__main__':
                 rdf = rdf.Define(ocol, f'{col}[{D}Flag][0]')
             columns_out.append(ocol)
 
+        rdf = rdf.Define('cscCTau', f'gLLP_ctau[{C}_match_gLLP_index[{C}Flag][0]]')
+        rdf = rdf.Define('dtCTau', f'gLLP_ctau[{D}_match_gLLP_index[{D}Flag][0]]')
         rdf = rdf.Define('tag_dEta', 'abs(cscEta - dtEta)')
         rdf = rdf.Define('tag_dPhi', f'abs( abs(cscPhi - dtPhi) - (abs(cscPhi - dtPhi) > {PI} ? 2*{PI} : 0) )')
         rdf = rdf.Define('tag_dR', 'sqrt(tag_dEta*tag_dEta + tag_dPhi*tag_dPhi)')
-        columns_out.extend(['tag_dEta', 'tag_dPhi', 'tag_dR'])
+        columns_out.extend(['tag_dEta', 'tag_dPhi', 'tag_dR', 'cscCTau', 'dtCTau'])
 
         # if 'BLINDSR' in CUTS:
         #     raise NotImplementedError('BLINDSR')

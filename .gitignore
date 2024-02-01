@@ -9,8 +9,8 @@ data/*datacard*
 *.pyc
 *.swp
 *.root
-*.pkl
-*.csv
+#*.pkl
+#*.csv
 *.csv:Zone.Identifier
 *.npy
 *.tar.gz

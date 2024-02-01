@@ -26,7 +26,23 @@ If there are more than 1 CSC or 1 DT clusters, new rows are appended combinatori
 If there are fewer than 1 CSC or 1 DT clusters, the event is rejected.
 
 
+cp mc_hlt569.root mc_hlt569.rdf
+cp mc_rdf.root mc_rdf.rdf
+cp r3_hlt569.root r3_hlt569.rdf
+cp r3_rdf.root r3_rdf.rdf
+
+
+
+equipment tracker account
+    ask justas
+
+
+
+
 # Data
+
+
+
 ## MC Event Generation
 
 ## Run 3 (2022) Data

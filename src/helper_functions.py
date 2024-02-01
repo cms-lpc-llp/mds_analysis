@@ -6,7 +6,7 @@ easier to understand."""
 import numpy as np
 import math
 import ROOT as rt
-import awkward as ak
+# import awkward as ak
 
 ###########################
 ####                   ####
