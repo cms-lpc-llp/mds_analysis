@@ -30,6 +30,7 @@ CUTS = [
     'MB1',
     'JET',
     # 'MUON',
+    # 'NLEP',
     # 'BDT',
     'HALO',
     # 'CSCSIZE',
@@ -37,7 +38,8 @@ CUTS = [
     '1CSC1DT',
     # 'BLINDSR',
     # 'DR',
-    # 'DPHI',
+    # 'DPHI_0.4',
+    'DPHI_0.2',
 ]
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
@@ -262,8 +264,8 @@ COLUMNS_OUT = [
     # 'nDtRechitClusters',
     # 'nDtRings',
     # 'nGLLP',
-    # 'nJets',
-    # 'nLeptons',
+    'nJets',
+    'nLeptons',
     # 'npu',
     # 'npv',
     # 'pileupWeight',
@@ -367,6 +369,11 @@ if __name__ == '__main__':
             rdf.Filter('met > 200')
 
         # Cluster level selections
+        # if key == 'mc':
+        #     rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( (-5 < {C}TimeWeighted) && ({C}TimeWeighted < 12.5) && ({C}TimeSpreadWeightedAll < 20) )')
+        # else:
+        #     rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && !( (-5 < {C}TimeWeighted) && ({C}TimeWeighted < 12.5) && ({C}TimeSpreadWeightedAll < 20) )')
+
         if 'CSCIT' in CUTS:
             rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( (-5 < {C}TimeWeighted) && ({C}TimeWeighted < 12.5) && ({C}TimeSpreadWeightedAll < 20) )')
         elif 'CSCOOT' in CUTS:
@@ -395,8 +402,8 @@ if __name__ == '__main__':
         # ec,cc,dc=ec.GetValue(),cc.GetValue(),dc.GetValue()
         # print(f' 4 | {ec=:,}, {cc=:,}, {dc=:,}')
         if 'JET' in CUTS:
-            rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}JetVetoPt < 10 )')
-            rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}JetVetoPt < 10 )')
+            rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( ({C}JetVetoPt < 10) )')#30) || ({C}JetVetoLooseId == 0) )')
+            rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( ({D}JetVetoPt < 10) )')#50) || ({D}JetVetoLooseId == 0) )')
         # ec,cc,dc = rdf.Count(), rdf.Sum(f'{C}Flag'), rdf.Sum(f'{D}Flag')
         # ec,cc,dc=ec.GetValue(),cc.GetValue(),dc.GetValue()
         # print(f' 5 | {ec=:,}, {cc=:,}, {dc=:,}')
@@ -467,10 +474,12 @@ if __name__ == '__main__':
         #     raise NotImplementedError('DR')
         # if 'DETA' in CUTS: #! Has not been tested -- if gg->H->ss is exclusive then conservation
         #     rdf = rdf.Filter('((0 < cscEta) && ( dtEta < 0)) || (( cscEta < 0) && (0 < dtEta)) ||')
-        if 'DPHI' in CUTS:
+        if 'DPHI_0.4' in CUTS:
             rdf = rdf.Filter('tag_dPhi > 0.4')
             # raise NotImplementedError('DPHI')
-
+        if 'DPHI_0.2' in CUTS:
+            rdf = rdf.Filter('tag_dPhi > 0.2')
+        
         # Update the dictionary with the new RDF
         rdfs[key] = rdf
 
