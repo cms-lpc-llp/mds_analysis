@@ -29,8 +29,8 @@ __credits__ = [
 import numpy as np
 import numba as nb
 
-# import ROOT as rt
-# from ROOT import TLatex, TLegend, TBox, TCanvas, TH1D, TH2D
+import ROOT as rt
+from ROOT import TLatex, TLegend, TBox, TCanvas, TH1D, TH2D
 # from ROOT import kRed, kBlue, kGreen, kCyan, kMagenta, kYellow, kBlack, kAzure
 
 # from ROOT.VecOps import RVec
@@ -38,30 +38,16 @@ import numba as nb
 import uproot as upr
 import awkward as ak
 import awkward.numba
-from src.helper_functions import alert#, lnot, land, lor, lxor, asum, aabs
+from src.helper_functions import alert, lnot, land, lor, lxor, asum, aabs
 
 # from itertools import product as combs
-# from src.histo_utilities import std_color_list
-
-###############################
-
-
-# def get_lat_leg(leg_coords=(0.6, 0.7, 0.95, 0.8)):
-#     lat = TLatex()
-#     lat.SetTextColor(kRed)
-#     lat.SetTextSize(0.03)
-#     lat.SetTextAlign(33)
-
-#     leg = TLegend(*leg_coords)
-#     leg.SetTextSize(0.025)
-#     leg.SetBorderSize(0)
-#     leg.SetEntrySeparation(0.01)
-
-#     return lat, leg
+from src.histo_utilities import std_color_list
+SCL = std_color_list
 
 
-###############################################################
-###############################################################
+################################################################
+################################################################
+################################################################
 
 
 class MuonSystemAwkward:
@@ -69,22 +55,24 @@ class MuonSystemAwkward:
 
     def __init__(
         self,
-        file_name,
-        name="MuonSystem",
-        tree_name="MuonSystem",
-        nev=None,
-        is_mc=False,
-        lumi=None,
+        file_name: str,
+        name: str,
+        tree_name: str="MuonSystem",
+        nev: int=None,
+        is_mc: bool=False,
+        lumi: float = None,
         cache=False,
         implicit: bool = True,
+        verbose: bool = True
     ) -> None:
         """Initialize a new instance of MuonSystemAwkward"""
 
-        print(f"Building MuonSystemAwkward '{name}' -")
-        print(f"  is_mc  = {is_mc}")
-        print(f"  events = {nev}")
-        print(f"  tree   = '{tree_name}'")
-        print(f"  file   = '{file_name}'")
+        if verbose:
+            print(f"Building MuonSystemAwkward '{name}' -")
+            print(f"  is_mc  = {is_mc}")
+            print(f"  events = {nev}")
+            print(f"  tree   = '{tree_name}'")
+            print(f"  file   = '{file_name}'")
 
         ##########
 
@@ -95,15 +83,14 @@ class MuonSystemAwkward:
         self.lumi = lumi
         self.nev = nev
         self.cache = cache
+        self.implicit = implicit
+        self.verbose = verbose
 
         ##########
 
-        self.implicit = implicit
         self.cut = True
-
         self.efficiency_denom = None
         self.efficiency = None
-
         self.colors = None
 
         ##########
@@ -247,7 +234,7 @@ class MuonSystemAwkward:
             return arr
 
         else:
-            raise ValueError("BROKEN implicit setting")
+            raise NotImplementedError("BROKEN implicit setting")
         #     imp = self.implicit
         #     self.set_implicit(False)
         #     sout = self.filter(sel=key, system="evt")
@@ -330,6 +317,8 @@ class MuonSystemAwkward:
 
     def f(self, *args, **kwargs):
         return self.filter(*args, **kwargs)
+    
+    # def hist(name, title)
 
     def match_mc(self, system="csc,dt", check_decay=True, **kwargs):
         self.cut, pcut = False, self.cut
@@ -480,6 +469,10 @@ class MuonSystemAwkward:
         self.cut = pcut
         return self
 
+    ################################
+    #             Cuts             #
+    ################################
+
     def cut_hlt(self, invert=False, **kwargs):
         self.cut, pcut = False, self.cut
         # sel = self['HLT_CscCluster_Loose'] | self['HLT_L1CSCCluster_DTCluster50']
@@ -553,18 +546,18 @@ class MuonSystemAwkward:
         csc_z, csc_size = np.abs(self["cscRechitClusterZ"]), self["cscRechitClusterSize"]
         csc_r = np.sqrt(self["cscRechitClusterX"] ** 2 + self["cscRechitClusterY"] ** 2)
         first_in_plateau = (
-            ((csc_r > 100) & (csc_r < 275) & (csc_z > 580) & (csc_z < 632) & (csc_size >= 500)) # ME 11
-            | ((csc_r > 275) & (csc_r < 465) & (csc_z > 668) & (csc_z < 724) & (csc_size >= 200)) # ME 12
-            | ((csc_r > 505) & (csc_r < 700) & (csc_z > 668) & (csc_z < 724) & (csc_size >= 200)) # ME 13
+              ((100 < csc_r) & (csc_r < 275) & (580 < csc_z) & (csc_z < 632) & (500 <= csc_size)) # ME 11
+            | ((275 < csc_r) & (csc_r < 465) & (668 < csc_z) & (csc_z < 724) & (200 <= csc_size)) # ME 12
+            | ((505 < csc_r) & (csc_r < 700) & (668 < csc_z) & (csc_z < 724) & (200 <= csc_size)) # ME 13
             #
-            | ((csc_r > 139) & (csc_r < 345) & (csc_z > 789) & (csc_z < 850) & (csc_size >= 500)) # ME 21
-            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 791) & (csc_z < 850) & (csc_size >= 200)) # ME 22
+            | ((139 < csc_r) & (csc_r < 345) & (789 < csc_z) & (csc_z < 850) & (500 <= csc_size)) # ME 21
+            | ((357 < csc_r) & (csc_r < 700) & (791 < csc_z) & (csc_z < 850) & (200 <= csc_size)) # ME 22
             #
-            | ((csc_r > 160) & (csc_r < 345) & (csc_z > 915) & (csc_z < 970) & (csc_size >= 500)) # ME 31
-            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 911) & (csc_z < 970) & (csc_size >= 200)) # ME 32
+            | ((160 < csc_r) & (csc_r < 345) & (915 < csc_z) & (csc_z < 970) & (500 <= csc_size)) # ME 31
+            | ((357 < csc_r) & (csc_r < 700) & (911 < csc_z) & (csc_z < 970) & (200 <= csc_size)) # ME 32
             #
-            | ((csc_r > 178) & (csc_r < 345) & (csc_z > 1002) & (csc_z < 1063) & (csc_size >= 500)) # ME 41
-            | ((csc_r > 357) & (csc_r < 700) & (csc_z > 1002) & (csc_z < 1063) & (csc_size >= 200)) # ME 42
+            | ((178 < csc_r) & (csc_r < 345) & (1002 < csc_z) & (csc_z < 1063) & (500 <= csc_size)) # ME 41
+            | ((357 < csc_r) & (csc_r < 700) & (1002 < csc_z) & (csc_z < 1063) & (200 <= csc_size)) # ME 42
         )
         self.filter(first_in_plateau, system="csc", **kwargs)
 
@@ -590,6 +583,9 @@ class MuonSystemAwkward:
         self.cut = pcut
         return self
 
+################################################################
+################################################################
+################################################################
 
 class MuonSystemsAnalyzer:
     """Analyzer for the MuonSystem.
