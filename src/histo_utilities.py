@@ -1,6 +1,6 @@
 import numpy as np
 import ROOT as rt
-
+import awkward as ak
 # import root_numpy as rtnp
 # import matplotlib.pyplot as plt
 from array import array
@@ -53,7 +53,10 @@ def create_TH1D(
 ):
     if name == "h":
         name += str(np.random.randint(999999999))
+    
+    weights = np.ravel(weights * ak.ones_like(x))
     x = np.ravel(x)
+
     if title is None:
         title = name
     if h2clone == None:

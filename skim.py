@@ -38,8 +38,8 @@ CUTS = [
     '1CSC1DT',
     # 'BLINDSR',
     # 'DR',
-    # 'DPHI_0.4',
-    'DPHI_0.2',
+    'DPHI_0.4',
+    # 'DPHI_0.2',
 ]
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
