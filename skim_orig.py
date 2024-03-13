@@ -1,5 +1,5 @@
 import os
-# import sys
+import sys
 import pathlib
 import argparse
 
@@ -22,29 +22,67 @@ CUTS = [
     'acceptance',
     'HLT',
     'L1',
-    'low MET',
-    # 'high MET',
+    # 'low MET',
+    'high MET',
     #! I reset cutflow indices here
     'CSC IT',
     'DT IT',
+    # 'DT OOT',
+    # 'DT I/OOT',
     # 'MET',
+    # 'DNN',
+    # 'BDT',
     # 'ME1',
     'MB1',
     'jet veto',
     # 'muon veto',
     # 'N Lep',
-    # 'BDT',
-    'halo veto',
+    # 'halo veto',
+    # 'DT stn',
     # 'CSCSIZE',
-    'DT stn',
     '1 CSC-DT',
     # 'BLINDSR',
     # 'DR',
+    # 'dPhi_0.4',
+    'dPhi_0.2',
+]
+CUTS_LOW = [
+    'acceptance',
+    'HLT',
+    'L1',
+    'low MET',
+    #! I reset cutflow indices here
+    'CSC IT',
+    'DT IT',
+    # 'DT OOT',
+    # 'DT I/OOT',
+    'MB1',
+    'jet veto',
+    'halo veto',
+    'DT stn',
+    # 'DNN',
+    '1 CSC-DT',
     'dPhi_0.4',
-    # 'dPhi_0.2',
+]
+CUTS_HIGH = [
+    'acceptance',
+    'HLT',
+    'L1',
+    'high MET',
+    #! I reset cutflow indices here
+    'CSC IT',
+    'DT IT',
+    # 'DT OOT',
+    # 'DT I/OOT',
+    'MB1',
+    # 'jet veto',
+    'DNN',
+    '1 CSC-DT',
+    'dPhi_0.4',
 ]
 
-PRINT_CUTFLOW = True
+
+PRINT_CUTFLOW = False
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
 T2_OUT_DIR = '/storage/af/user/psimmerl/LLP/mds_analysis'  # os.getcwd()
@@ -285,6 +323,17 @@ if __name__ == '__main__':
     print('| Starting skim.py |')
     print('+ -----------------+')
 
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'low':
+            print('    Using low met cuts')
+            CUTS = CUTS_LOW
+        elif sys.argv[1] == 'high':
+            print('    Using high met cuts')
+            CUTS = CUTS_HIGH
+        else:
+            raise ValueError('Unknown arguments: '+' '.join(sys.argv[1:]))
+
     # Arguments:
     #   - input path
     #   - output path
@@ -292,31 +341,37 @@ if __name__ == '__main__':
     #   - cut options (eg in-time vs out-of-time)
     #   - multithreading
 
-    FN_MC='/home/psimmerl/mds_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root'
-    # FN_R3='/home/psimmerl/mds_analysis/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root'
-    # FN_MC='/home/psimmerl/mds_analysis/data/processed/mc_hlt569.root'
-    FN_R3='/home/psimmerl/mds_analysis/data/processed/r3_hlt569.root'
+    # # All of the data
+    # FN_MC, TN_MC = '/home/psimmerl/mds_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root', 'MuonSystem'
+    # # FN_R3, TN_R3 ='/home/psimmerl/mds_analysis/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root', 'MuonSystem'
+
+    # # My skim where it passes HLT_L1CSCCluster_DTCluster50 (HLT 569)
+    # # FN_MC, TN_MC ='/home/psimmerl/mds_analysis/data/processed/mc_hlt569.root', 'MuonSystem_HLT569'
+    # FN_R3, TN_R3 ='/home/psimmerl/mds_analysis/data/processed/r3_hlt569.root', 'MuonSystem_HLT569'
+
+    # Pedro's DNN skim
+    LUMI = 1.1328524540090597e-06 * LUMI # ???
+    FN_MC, TN_MC ='/home/psimmerl/mds_analysis/data/processed/mc_pedro.root', 'MuonSystem'
+    # FN_R3, TN_R3 ='/home/psimmerl/mds_analysis/data/processed/data_pedro.root', 'MuonSystem'
+    FN_R3, TN_R3 ='/home/psimmerl/mds_analysis/data/processed/r3_pedro_hlt569.root', 'MuonSystem'
 
     if '1 CSC-DT' not in CUTS:
         raise NotImplementedError('cant handle multiple pairs yet')
 
-    # ROOT MT causes the code to crash (not enough memory?)
-    rt.EnableImplicitMT()
-    print('  Enabled ROOT\'s implicit multithreading (sometimes causes a crash)')
+    rt.EnableImplicitMT(4)
+    print('    Enabled ROOT\'s implicit multithreading (sometimes causes a crash)')
+    
     print('')
 
     # **************** #
     print('Events in:')
     
     rdfs = {
-        'mc' : rt.RDataFrame('MuonSystem', FN_MC),
-        # 'r3' : rt.RDataFrame('MuonSystem', FN_R3),
-        # 'mc' : rt.RDataFrame('MuonSystem_HLT569', FN_MC),
-        'r3' : rt.RDataFrame('MuonSystem_HLT569', FN_R3),
+        'mc' : rt.RDataFrame(TN_MC, FN_MC),
+        'r3' : rt.RDataFrame(TN_R3, FN_R3),
     }
 
     for key, rdf in rdfs.items():
-        # **** #
         # rdf = rdf.Range(0,100_000) # Skim a subset of events for debugging
         count, weight = rdf.Count().GetValue(), rdf.Sum('weight').GetValue()
         print(f'  {key} = {count:,} ({weight:,.2f}) -- read')
@@ -359,10 +414,10 @@ if __name__ == '__main__':
             print(f'{key} cutflow:')
             print(r'\begin{center}')
             print(r'\begin{tabular}{c|ccc|ccc|ccc}')
-            ec0,cc0,dc0 = rdf.Filter('evtFlag').Sum('weight'), rdf.Sum(f'{C}Flag'), rdf.Sum(f'{D}Flag')
+            ec0,cc0,dc0 = rdf.Filter('evtFlag').Sum('weight'), rdf.Filter('evtFlag').Sum(f'{C}Flag'), rdf.Filter('evtFlag').Sum(f'{D}Flag')
             ec0,cc0,dc0 = ec0.GetValue(),cc0.GetValue(),dc0.GetValue()
             print(r'    \hline')
-            print(f'    {"Signal" if "mc" in key else "Data"}'+r' & \multicolumn{3}{c}{CSC-DT} & \multicolumn{3}{c}{CSC} & \multicolumn{3}{c}{DT} \\')
+            print(f'    \\textbf{{{"Signal" if "mc" in key else "Data"}}}'+r' & \multicolumn{3}{c}{CSC-DT} & \multicolumn{3}{c}{CSC} & \multicolumn{3}{c}{DT} \\')
             print(r'    \hline')
             print(r'    Selection & N Events & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff \\')
             print(r'    \hline')
@@ -433,6 +488,12 @@ if __name__ == '__main__':
             elif 'CSC OOT' in cut:
                 rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && !( (-5 < {C}TimeWeighted) && ({C}TimeWeighted < 12.5) && ({C}TimeSpreadWeightedAll < 20) )')
 
+            if 'DT I/OOT' in cut:
+                if 'mc' in key:
+                    cut = 'DT IT*'
+                else:
+                    cut = 'DT OOT*'
+
             if 'DT IT' in cut:
                 rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}_match_RPCBx_dPhi0p5 == 0) && ({D}_match_RPChits_dPhi0p5 > 0) )')
             elif 'DT OOT' in cut:
@@ -475,11 +536,24 @@ if __name__ == '__main__':
             # if 'BDT' in cut:
             #     raise NotImplementedError('BDT')
 
+            if 'DNN' in cut:
+                # rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > 0.85 )')
+                # rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > 0.85 )')
+                if 'high MET' in CUTS:
+                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > 0.01 )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > 0.01 )')
+                else:
+                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > 0.75 )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > 0.75 )')
+
             # **** #
             if '1 CSC-DT' in cut:
-                rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && evtFlag && '+
-                                   f'(reduce({C}Flag.begin(), {C}Flag.end()) == 1) && '+
-                                   f'(reduce({D}Flag.begin(), {D}Flag.end()) == 1)')
+                # rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && evtFlag && '+
+                #                    f'(reduce({C}Flag.begin(), {C}Flag.end()) == 1) && '+
+                #                    f'(reduce({D}Flag.begin(), {D}Flag.end()) == 1)')
+                rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )')
+                rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )')
+                
 
                 # Apply our cluster level selections to relevant columns
                 columns_out = []
@@ -508,8 +582,8 @@ if __name__ == '__main__':
             # if 'DETA' in cut: #! Has not been tested -- if gg->H->ss is exclusive then conservation
             #     rdf = rdf.Redefine('evtCutFlag', '((0 < cscEta) && ( dtEta < 0)) || (( cscEta < 0) && (0 < dtEta)) ||')
             if 'dPhi' in cut:
-                if '>' in cut:
-                    rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dPhi > {cut.split(">")[-1]})')
+                if '_' in cut:
+                    rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dPhi > {cut.split("_")[-1]})')
                 else:
                     rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dPhi > 0.4)')
 
@@ -541,10 +615,10 @@ if __name__ == '__main__':
                 ec,cc,dc = ec.GetValue(),cc.GetValue(),dc.GetValue()
                 ecc,ccc,dcc = ecc.GetValue(),ccc.GetValue(),dcc.GetValue()
 
-                c_cum_eff = f'{100*cc/ec0:.2f}' if cc != cc0 else '--'
-                c_cut_eff = f'{100*ccc/ec0:.2f}' if ccc != cc0 else '--'
-                d_cum_eff = f'{100*dc/ec0:.2f}' if dc != dc0 else '--'
-                d_cut_eff = f'{100*dcc/ec0:.2f}' if dcc != dc0 else '--'
+                c_cum_eff = f'{100*cc/cc0:.2f}' if cc != cc0 else '--'
+                c_cut_eff = f'{100*ccc/cc0:.2f}' if ccc != cc0 else '--'
+                d_cum_eff = f'{100*dc/dc0:.2f}' if dc != dc0 else '--'
+                d_cut_eff = f'{100*dcc/dc0:.2f}' if dcc != dc0 else '--'
 
                 print(f'    {cut.replace("_"," ")} & {ec:,.0f} & {100*ecc/ec0:.2f} & {100*ec/ec0:.2f} & '+
                       f'{cc:,.0f} & {c_cut_eff} & {c_cum_eff} & '+
@@ -562,9 +636,13 @@ if __name__ == '__main__':
                     #     elif D in col[:len(D)]:
                     #         rdf = rdf.Redefine(col, f'{col}[{D}Flag]')
 
-                    rdf = rdf.Redefine('weight', 'weight * evtFlag')
+                    # rdf = rdf.Redefine('weight', 'weight * evtFlag')
                     rdf = rdf.Redefine(f'{C}Size', f'{C}Size * {C}Flag')
                     rdf = rdf.Redefine(f'{D}Size', f'{D}Size * {D}Flag')
+            else:
+                rdf = rdf.Filter('evtFlag')
+                rdf = rdf.Redefine(f'{C}Size', f'{C}Size * {C}Flag')
+                rdf = rdf.Redefine(f'{D}Size', f'{D}Size * {D}Flag')
 
 
         rdfs[key] = rdf.Filter('evtFlag') # Apply event level cut and update the dictionary with the new RDF
@@ -578,6 +656,10 @@ if __name__ == '__main__':
     # **************** #
     print('Events out:')
     for key, rdf in rdfs.items():
+        if rdf.Count().GetValue() == 0:
+            print(f'{key} is empty')
+            continue
+
         rdf = rdf.Snapshot('MuonSystem_flat', f'data/processed/{key}_rdf.root', columns_out)
         rdfs[key] = rdf
 
