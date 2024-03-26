@@ -1,7 +1,7 @@
 #!/bin/bash
 
-pyroot=/home/psimmerl/.miniconda3/envs/pyroot/bin/python
-
+# pyroot=/home/psimmerl/.miniconda3/envs/pyroot/bin/python
+pyroot=/home/psimmerl/mambaforge/envs/pyroot/bin/python
 # CSC-CSC
 ll="_pedro"
 time $pyroot skim_csccsc.py it
