@@ -44,7 +44,7 @@ CUTS = [
     # 'BLINDSR',
     # 'DR',
     # 'dPhi_0.4',
-    'dPhi_0.2',
+    # 'dPhi_0.2',
 ]
 CUTS_LOW = [
     'acceptance',
@@ -62,7 +62,7 @@ CUTS_LOW = [
     # 'DT stn',
     'DNN',
     '1 CSC-DT',
-    'dPhi',
+    # 'dPhi',
 ]
 CUTS_HIGH = [
     'acceptance',
@@ -78,11 +78,11 @@ CUTS_HIGH = [
     # 'jet veto',
     'DNN',
     '1 CSC-DT',
-    'dPhi_0.4',
+    # 'dPhi_0.4',
 ]
 
 
-PRINT_CUTFLOW = True
+PRINT_CUTFLOW = False
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
 T2_OUT_DIR = '/storage/af/user/psimmerl/LLP/mds_analysis'  # os.getcwd()

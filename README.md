@@ -1,8 +1,16 @@
 # CMS Run 3 LLP/MDS Analysis
-1 CSC cluster and 1 DT cluster
 
+## Skimming datasets
+- skim_csccsc.py
+- skim_cscdt.py
 
-# Running the Analysis
+## Notebooks
+- split_met.ipynb
+- --cscdt_cuts.ipynb--
+- closure_test.ipynb
+- datacard_scan.ipynb
+
+<!-- # Running the Analysis
 ## Setting Up the Environment
 
 ## Cut Flow
@@ -34,4 +42,4 @@ If there are fewer than 1 CSC or 1 DT clusters, the event is rejected.
 ## Run 3 (2022) Data
 
 
-# References
+# References -->

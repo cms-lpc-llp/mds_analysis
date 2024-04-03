@@ -18,6 +18,21 @@ from ROOT import RDataFrame
 # from ROOT import TH1D, TH2D, TGraph, TGraphErrors, TGraphAsymmErrors
 
 # **************************** #
+CUTS_L1 = [
+    'acceptance',
+    'HLT',
+    'L1',
+    # 'high MET',
+    #! I reset cutflow indices here
+    'CSC0 IT',
+    'CSC1 IT',
+    'DT IT',
+    'ME1',
+    'MB1',
+    '1 CSC-CSC',
+    # 'dPhi_1.0',
+]
+
 CUTS = [
     'acceptance',
     'HLT',
@@ -41,9 +56,9 @@ CUTS = [
     '1 CSC-CSC',
     # 'BLINDSR',
     # 'DR',
-    'dPhi_0.4',
+    # 'dPhi_0.4',
+    # 'dPhi_1.0',
 ]
-
 
 PRINT_CUTFLOW = True
 # **************************** #
@@ -292,13 +307,25 @@ if __name__ == '__main__':
 
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'it':
+        args = ' '.join(sys.argv[1:])
+        if 'l1' in args:
+            print('    Using the reduced cut set')
+            CUTS = CUTS_L1
+
+        if 'low' in args:
+            print('    Using low met cuts')
+            CUTS = [c.replace('MET', 'low MET') if 'MET' == c else c for c in CUTS]
+            # CUTS = CUTS_LOW
+        if 'high' in args:
+            print('    Using high met cuts')
+            CUTS = [c.replace('MET', 'high MET') if 'MET' == c else c for c in CUTS]
+            # CUTS = CUTS_HIGH
+
+        if 'it' in args:
             print('    Using in-time 2nd cluster')
-        elif sys.argv[1] == 'oot':
+        if 'oot' in args:
             print('    Using out-of-time 2nd cluster')
             CUTS = [c.replace('CSC1 IT', 'CSC1 OOT') if 'CSC1 IT' == c else c for c in CUTS]
-        else:
-            raise ValueError('Unknown arguments: '+' '.join(sys.argv[1:]))
 
     # Arguments:
     #   - input path
