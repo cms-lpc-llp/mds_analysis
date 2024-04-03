@@ -60,7 +60,7 @@ CUTS = [
     # 'dPhi_1.0',
 ]
 
-PRINT_CUTFLOW = True
+PRINT_CUTFLOW = False
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
 T2_OUT_DIR = '/storage/af/user/psimmerl/LLP/mds_analysis'  # os.getcwd()
