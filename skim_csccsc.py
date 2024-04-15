@@ -33,6 +33,22 @@ CUTS_L1 = [
     # 'dPhi_1.0',
 ]
 
+CUTS_DNN = [
+    'acceptance',
+    'HLT',
+    'L1',
+    # 'high MET',
+    #! I reset cutflow indices here
+    'CSC0 IT',
+    'CSC1 IT',
+    'DT IT',
+    'ME1',
+    'MB1',
+    'DNN'
+    '1 CSC-CSC',
+    'dPhi_1.0',
+]
+
 CUTS = [
     'acceptance',
     'HLT',
@@ -57,7 +73,7 @@ CUTS = [
     # 'BLINDSR',
     # 'DR',
     # 'dPhi_0.4',
-    # 'dPhi_1.0',
+    'dPhi_1.0',
 ]
 
 PRINT_CUTFLOW = False
@@ -311,20 +327,24 @@ if __name__ == '__main__':
         if 'l1' in args:
             print('    Using the reduced cut set')
             CUTS = CUTS_L1
+        if 'dnn' in args:
+            print('    Using the DNN cut set')
+            CUTS = CUTS_DNN
+
 
         if 'low' in args:
-            print('    Using low met cuts')
+            print('    Using the low met cuts')
             CUTS = [c.replace('MET', 'low MET') if 'MET' == c else c for c in CUTS]
             # CUTS = CUTS_LOW
         if 'high' in args:
-            print('    Using high met cuts')
+            print('    Using the high met cuts')
             CUTS = [c.replace('MET', 'high MET') if 'MET' == c else c for c in CUTS]
             # CUTS = CUTS_HIGH
 
         if 'it' in args:
-            print('    Using in-time 2nd cluster')
+            print('    Using the in-time 2nd cluster')
         if 'oot' in args:
-            print('    Using out-of-time 2nd cluster')
+            print('    Using the out-of-time 2nd cluster')
             CUTS = [c.replace('CSC1 IT', 'CSC1 OOT') if 'CSC1 IT' == c else c for c in CUTS]
 
     # Arguments:

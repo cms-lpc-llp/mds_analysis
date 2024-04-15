@@ -19,19 +19,31 @@ from ROOT import RDataFrame
 
 import pickle
 # **************************** #
+CUTS_L1 = [
+    'acceptance',
+    'HLT',
+    'L1',
+    'MET',
+    #! I reset cutflow indices here
+    'CSC IT',
+    'DT IT', # can set OOT using command line
+    'MB1',
+    '1 CSC-CSC',
+    # 'dPhi',
+]
+
 CUTS = [
     'acceptance',
     'HLT',
     'L1',
-    'low MET',
-    # 'high MET',
+    'MET',
     #! I reset cutflow indices here
     'CSC IT',
-    'DT IT',
+    'DT IT', # can set OOT using command line
     # 'DT OOT',
     # 'DT I/OOT',
     # 'MET',
-    'DNN',
+    # 'DNN',
     # 'BDT',
     # 'ME1',
     'MB1',
@@ -45,42 +57,41 @@ CUTS = [
     # 'BLINDSR',
     # 'DR',
     'dPhi',
-    # 'dPhi_0.2',
 ]
-CUTS_LOW = [
-    'acceptance',
-    'HLT',
-    'L1',
-    'low MET',
-    #! I reset cutflow indices here
-    'CSC IT',
-    'DT IT',
-    # 'DT OOT',
-    # 'DT I/OOT',
-    'MB1',
-    'jet veto',
-    'halo veto',
-    # 'DT stn',
-    'DNN',
-    '1 CSC-DT',
-    'dPhi_0.4',
-]
-CUTS_HIGH = [
-    'acceptance',
-    'HLT',
-    'L1',
-    'high MET',
-    #! I reset cutflow indices here
-    'CSC IT',
-    'DT IT',
-    # 'DT OOT',
-    # 'DT I/OOT',
-    'MB1',
-    # 'jet veto',
-    'DNN',
-    '1 CSC-DT',
-    'dPhi_0.4',
-]
+# CUTS_LOW = [
+#     'acceptance',
+#     'HLT',
+#     'L1',
+#     'low MET',
+#     #! I reset cutflow indices here
+#     'CSC IT',
+#     'DT IT',
+#     # 'DT OOT',
+#     # 'DT I/OOT',
+#     'MB1',
+#     'jet veto',
+#     'halo veto',
+#     # 'DT stn',
+#     'DNN',
+#     '1 CSC-DT',
+#     'dPhi',
+# ]
+# CUTS_HIGH = [
+#     'acceptance',
+#     'HLT',
+#     'L1',
+#     'high MET',
+#     #! I reset cutflow indices here
+#     'CSC IT',
+#     'DT IT',
+#     # 'DT OOT',
+#     # 'DT I/OOT',
+#     'MB1',
+#     # 'jet veto',
+#     'DNN',
+#     '1 CSC-DT',
+#     'dPhi',
+# ]
 
 
 COLUMNS_OUT = [
@@ -322,22 +333,38 @@ C, D = 'cscRechitCluster', 'dtRechitCluster'
 
 
 if __name__ == '__main__':
-    print('+------------------------------+')
-    print('| Starting loo_optimization.py |')
-    print('+ -----------------------------+')
+    print('+-----------------------+')
+    print('| Starting loo_cscdt.py |')
+    print('+ ----------------------+')
 
+    n_iterations = 100_000
+    SAVE_BEST = False
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'low':
+        args = ' '.join(sys.argv[1:])
+        if 'l1' in args:
+            print('    Using the reduced cut set')
+            CUTS = CUTS_L1
+
+        if 'low' in args:
             print('    Using low met cuts')
-            CUTS = CUTS_LOW
+            CUTS = [c.replace('MET', 'low MET') if 'MET' == c else c for c in CUTS]
+            # CUTS = CUTS_LOW
             MET_CATEGORY = 'low'
-        elif sys.argv[1] == 'high':
+        if 'high' in args:
             print('    Using high met cuts')
-            CUTS = CUTS_HIGH
+            CUTS = [c.replace('MET', 'high MET') if 'MET' == c else c for c in CUTS]
+            # CUTS = CUTS_HIGH
             MET_CATEGORY = 'high'
-        else:
-            raise ValueError('Unknown arguments: '+' '.join(sys.argv[1:]))
+
+        if 'oot' in args:
+            print('    Using out-of-time 2nd cluster, DATA ONLY')
+            CUTS = [c.replace('DT IT', 'DT OOT') if 'DT IT' == c else c for c in CUTS]
+        else:#if 'it' in args:
+            print('    Using in-time 2nd cluster')
+
+        if 'save' in args:
+            SAVE_BEST = True
 
     # # All of the data
     # FN_MC, TN_MC = '/home/psimmerl/mds_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root', 'MuonSystem'
@@ -356,69 +383,122 @@ if __name__ == '__main__':
     if '1 CSC-DT' not in CUTS:
         raise NotImplementedError('cant handle multiple pairs yet')
 
-    # rt.EnableImplicitMT(4)
-    # print('    Enabled ROOT\'s implicit multithreading (sometimes causes a crash)')
+    rt.EnableImplicitMT(4)
+    print('    Enabled ROOT\'s implicit multithreading (sometimes causes a crash)')
     
     print('')
 
     # **************** #
 
     rng = np.random.default_rng()
-
     tests = []
 
-    # With CSC time cut optimization
-    test_cuts = [
-        [000.00, 0000.00, 00.00, -5.00, 12.5, 20.00, 30.00, 50.00, 999.9, 999.9, 1.00, 0.40, 0.40, 0.00, 0.00],
-        [121.95, 1104.28, 82.00, -2.27, 6.07, 13.26, 17.24, 48.54, 32.30, 45.82, 3.79, 0.01, 0.58, 0.10, 0.38],
-        [112.74, 1144.15, 103.00, -7.87, 4.86, 17.71, 1.00, 62.55, 62.11, 39.70, 7.42, 0.04, 0.35, 0.30, 0.55],
-        [112.71, 1032.99, 84.00, -7.27, 2.15, 34.85, 79.81, 46.13, 70.73, 18.38, 0.49, 0.07, 0.24, 0.53, 0.32],
-        [107.51, 1122.40, 109.00, -6.94, 4.22, 21.09, 92.61, 52.32, 16.21, 92.34, 9.75, 0.10, 0.06, 0.48, 0.60],
-        [107.48, 1080.11, 101.00, -6.82, 3.53, 14.60, 79.05, 75.57, 37.24, 95.08, 9.78, 0.30, 0.30, 0.55, 0.28],
-        [106.65, 1173.14, 121.00, -4.39, 3.68, 35.45, 75.97, 1.64, 27.23, 27.19, 3.69, 0.10, 0.38, 0.53, 0.32],
-        [106.07, 1011.85, 91.00, -18.50, 8.00, 41.15, 40.06, 36.02, 64.87, 74.79, 5.34, 0.01, 0.52, 0.61, 0.62],
-        [104.53, 1034.81, 98.00, -1.79, 2.92, 49.34, 69.95, 14.63, 70.19, 60.26, 0.08, 0.11, 0.18, 0.20, 0.42],
-        [100.79, 1144.75, 129.00, -15.99, 1.93, 49.97, 77.46, 88.45, 20.15, 63.64, 6.92, 0.01, 0.60, 0.57, 0.47],
-        [100.25, 1235.97, 152.00, -11.25, 5.03, 21.32, 79.95, 33.69, 57.35, 6.05, 2.23, 0.00, 0.58, 0.36, 0.46],
-    ]
-    # Fixed CSC time cut
-    test_cuts = [
-        [000.00, 0000.00, 00.00, -5.00, 12.5, 20.00, 30.00, 50.00, 999.9, 999.9, 1.00, 0.40, 0.40, 0.00, 0.00],
-        [122.31, 1023.33, 70.00, -5.00, 12.50, 20.00, 178.42, 170.92, 168.68, 199.16, 8.45, 0.05, 0.44, 0.59, 0.69],
-        [118.26, 1044.47, 78.00, -5.00, 12.50, 20.00, 57.57, 145.94, 100.43, 77.14, 9.42, 0.09, 0.53, 0.41, 0.74],
-        [108.54, 1035.41, 91.00, -5.00, 12.50, 20.00, 86.82, 165.34, 25.03, 135.81, 2.76, 0.12, 0.54, 0.46, 0.60],
-        [105.80, 1042.06, 97.00, -5.00, 12.50, 20.00, 66.25, 68.82, 31.59, 88.50, 9.65, 0.06, 0.24, 0.31, 0.78],
-        [102.56, 1055.95, 106.00, -5.00, 12.50, 20.00, 171.30, 16.31, 181.93, 24.57, 2.25, 0.07, 0.30, 0.35, 0.68],
-        [102.02, 1060.18, 108.00, -5.00, 12.50, 20.00, 158.27, 118.35, 78.16, 5.67, 3.49, 0.05, 0.46, 0.72, 0.36],
-        [98.92, 1097.03, 123.00, -5.00, 12.50, 20.00, 106.16, 113.13, 33.15, 176.01, 8.35, 0.11, 0.57, 0.73, 0.30],
-        [98.74, 1164.08, 139.00, -5.00, 12.50, 20.00, 65.34, 181.75, 60.82, 150.19, 5.41, 0.06, 0.55, 0.68, 0.29],
-        [96.00, 1086.15, 128.00, -5.00, 12.50, 20.00, 81.03, 112.16, 111.71, 58.03, 7.35, 0.01, 0.26, 0.22, 0.79],
-        [95.96, 1106.69, 133.00, -5.00, 12.50, 20.00, 71.00, 2.75, 85.21, 46.74, 1.58, 0.13, 0.58, 0.48, 0.32],
-    ]
+# LOW MET, Min dPhi < 1.5, 1350 iterations
+# 0: 49.94, 1121.19, 504.00, -5.00, 12.50, 20.00, 15.00, 10.00, 45.00, 95.00, 0.00, 0.00, 1.35, 0.00, 0.00
+# 1: 49.55, 1155.62, 544.00, -5.00, 12.50, 20.00, 55.00, 10.00, 65.00, 80.00, 0.00, 0.00, 1.50, 0.00, 0.00
+# 2: 47.66, 1136.90, 569.00, -5.00, 12.50, 20.00, 35.00, 10.00, 30.00, 60.00, 0.00, 0.00, 1.40, 0.00, 0.00
+# 3: 45.63, 1154.42, 640.00, -5.00, 12.50, 20.00, 80.00, 10.00, 45.00, 75.00, 0.00, 0.00, 1.20, 0.00, 0.00
+# 4: 45.35, 1083.74, 571.00, -5.00, 12.50, 20.00, 10.00, 100.00, 45.00, 100.00, 0.00, 0.00, 1.25, 0.00, 0.00
+# 5: 44.38, 1135.69, 655.00, -5.00, 12.50, 20.00, 20.00, 10.00, 90.00, 40.00, 0.00, 0.00, 1.15, 0.00, 0.00
+# 6: 44.26, 1150.79, 676.00, -5.00, 12.50, 20.00, 10.00, 15.00, 70.00, 85.00, 1.00, 0.00, 1.30, 0.00, 0.00
+# 7: 43.85, 1172.54, 715.00, -5.00, 12.50, 20.00, 75.00, 10.00, 15.00, 40.00, 1.00, 0.00, 1.50, 0.00, 0.00
+# 8: 43.66, 1239.59, 806.00, -5.00, 12.50, 20.00, 85.00, 10.00, 55.00, 70.00, 1.00, 0.00, 1.35, 0.00, 0.00
+# 9: 43.14, 1124.21, 679.00, -5.00, 12.50, 20.00, 10.00, 75.00, 15.00, 95.00, 1.00, 0.00, 1.45, 0.00, 0.00
+# Completed 4151 iterations
+# Best S/sqrt[ B ], B >= 3:
+# 0: 36.77, 1077.09, 858.00, -5.00, 12.50, 20.00, 0.00, 1.00, 85.00, 10.00, 15.00, 40.00, -1.00, 0.00, 0.05, 0.40, 0.00, 0.00
+# 1: 36.51, 1036.62, 806.00, -5.00, 12.50, 20.00, 0.00, 1.00, 100.00, 10.00, 90.00, 60.00, -1.00, 0.00, 0.15, 0.40, 0.00, 0.00
+# 2: 36.38, 1015.48, 779.00, -5.00, 12.50, 20.00, 0.00, 1.00, 10.00, 70.00, 55.00, 85.00, -1.00, 0.00, 0.10, 0.40, 0.00, 0.00
+# 3: 36.29, 1013.66, 780.00, -5.00, 12.50, 20.00, 0.00, 1.00, 100.00, 10.00, 95.00, 95.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 4: 36.23, 1010.64, 778.00, -5.00, 12.50, 20.00, 0.00, 1.00, 25.00, 10.00, 85.00, 90.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 5: 36.13, 1005.21, 774.00, -5.00, 12.50, 20.00, 0.00, 1.00, 30.00, 10.00, 65.00, 80.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 6: 36.09, 996.14, 762.00, -5.00, 12.50, 20.00, 0.00, 1.00, 25.00, 10.00, 30.00, 70.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 7: 35.79, 1016.08, 806.00, -5.00, 12.50, 20.00, 0.00, 1.00, 90.00, 10.00, 10.00, 45.00, -1.00, 0.00, 0.10, 0.40, 0.00, 0.00
+# 8: 35.67, 1178.58, 1092.00, -5.00, 12.50, 20.00, 0.00, 1.00, 15.00, 10.00, 15.00, 85.00, -1.00, 1.00, 0.00, 0.40, 0.00, 0.00
+# 9: 35.53, 1045.68, 866.00, -5.00, 12.50, 20.00, 0.00, 1.00, 10.00, 85.00, 85.00, 25.00, -1.00, 0.00, 0.00, 0.40, 0.00, 0.00
+# Best S/sqrt[ B ], S > 900, B >= 3:
+# 0: 36.77, 1077.09, 858.00, -5.00, 12.50, 20.00, 0.00, 1.00, 85.00, 10.00, 15.00, 40.00, -1.00, 0.00, 0.05, 0.40, 0.00, 0.00
+# 1: 36.51, 1036.62, 806.00, -5.00, 12.50, 20.00, 0.00, 1.00, 100.00, 10.00, 90.00, 60.00, -1.00, 0.00, 0.15, 0.40, 0.00, 0.00
+# 2: 36.38, 1015.48, 779.00, -5.00, 12.50, 20.00, 0.00, 1.00, 10.00, 70.00, 55.00, 85.00, -1.00, 0.00, 0.10, 0.40, 0.00, 0.00
+# 3: 36.29, 1013.66, 780.00, -5.00, 12.50, 20.00, 0.00, 1.00, 100.00, 10.00, 95.00, 95.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 4: 36.23, 1010.64, 778.00, -5.00, 12.50, 20.00, 0.00, 1.00, 25.00, 10.00, 85.00, 90.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 5: 36.13, 1005.21, 774.00, -5.00, 12.50, 20.00, 0.00, 1.00, 30.00, 10.00, 65.00, 80.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 6: 36.09, 996.14, 762.00, -5.00, 12.50, 20.00, 0.00, 1.00, 25.00, 10.00, 30.00, 70.00, -1.00, 0.00, 0.20, 0.40, 0.00, 0.00
+# 7: 35.79, 1016.08, 806.00, -5.00, 12.50, 20.00, 0.00, 1.00, 90.00, 10.00, 10.00, 45.00, -1.00, 0.00, 0.10, 0.40, 0.00, 0.00
+# 8: 35.67, 1178.58, 1092.00, -5.00, 12.50, 20.00, 0.00, 1.00, 15.00, 10.00, 15.00, 85.00, -1.00, 1.00, 0.00, 0.40, 0.00, 0.00
+# 9: 35.53, 1045.68, 866.00, -5.00, 12.50, 20.00, 0.00, 1.00, 10.00, 85.00, 85.00, 25.00, -1.00, 0.00, 0.00, 0.40, 0.00, 0.00
 
-    n_iterations = 100_000
+# HIGH MET, Min dPhi < 1.5, 1400 iterations
+# 0: 23.02, 39.87, 3.00, -5.00, 12.50, 20.00, 45.00, 10.00, 40.00, 100.00, 7.00, 0.00, 0.05, 0.00, 0.00
+# 1: 22.67, 39.27, 3.00, -5.00, 12.50, 20.00, 75.00, 10.00, 15.00, 95.00, 7.00, 0.00, 0.05, 0.00, 0.00
+# 2: 22.32, 38.66, 3.00, -5.00, 12.50, 20.00, 100.00, 10.00, 40.00, 85.00, 10.00, 0.00, 0.15, 0.00, 0.00
+# 3: 21.62, 37.45, 3.00, -5.00, 12.50, 20.00, 60.00, 10.00, 20.00, 70.00, 9.00, 0.00, 0.10, 0.00, 0.00
+# 4: 20.58, 35.64, 3.00, -5.00, 12.50, 20.00, 55.00, 90.00, 35.00, 95.00, 1.00, 0.00, 0.00, 0.00, 0.00
+# 5: 20.23, 35.04, 3.00, -5.00, 12.50, 20.00, 95.00, 15.00, 20.00, 65.00, 4.00, 0.00, 0.15, 0.00, 0.00
+# 6: 19.88, 34.43, 3.00, -5.00, 12.50, 20.00, 15.00, 10.00, 25.00, 60.00, 7.00, 0.00, 0.25, 0.00, 0.00
+# 7: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 80.00, 10.00, 25.00, 30.00, 9.00, 0.00, 0.00, 0.00, 0.00
+# 8: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 65.00, 10.00, 45.00, 95.00, 9.00, 0.00, 0.10, 0.00, 0.00
+# 9: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 35.00, 10.00, 70.00, 80.00, 7.00, 0.00, 0.05, 0.00, 0.00
+# Completed 2501 iterations
+# Best S/sqrt[ B ], B >= 3:
+# 0: 20.58, 35.64, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 35.00, 10.00, 70.00, 95.00, -1.00, 9.00, 0.00, 0.40, 0.00, 0.00
+# 1: 19.53, 33.83, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 75.00, 15.00, 10.00, 85.00, -1.00, 8.00, 0.00, 0.40, 0.00, 0.00
+# 2: 19.53, 33.83, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 95.00, 15.00, 10.00, 75.00, -1.00, 9.00, 0.00, 0.40, 0.00, 0.00
+# 3: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 45.00, 15.00, 25.00, 50.00, -1.00, 10.00, 0.05, 0.40, 0.00, 0.00
+# 4: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 55.00, 20.00, 40.00, 75.00, -1.00, 6.00, 0.00, 0.40, 0.00, 0.00
+# 5: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 30.00, 65.00, 35.00, 95.00, -1.00, 4.00, 0.00, 0.40, 0.00, 0.00
+# 6: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 85.00, 10.00, 45.00, 50.00, -1.00, 8.00, 0.00, 0.40, 0.00, 0.00
+# 7: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 55.00, 75.00, 15.00, 95.00, -1.00, 5.00, 0.00, 0.40, 0.00, 0.00
+# 8: 19.18, 33.22, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 95.00, 15.00, 15.00, 60.00, -1.00, 8.00, 0.00, 0.40, 0.00, 0.00
+# 9: 18.83, 32.62, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 25.00, 75.00, 40.00, 80.00, -1.00, 6.00, 0.05, 0.40, 0.00, 0.00
+
     for i in range(n_iterations):
-    # for i in range(len(test_cuts)):
-        # SHUFFLE CUTS #
-        MIN_CSC_TIME = -5.0 #rng.uniform(-25, 0) # 
-        MAX_CSC_TIME =  12.5 #rng.uniform(0, 25) #
-        MAX_CSC_TSPREAD =  20.0 #rng.uniform(0, 50) #
+        MIN_CSC_TIME = -5.0
+        MAX_CSC_TIME =  12.5
+        MAX_CSC_TSPREAD =  20.0
 
-        MAX_CSC_JET = rng.uniform(0, 200)
-        MAX_DT_JET = rng.uniform(0, 200)
-        MAX_CSC_MUON = rng.uniform(0, 200)
-        MAX_DT_MUON = rng.uniform(0, 200)
+        MAX_RPC_BX = 0
+        MIN_RPC_HITS = 1
 
-        MAX_MB1 = rng.uniform(0, 10)
+        MAX_CSC_JET = 30
+        MAX_DT_JET = 50
+        MAX_CSC_MUON = 30
+        MAX_DT_MUON = 10
 
-        HALO_CUTOFF = rng.uniform(0, 0.5)
-        MIN_DPHI = rng.uniform(0, 0.6)
+        MAX_ME1 = -1
+        MAX_MB1 = 0
 
-        MIN_CSC_DNN = rng.uniform(0, 1)
-        MIN_DT_DNN = rng.uniform(0, 1)
+        HALO_CUTOFF = 0.4
+        MIN_DPHI = 0.4
+
+        MIN_CSC_DNN = 0
+        MIN_DT_DNN = 0
         if i == 0:
-            print('old cuts')
-            s2b, s, b, MIN_CSC_TIME, MAX_CSC_TIME, MAX_CSC_TSPREAD, MAX_CSC_JET, MAX_DT_JET, MAX_CSC_MUON, MAX_DT_MUON, MAX_MB1, HALO_CUTOFF, MIN_DPHI, MIN_CSC_DNN, MIN_DT_DNN = test_cuts[i]
+            print('Running first iteration with default cuts')
+        else:
+            MIN_CSC_TIME = -5.0 # rng.uniform(-25, 0)
+            MAX_CSC_TIME =  12.5 # rng.uniform(0, 25)
+            MAX_CSC_TSPREAD =  20.0 # rng.uniform(0, 50)
+
+            MAX_RPC_BX = 0
+            MIN_RPC_HITS = 1
+
+            MAX_CSC_JET = rng.choice(np.arange(10, 100+5, 5)) # rng.uniform(10, 100) # 30
+            MAX_DT_JET = rng.choice(np.arange(10, 100+5, 5)) # rng.uniform(10, 100) # 50
+            MAX_CSC_MUON = rng.choice(np.arange(10, 100+5, 5)) # rng.uniform(10, 100) # 30
+            MAX_DT_MUON = rng.choice(np.arange(10, 100+5, 5)) # rng.uniform(10, 100) # 10
+
+            MAX_ME1 = -1 # rng.choice(np.arange(0, 10+1, 1)) # rng.uniform(0, 50) # 0
+            MAX_MB1 = rng.choice(np.arange(0, 10+1, 1)) # rng.uniform(0, 50) # 0
+
+            HALO_CUTOFF = rng.choice(np.arange(0, 0.6+0.05, 0.05))
+            MIN_DPHI = 0.4 # rng.choice(np.arange(0, 0.6+0.05, 0.05)) # rng.uniform(0, 1.5) # 1
+
+            MIN_CSC_DNN = rng.choice(np.arange(0, 1+0.05, 0.05)) # rng.uniform(0, 1) # 0
+            MIN_DT_DNN = rng.choice(np.arange(0, 1+0.05, 0.05)) # rng.uniform(0, 1) # 0
+
+        if 'DNN' not in CUTS:
+            MIN_CSC_DNN, MIN_DT_DNN = 0, 0
 
         # ************ #
         
@@ -443,6 +523,8 @@ if __name__ == '__main__':
 
             for p in (C, D):
                 rdf = rdf.Define(f'{p}R', f'ROOT::VecOps::sqrt( {p}X*{p}X + {p}Y*{p}Y )')
+                if f'{p}R' not in COLUMNS_OUT:
+                    COLUMNS_OUT.append(f'{p}R')
             
             if 'mc' in key: # Fix the weight branch
                 rdf = rdf.Redefine('weight', f'weight * {LUMI}')
@@ -502,6 +584,9 @@ if __name__ == '__main__':
                                     f'((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )') # ME 42
 
                 # **** #
+                if 'MET' in cut:
+                    rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (met < 200)')
+
                 if 'low MET' in cut:
                     rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (met < 75)')
 
@@ -510,35 +595,35 @@ if __name__ == '__main__':
 
                 # **** #
                 # Cluster level selections
-                if 'CSC IT' in cut:
+                if 'mc' in key and ' OOT' in cut:
+                    cut = cut.replace(' OOT', ' IT')
+
+                if 'CSC IT' in cut or 'mc' in key:
                     rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )')
                 elif 'CSC OOT' in cut:
                     rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && !( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )')
 
-                if 'DT I/OOT' in cut:
-                    if 'mc' in key:
-                        cut = 'DT IT*'
-                    else:
-                        cut = 'DT OOT*'
-
-                if 'DT IT' in cut:
-                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}_match_RPCBx_dPhi0p5 == 0) && ({D}_match_RPChits_dPhi0p5 > 0) )')
+                if 'DT IT' in cut or 'mc' in key:
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )')
                 elif 'DT OOT' in cut:
-                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && !( ({D}_match_RPCBx_dPhi0p5 == 0) && ({D}_match_RPChits_dPhi0p5 > 0) )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && !( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )')
 
                 # **** #
                 if 'ME1' in cut:
-                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( '+
-                                    f'({C}NRechitChamberPlus11 == 0) &&'+
-                                    f'({C}NRechitChamberPlus12 == 0) &&'+
-                                    f'({C}NRechitChamberMinus11 == 0) &&'+
-                                    f'({C}NRechitChamberMinus12 == 0) )')
+                    rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( '+
+                                    f'({C}NRechitChamberPlus11 <= {MAX_ME1}) &&'+
+                                    f'({C}NRechitChamberPlus12 <= {MAX_ME1}) &&'+
+                                    f'({C}NRechitChamberMinus11 <= {MAX_ME1}) &&'+
+                                    f'({C}NRechitChamberMinus12 <= {MAX_ME1}) )')
+                    # rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( '+
+                    #                 f'({C}NRechitChamberPlus11 +'+
+                    #                 f'{C}NRechitChamberPlus12 +'+
+                    #                 f'{C}NRechitChamberMinus11 +'+
+                    #                 f'{C}NRechitChamberMinus12 <= {MAX_ME1}) ')
 
                 if 'MB1' in cut:
-                    # if 'low MET' in CUTS:
-                    #     rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( {D}NHitStation1 == 0 )')
-                    # else:
-                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( {D}NHitStation1 < {MAX_MB1} )')
+                    # rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( {D}NHitStation1 == 0 )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( {D}NHitStation1 <= {MAX_MB1} )')
 
                 if 'DT stn' in cut:
                     rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}NStation10 < 3) && !(({D}NStation10 == 2) && ({D}MaxStation == 4)) )')
@@ -546,15 +631,15 @@ if __name__ == '__main__':
                 # **** #
                 if 'jet veto' in cut:
                     if 'high MET' in CUTS:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) || ({C}JetVetoPt < {MAX_CSC_JET}) )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) || ({D}JetVetoPt < {MAX_DT_JET}) )')
+                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {MAX_CSC_JET}) )')
+                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {MAX_DT_JET}) )')
                     else:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) || ({C}JetVetoPt < {MAX_CSC_JET}) )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) || ({D}JetVetoPt < {MAX_DT_JET}) )')
+                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {MAX_CSC_JET}) )')
+                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {MAX_DT_JET}) )')
                 
                 if 'muon veto' in cut:
-                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}MuonVetoGlobal == 0) || ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
-                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}MuonVetoLooseId == 0) || ({D}MuonVetoPt < {MAX_DT_MUON}) )')
+                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}MuonVetoGlobal == 0) && ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}MuonVetoLooseId == 0) && ({D}MuonVetoPt < {MAX_DT_MUON}) )')
 
                 if 'halo veto' in cut:
                     rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({HALO_CUTOFF} < abs({D}Phi)) && (abs({D}Phi) < {PI} - {HALO_CUTOFF}) )')
@@ -564,8 +649,6 @@ if __name__ == '__main__':
                 #     raise NotImplementedError('BDT')
 
                 if 'DNN' in cut:
-                    # rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > 0.85 )')
-                    # rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > 0.85 )')
                     if 'high MET' in CUTS:
                         rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
                         rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
@@ -578,15 +661,19 @@ if __name__ == '__main__':
                     # rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && evtFlag && '+
                     #                    f'(reduce({C}Flag.begin(), {C}Flag.end()) == 1) && '+
                     #                    f'(reduce({D}Flag.begin(), {D}Flag.end()) == 1)')
+
                     rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )')
                     rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )')
 
+                    # Apply our cluster level selections to relevant columns
+                    columns_out = []
                     for col in COLUMNS_OUT:
                         ocol = col.replace('RechitCluster', '')
                         if C in col[:len(C)]:
                             rdf = rdf.Define(ocol, f'{col}[{C}Flag][0]')
                         elif D in col[:len(D)]:
                             rdf = rdf.Define(ocol, f'{col}[{D}Flag][0]')
+                        columns_out.append(ocol)
 
                     # Apply our cluster level selections to relevant columns
                     rdf = rdf.Define('cscCTau', f'gLLP_ctau[{C}_match_gLLP_index[{C}Flag][0]]')
@@ -594,6 +681,7 @@ if __name__ == '__main__':
                     rdf = rdf.Define('tag_dEta', 'abs(cscEta - dtEta)')
                     rdf = rdf.Define('tag_dPhi', f'abs( abs(cscPhi - dtPhi) - (abs(cscPhi - dtPhi) > {PI} ? 2*{PI} : 0) )')
                     rdf = rdf.Define('tag_dR', 'sqrt(tag_dEta*tag_dEta + tag_dPhi*tag_dPhi)')
+                    columns_out.extend(['tag_dEta', 'tag_dPhi', 'tag_dR', 'cscCTau', 'dtCTau'])
 
                 # **** #
                 # if 'BLINDSR' in cut:
@@ -608,18 +696,11 @@ if __name__ == '__main__':
                     rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dPhi > {MIN_DPHI})')
 
                 # **** #
-                # Finally require that we still have just one or at least one pair of CSC+DT per event
-                rdf = rdf.Redefine('evtCutFlag', 'evtCutFlag && ('+
-                                f'(reduce({C}CutFlag.begin(), {C}CutFlag.end()) > 0) && '+
-                                f'(reduce({D}CutFlag.begin(), {D}CutFlag.end()) > 0))')
-
-                # **** #
                 # Propagate to cumulative flags
-                rdf = rdf.Redefine('evtFlag', 'evtFlag && evtCutFlag')
                 rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && {C}CutFlag')
                 rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && {D}CutFlag')
 
-                rdf = rdf.Redefine('evtFlag', 'evtFlag && ('+
+                rdf = rdf.Redefine('evtFlag', 'evtFlag && evtCutFlag && ('+
                                 f'(reduce({C}Flag.begin(), {C}Flag.end()) > 0) && '+
                                 f'(reduce({D}Flag.begin(), {D}Flag.end()) > 0))')
 
@@ -638,125 +719,65 @@ if __name__ == '__main__':
         s2b = s / ( b )**(1/2) if b else 0
 
         # **************** #
-        # if s>= 4 and b >= 3:
-        #     sizes = np.linspace(50,150,50) #if ABCD_SIZE is None else np.array([ABCD_SIZE])
-        #     dphis = np.linspace(0.4,np.pi,50) #if ABCD_DPHI is None else np.array([ABCD_DPHI])
-
-        #     # if 'low MET' in CUTS:
-        #     a_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi >= {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     b_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi >= {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     c_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi < {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     d_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi < {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-
-        #     a_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi >= {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     b_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi >= {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     c_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi < {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     d_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi < {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     # if 'high MET' in CUTS:
-        #     #     a_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi < {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     b_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi < {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     c_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi >= {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     d_mc = [ [rdfs['mc'].Filter(f'(tag_dPhi >= {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-
-        #     #     a_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi < {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     b_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi < {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     c_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi >= {dp}) && (dtSize < {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     #     d_r3 = [ [rdfs['r3'].Filter(f'(tag_dPhi >= {dp}) && (dtSize >= {sz})').Sum('weight') for sz in sizes] for dp in dphis ]
-        #     # else:
-        #     #     raise
-
-        #     a_mc = np.array([ [xx.GetValue() for xx in x] for x in a_mc])
-        #     b_mc = np.array([ [xx.GetValue() for xx in x] for x in b_mc])
-        #     c_mc = np.array([ [xx.GetValue() for xx in x] for x in c_mc])
-        #     d_mc = np.array([ [xx.GetValue() for xx in x] for x in d_mc])
-
-        #     a_r3 = np.array([ [xx.GetValue() for xx in x] for x in a_r3])
-        #     b_r3 = np.array([ [xx.GetValue() for xx in x] for x in b_r3])
-        #     c_r3 = np.array([ [xx.GetValue() for xx in x] for x in c_r3])
-        #     d_r3 = np.array([ [xx.GetValue() for xx in x] for x in d_r3])
-
-        #     ap_mc = np.divide(b_mc*d_mc, c_mc, where=c_mc>0, out=np.zeros_like(a_mc))
-        #     ap_r3 = np.divide(b_r3*d_r3, c_r3, where=c_r3>0, out=np.zeros_like(a_r3))
-
-        #     ####
-
-        #     # There has to be signal and data in each of the 4 bins for the ABCD method to work
-        #     cond = ((a_mc>0) & (b_mc>0) & (c_mc>0) & (d_mc>0)) & \
-        #             ((ap_r3>0) & (b_r3>0) & (c_r3>0) & (d_r3>0))
-
-        #     # Here we add a condition that the predicted value must be within 2 sigma of the actual value
-        #     ae_r3 = np.sqrt(a_r3)
-        #     ape_r3 = ap_r3 * np.sqrt(
-        #         np.divide(1,b_r3, where=cond, out=np.zeros_like(b_r3)) +
-        #         np.divide(1,c_r3, where=cond, out=np.zeros_like(c_r3)) +
-        #         np.divide(1,d_r3, where=cond, out=np.zeros_like(d_r3))
-        #     )
-
-        #     cond = cond & (np.divide(np.abs(a_r3-ap_r3),np.sqrt(ae_r3**2 + ape_r3**2), where=cond, out=999*np.zeros_like(a_r3))<1)
-                        
-        #     ####
-        #     s2bs = np.divide(a_mc, np.sqrt(ap_r3), where=cond, out=np.zeros_like(a_mc))
-
-        #     idx_s2b = np.unravel_index(np.argmax(s2bs), s2bs.shape)
-
-        #     s2b_a = s2bs[idx_s2b]
-        #     s_a = a_mc[idx_s2b]
-        #     b_a = ap_r3[idx_s2b]
-
-        #     ABCD_DPHI = dphis[idx_s2b[0]]
-        #     ABCD_SIZE = sizes[idx_s2b[1]]
-        # else:
-        #     s2b_a = 0
-        #     s_a = 0
-        #     b_a = 0
-        #     ABCD_DPHI = 0
-        #     ABCD_SIZE = 0
-            
-        # **************** #
 
         tests.append([
             s2b,
             s,
             b,
-            # s2b_a,
-            # s_a,
-            # b_a,
-            # ABCD_DPHI,
-            # ABCD_SIZE,
             MIN_CSC_TIME,
             MAX_CSC_TIME,
             MAX_CSC_TSPREAD,
+            MAX_RPC_BX,
+            MIN_RPC_HITS,
             MAX_CSC_JET,
             MAX_DT_JET,
             MAX_CSC_MUON,
             MAX_DT_MUON,
+            MAX_ME1,
             MAX_MB1,
             HALO_CUTOFF,
             MIN_DPHI,
             MIN_CSC_DNN,
             MIN_DT_DNN,
+            # MIN_CSC_TIME,
+            # MAX_CSC_TIME,
+            # MAX_CSC_TSPREAD,
+            # MAX_CSC_JET,
+            # MAX_DT_JET,
+            # MAX_CSC_MUON,
+            # MAX_DT_MUON,
+            # MAX_MB1,
+            # HALO_CUTOFF,
+            # MIN_DPHI,
+            # MIN_CSC_DNN,
+            # MIN_DT_DNN,
         ])
 
-        with open(f'loo_tests_{MET_CATEGORY}.pkl', 'wb') as fout:
+        with open(f'loo_tests_cscdt_{MET_CATEGORY}.pkl', 'wb') as fout:
             pickle.dump(tests, fout)
         
-        print(f'{s2b:>7.2f}, {s:>7.2f}, {b:>7.2f} | {MIN_CSC_TIME:>6.2f}, {MAX_CSC_TIME:>5.2f}, {MAX_CSC_TSPREAD:>5.2f} | {MAX_CSC_JET:>6.2f}, {MAX_DT_JET:>6.2f} | {MAX_CSC_MUON:>6.2f}, {MAX_DT_MUON:>6.2f} | {MAX_MB1:>5.2f}, {HALO_CUTOFF:>4.2f}, {MIN_DPHI:>4.2f} | {MIN_CSC_DNN:>4.2f}, {MIN_DT_DNN:>4.2f}')
-        # print(f'{s2b:>7.2f} {s:>7.2f}, {b:>7.2f} | {s2b_a:>7.2f} {s_a:>7.2f}, {b_a:>6.2f} | {ABCD_DPHI:>4.2f}, {ABCD_SIZE:>6.2f} | {MIN_CSC_TIME:>6.2f}, {MAX_CSC_TIME:>5.2f}, {MAX_CSC_TSPREAD:>5.2f} | {MAX_CSC_JET:>6.2f}, {MAX_DT_JET:>6.2f} | {MAX_CSC_MUON:>6.2f}, {MAX_DT_MUON:>6.2f} | {HALO_CUTOFF:>4.2f} | {MIN_CSC_DNN:>4.2f}, {MIN_DT_DNN:>4.2f}')
-        
+        print(f'{s2b:>5.1f}, {s:>4.0f}, {b:>6.0f} | {MIN_CSC_TIME:>5.1f}, {MAX_CSC_TIME:>4.2f}, {MAX_CSC_TSPREAD:>4.1f} | {MAX_RPC_BX:>1.0f}, {MIN_RPC_HITS:>2.0f} | {MAX_CSC_JET:>3.0f}, {MAX_DT_JET:>3.0f} | {MAX_CSC_MUON:>3.0f}, {MAX_DT_MUON:>3.0f} | {MAX_ME1:>2.0F}, {MAX_MB1:>2.0f} | {HALO_CUTOFF:>4.2f}, {MIN_DPHI:>4.2f} | {MIN_CSC_DNN:>4.3f}, {MIN_DT_DNN:>4.3f}')
 
         if i % 50 == 0 or i+1 == n_iterations:
             _t = np.array(tests)
             # idx_best = np.argmax(_t[:,3])
             print('')
             print(f'Completed {i+1} iterations')
-            print('Best S/sqrt[ B ]:')
-            idxs = np.argsort(_t[:,0])[::-1]
+            print('Best S/sqrt[ B ], B >= 3:')
+            idxs = np.argsort(_t[:,0] * (_t[:,2]>=3))[::-1]
             for iidx, idx in enumerate(idxs[:10]):
                 print(f'{iidx}: ' + ', '.join([f'{x:.2f}' for x in tests[idx]]))
             
-            print('Best S/sqrt[ B ], with S > 1000:')
-            idxs = np.argsort(_t[:,0] * (_t[:,1]>1000))[::-1]
+            print('Best S/sqrt[ B ], S > 900, B >= 3:')
+            idxs = np.argsort(_t[:,0] * (_t[:,1]>900) * (_t[:,2]>=3))[::-1]
             for iidx, idx in enumerate(idxs[:10]):
                 print(f'{iidx}: ' + ', '.join([f'{x:.2f}' for x in tests[idx]]))
             print('')
 
+        if n_iterations == 1:
+            print('saving loo rdfs using the best cut selection found')
+            # for key, rdf in rdfs.items():
+            #     fout = f'data/processed/{key}_cscdt_loo_{MET_CATEGORY}_rdf.root'
+            #     if 'DT OOT' in CUTS:
+            #         fout = fout.replace('cscdt_', 'cscdtOOT_')
+            #     rdf = rdf.Snapshot('MuonSystem_flat', fout, columns_out)
