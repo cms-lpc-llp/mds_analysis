@@ -28,7 +28,7 @@ CUTS_L1 = [
     'CSC IT',
     'DT IT', # can set OOT using command line
     'MB1',
-    '1 CSC-CSC',
+    '1 CSC-DT',
     # 'dPhi',
 ]
 
@@ -58,41 +58,6 @@ CUTS = [
     # 'DR',
     'dPhi',
 ]
-# CUTS_LOW = [
-#     'acceptance',
-#     'HLT',
-#     'L1',
-#     'low MET',
-#     #! I reset cutflow indices here
-#     'CSC IT',
-#     'DT IT',
-#     # 'DT OOT',
-#     # 'DT I/OOT',
-#     'MB1',
-#     'jet veto',
-#     'halo veto',
-#     # 'DT stn',
-#     'DNN',
-#     '1 CSC-DT',
-#     'dPhi',
-# ]
-# CUTS_HIGH = [
-#     'acceptance',
-#     'HLT',
-#     'L1',
-#     'high MET',
-#     #! I reset cutflow indices here
-#     'CSC IT',
-#     'DT IT',
-#     # 'DT OOT',
-#     # 'DT I/OOT',
-#     'MB1',
-#     # 'jet veto',
-#     'DNN',
-#     '1 CSC-DT',
-#     'dPhi',
-# ]
-
 
 COLUMNS_OUT = [
     # 'Flag2_BadChargedCandidateFilter',
@@ -295,8 +260,6 @@ COLUMNS_OUT = [
     'weight',
 ]
 
-
-PRINT_CUTFLOW = False
 # **************************** #
 OUT_DIR = 'reports/weekly/2024-01-22'
 T2_OUT_DIR = '/storage/af/user/psimmerl/LLP/mds_analysis'  # os.getcwd()
@@ -404,6 +367,7 @@ if __name__ == '__main__':
 # 7: 43.85, 1172.54, 715.00, -5.00, 12.50, 20.00, 75.00, 10.00, 15.00, 40.00, 1.00, 0.00, 1.50, 0.00, 0.00
 # 8: 43.66, 1239.59, 806.00, -5.00, 12.50, 20.00, 85.00, 10.00, 55.00, 70.00, 1.00, 0.00, 1.35, 0.00, 0.00
 # 9: 43.14, 1124.21, 679.00, -5.00, 12.50, 20.00, 10.00, 75.00, 15.00, 95.00, 1.00, 0.00, 1.45, 0.00, 0.00
+# Min dPhi = 0.4
 # Completed 4151 iterations
 # Best S/sqrt[ B ], B >= 3:
 # 0: 36.77, 1077.09, 858.00, -5.00, 12.50, 20.00, 0.00, 1.00, 85.00, 10.00, 15.00, 40.00, -1.00, 0.00, 0.05, 0.40, 0.00, 0.00
@@ -439,6 +403,7 @@ if __name__ == '__main__':
 # 7: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 80.00, 10.00, 25.00, 30.00, 9.00, 0.00, 0.00, 0.00, 0.00
 # 8: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 65.00, 10.00, 45.00, 95.00, 9.00, 0.00, 0.10, 0.00, 0.00
 # 9: 19.63, 39.27, 4.00, -5.00, 12.50, 20.00, 35.00, 10.00, 70.00, 80.00, 7.00, 0.00, 0.05, 0.00, 0.00
+# Min dPhi = 0.4
 # Completed 2501 iterations
 # Best S/sqrt[ B ], B >= 3:
 # 0: 20.58, 35.64, 3.00, -5.00, 12.50, 20.00, 0.00, 1.00, 35.00, 10.00, 70.00, 95.00, -1.00, 9.00, 0.00, 0.40, 0.00, 0.00
@@ -630,12 +595,8 @@ if __name__ == '__main__':
 
                 # **** #
                 if 'jet veto' in cut:
-                    if 'high MET' in CUTS:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {MAX_CSC_JET}) )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {MAX_DT_JET}) )')
-                    else:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {MAX_CSC_JET}) )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {MAX_DT_JET}) )')
+                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {MAX_CSC_JET}) )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {MAX_DT_JET}) )')
                 
                 if 'muon veto' in cut:
                     rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( ({C}MuonVetoGlobal == 0) && ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
@@ -649,12 +610,8 @@ if __name__ == '__main__':
                 #     raise NotImplementedError('BDT')
 
                 if 'DNN' in cut:
-                    if 'high MET' in CUTS:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
-                    else:
-                        rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
-                        rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
+                    rdf = rdf.Redefine(f'{C}CutFlag', f'{C}CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
 
                 # **** #
                 if '1 CSC-DT' in cut:
