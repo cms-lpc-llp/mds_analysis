@@ -7,6 +7,8 @@ import pickle
 import ROOT as rt
 from ROOT import RDataFrame
 
+from src.histo_utilities import std_color_list as SCL
+
 # **************************** #
 LOCAL_DIR = '/home/psimmerl/mds_analysis'
 OUT_DIR = f'{LOCAL_DIR}/reports/weekly/2024-04-15'
@@ -52,18 +54,471 @@ CUTS = [
     'DT IT',
     # 'ME1',
     'MB1',
+    # 'n jets',
+    # 'n leptons',
     'jet veto',
     'muon veto',
-    # 'no leptons',
     'halo veto',
-    # 'DT stn',
+    # 'DT N Station',
+    # 'DT Avg Station',
     # 'BDT',
     'DNN',
     '1 CSC-DT',
     # 'dR',
-    # 'dEta',
+    'dEta',
     'dPhi',
+    # 'ABCD'
+    'DT size' # for ABCD?
 ]
+
+# **** #
+CUT_VALUES = {
+    'l1_lt200' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        'MAX_CSC_JET' : 200,
+        'MAX_DT_JET' : 200,
+        'MAX_CSC_MUON' : 200,
+        'MAX_DT_MUON' : 200,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0,
+        'MIN_DPHI' : 0.4,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'scs_lt200' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' :  12.5,
+        'MAX_CSC_TSPREAD' :  20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        'MAX_CSC_JET' : 30,
+        'MAX_DT_JET' : 50,
+        'MAX_CSC_MUON' : 30,
+        'MAX_DT_MUON' : 10,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 0,
+        'HALO_CUTOFF' : 0.4,
+        'MIN_DPHI' : 0.4,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'ropt_low' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' :  12.5,
+        'MAX_CSC_TSPREAD' :  20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 10,
+        'MAX_CSC_MUON' : 90,
+        'MAX_DT_MUON' : 60,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 1,
+        'HALO_CUTOFF' : 0.15,
+        'MIN_DPHI' : 0.4,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'ropt_high' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' :  12.5,
+        'MAX_CSC_TSPREAD' :  20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        'MAX_CSC_JET' : 35,
+        'MAX_DT_JET' : 10,
+        'MAX_CSC_MUON' : 70,
+        'MAX_DT_MUON' : 95,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 9,
+        'HALO_CUTOFF' : 0.0,
+        'MIN_DPHI' : 0.4,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'lopt_lt200' : {
+        # Default guess
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'loptDNN_lt200' : {
+        # Default guess
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'lopt_low' : {
+        # Default guess
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'loptDNN_low' : {
+        # Default guess
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+        # 'ABCD_PHI' : 75,
+        # 'ABCD_SIZE' : 75,
+        # # Randomly choosing a value that has a better S/sqrt[B], frac=1 niter=100, S=622.8 B=4, SR S/rt[B]=558
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 72,
+        # 'MAX_DT_JET' : 199,
+        # 'MAX_CSC_MUON' : 146,
+        # 'MAX_DT_MUON' : 200,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 8,
+        # 'HALO_CUTOFF' : 0.08,
+        # 'MIN_DPHI' : 0.40,
+        # 'MIN_DETA' : 0,
+        # 'MAX_DETA' : 4,
+        # 'MIN_CSC_DNN' : 0.82,
+        # 'MIN_DT_DNN' : 0.81,
+        # 'MIN_DT_SIZE' : 50,
+        # # Randomly choosing a value that has a better S/sqrt[B], frac=0.5 niter=200, S=879.0 B=11, SR S/rt[B]=320
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 101,
+        # 'MAX_DT_JET' : 177,
+        # 'MAX_CSC_MUON' : 200,
+        # 'MAX_DT_MUON' : 200,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 2,
+        # 'HALO_CUTOFF' : 0.04,
+        # 'MIN_DPHI' : 0.40,
+        # 'MIN_DETA' : 0,
+        # 'MAX_DETA' : 4,
+        # 'MIN_CSC_DNN' : 0.70,
+        # 'MIN_DT_DNN' : 0.63,
+        # 'MIN_DT_SIZE' : 50,
+        # # Randomly choosing a value that has a better S/sqrt[B], wmv/4 in avg, niter=500, S=783.5 B=8, SR S/rt[B]=320
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 123,
+        # 'MAX_DT_JET' : 129,
+        # 'MAX_CSC_MUON' : 159,
+        # 'MAX_DT_MUON' : 171,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 9,
+        # 'HALO_CUTOFF' : 0.14,
+        # 'MIN_DPHI' : 0.54,
+        # 'MIN_DETA' : 0.2,
+        # 'MAX_DETA' : 3.2,
+        # 'MIN_CSC_DNN' : 0.72,
+        # 'MIN_DT_DNN' : 0.71,
+        # 'MIN_DT_SIZE' : 50,
+        #
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 57,
+        # 'MAX_DT_JET' : 138,
+        # 'MAX_CSC_MUON' : 146,
+        # 'MAX_DT_MUON' : 158,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 9,
+        # 'HALO_CUTOFF' : 0.04,
+        # 'MIN_DPHI' : 0.38,
+        # 'MIN_DETA' : 0.0,
+        # 'MAX_DETA' : 2.4,
+        # 'MIN_CSC_DNN' : 0.69,
+        # 'MIN_DT_DNN' : 0.82,
+        # 'MIN_DT_SIZE' : 50,#53,
+    },
+    'lopt_high' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+    },
+    'loptDNN_high' : {
+        'MIN_CSC_TIME' : -5.0,
+        'MAX_CSC_TIME' : 12.5,
+        'MAX_CSC_TSPREAD' : 20.0,
+        'MAX_RPC_BX' : 0,
+        'MIN_RPC_HITS' : 1,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        'MAX_CSC_JET' : 100,
+        'MAX_DT_JET' : 100,
+        'MAX_CSC_MUON' : 100,
+        'MAX_DT_MUON' : 100,
+        'MAX_ME1' : 0,
+        'MAX_MB1' : 10,
+        'HALO_CUTOFF' : 0.2,
+        'MIN_DPHI' : 0,
+        'MIN_DETA' : 0,
+        'MAX_DETA' : 4,
+        'MIN_CSC_DNN' : 0,
+        'MIN_DT_DNN' : 0,
+        'MIN_DT_SIZE' : 50,
+        # 'ABCD_PHI' : 1.5,
+        # 'ABCD_SIZE' : 75,
+        # # Randomly choosing a value that has a better S/sqrt[B], wmv/4 in avg, niter=500, S=783.5 B=8, SR S/rt[B]=320
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 188,
+        # 'MAX_DT_JET' : 115,
+        # 'MAX_CSC_MUON' : 200,
+        # 'MAX_DT_MUON' : 200,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 8,
+        # 'HALO_CUTOFF' : 0.04,
+        # 'MIN_DPHI' : 0.24,
+        # 'MIN_DETA' : 0.1,
+        # 'MAX_DETA' : 3.0,
+        # 'MIN_CSC_DNN' : 0.21,
+        # 'MIN_DT_DNN' : 0.01,
+        # 'MIN_DT_SIZE' : 50,
+        # 'MIN_CSC_TIME' : -5.00,
+        # 'MAX_CSC_TIME' : 12.50,
+        # 'MAX_CSC_TSPREAD' : 20.00,
+        # 'MAX_RPC_BX' : 0,
+        # 'MIN_RPC_HITS' : 1,
+        # 'MAX_CSC_JET' : 118,
+        # 'MAX_DT_JET' : 132,
+        # 'MAX_CSC_MUON' : 97,
+        # 'MAX_DT_MUON' : 183,
+        # 'MAX_ME1' : 0,
+        # 'MAX_MB1' : 10,
+        # 'HALO_CUTOFF' : 0.02,
+        # 'MIN_DPHI' : 0.12,
+        # 'MIN_DETA' : 0.1,
+        # 'MAX_DETA' : 2.5,
+        # 'MIN_CSC_DNN' : 0.33,
+        # 'MIN_DT_DNN' : 0.06,
+        # 'MIN_DT_SIZE' : 50,
+
+
+    },
+}
+
+LOO_CUTS = ['MB1','CSC jet veto','DT jet veto','CSC muon veto','DT muon veto','halo veto','min dPhi','min dEta','max dEta','CSC DNN','DT DNN','DT size']#,'ABCD phi', 'ABCD size',]#,'ME1']
+CUT_OPT_PARS = {
+    'ME1' : {
+        'col' : 'cscNHitME1',
+        'cut' : 'MAX_ME1',
+        'values' : np.arange(0, 11, 1)[::-1],
+        'func' : lambda v, vd: vd <= v,
+    },
+    'MB1' : {
+        'col' : 'dtNHitStation1',
+        'cut' : 'MAX_MB1',
+        'values' : np.arange(0, 11, 1)[::-1],
+        'func' : lambda v, vd: vd <= v,
+    },
+    'CSC jet veto' : {
+        'col' : 'cscJetVetoPt',
+        'cut' : 'MAX_CSC_JET',
+        'values' : np.arange(10, 201, 1)[::-1],
+        # 'func' : lambda v, vd: (10 < vd) & (vd < v),
+        'func' : lambda v, vd: vd < v,
+    },
+    'DT jet veto' : {
+        'col' : 'dtJetVetoPt',
+        'cut' : 'MAX_DT_JET',
+        'values' : np.arange(10, 201, 1)[::-1],
+        # 'func' : lambda v, vd: (10 < vd) & (vd < v),
+        'func' : lambda v, vd: vd < v,
+    },
+    'CSC muon veto' : {
+        'col' : 'cscMuonVetoPt',
+        'cut' : 'MAX_CSC_MUON',
+        'values' : np.arange(0, 201, 1)[::-1],
+        # 'func' : lambda v, vd: (0 < vd) & (vd < v),
+        'func' : lambda v, vd: vd < v,
+    },
+    'DT muon veto' : {
+        'col' : 'dtMuonVetoPt',
+        'cut' : 'MAX_DT_MUON',
+        'values' : np.arange(0, 201, 1)[::-1],
+        # 'func' : lambda v, vd: (0 < vd) & (vd < v),
+        'func' : lambda v, vd: vd < v,
+    },
+    'halo veto' : {
+        'col' : 'dtPhi',
+        'cut' : 'HALO_CUTOFF',
+        'values' : np.arange(0, 0.52, 0.02),
+        'func' : lambda v, vd: (v < np.abs(vd)) & (np.abs(vd) < PI - v),
+    },
+    'min dPhi' : {
+        'col' : 'tag_dPhi',
+        'cut' : 'MIN_DPHI',
+        'values' : np.arange(0, 0.62, 0.02),
+        'func' : lambda v, vd: v < vd,
+    },
+    'min dEta' : {
+        'col' : 'tag_dEta',
+        'cut' : 'MIN_DETA',
+        'values' : np.arange(0, 4.1, 0.1),
+        'func' : lambda v, vd: v < vd,
+    },
+    'max dEta' : {
+        'col' : 'tag_dEta',
+        'cut' : 'MAX_DETA',
+        'values' : np.arange(0, 4.1, 0.1)[::-1],
+        'func' : lambda v, vd: vd < v,
+    },
+    'CSC DNN' : {
+        'col' : 'cscDNN',
+        'cut' : 'MIN_CSC_DNN',
+        'values' : np.arange(0, 1.01, 0.01),
+        'func' : lambda v, vd: v < vd,
+    },
+    'DT DNN' : {
+        'col' : 'dtDNN',
+        'cut' : 'MIN_DT_DNN',
+        'values' : np.arange(0, 1.01, 0.01),
+        'func' : lambda v, vd: v < vd,
+    },
+    'CSC DNN' : {
+        'col' : 'cscDNN',
+        'cut' : 'MIN_CSC_DNN',
+        'values' : np.arange(0, 1.01, 0.01),
+        'func' : lambda v, vd: v < vd,
+    },
+    'DT DNN' : {
+        'col' : 'dtDNN',
+        'cut' : 'MIN_DT_DNN',
+        'values' : np.arange(0, 1.01, 0.01),
+        'func' : lambda v, vd: v < vd,
+    },
+    'ABCD phi' : {
+        'col' : 'tag_dPhi',
+        'cut' : 'ABCD_PHI',
+        'values' : np.arange(0, 3.5, 0.01),
+        'func' : lambda v, vd: v <= vd,
+    },
+    'ABCD size' : {
+        'col' : 'dtSize',
+        'cut' : 'ABCD_SIZE',
+        'values' : np.arange(50, 150, 1),
+        'func' : lambda v, vd: v <= vd,
+    },
+    'DT size' : {
+        'col' : 'dtSize',
+        'cut' : 'MIN_DT_SIZE',
+        'values' : np.arange(50, 150, 1),
+        'func' : lambda v, vd: v <= vd,
+    },
+}
 
 # **** #
 C, D = 'cscRechitCluster', 'dtRechitCluster'
@@ -233,22 +688,22 @@ COLUMNS_OUT = [
     # 'gLLP_eta',
     # 'gLLP_phi',
     # 'gLLP_pt',
-    # 'jetE',
-    # 'jetEta',
-    # 'jetPhi',
-    # 'jetPt',
-    # 'jetTightPassId',
-    # 'lepDZ',
-    # 'lepE',
-    # 'lepEta',
-    # 'lepPassLooseIso',
-    # 'lepPassTightIso',
-    # 'lepPassVTightIso',
-    # 'lepPassVVTightIso',
-    # 'lepPdgId',
-    # 'lepPhi',
-    # 'lepPt',
-    # 'lepTightId',
+    'jetE',
+    'jetEta',
+    'jetPhi',
+    'jetPt',
+    'jetTightPassId',
+    'lepDZ',
+    'lepE',
+    'lepEta',
+    'lepPassLooseIso',
+    'lepPassTightIso',
+    'lepPassVTightIso',
+    'lepPassVVTightIso',
+    'lepPdgId',
+    'lepPhi',
+    'lepPt',
+    'lepTightId',
     # 'lumiSec',
     # 'mH',
     # 'mX',
@@ -272,14 +727,24 @@ COLUMNS_OUT = [
 # **** #
 pathlib.Path(OUT_DIR).mkdir(parents=True, exist_ok=True)
 
+rng = np.random.default_rng()
+
 rt.gErrorIgnoreLevel = 1001  # rt.kInfo + 1
 rt.gROOT.SetBatch(True)
 PI = rt.TMath.Pi()
 
-gc = []
+gc = [] # ROOT garbage collector
 
 # **************************** #
-def loo_score(_rdfs, vn, val, form, val0=None):
+def optimize_cut(_rdfs, col, cut_func, cut_values=None, cut0=None):
+    vmc = _rdfs['mc'].AsNumpy(['weight',col])#,'tag_dPhi','dtSize'
+    vr3 = _rdfs['r3'].AsNumpy(['weight',col])#,'tag_dPhi','dtSize'
+    wmc, vmc = vmc['weight'], vmc[col]
+    wr3, vr3 = vr3['weight'], vr3[col]
+    # wmc_tot, wr3_tot = wmc.sum(), wr3.sum() # may have issues when cut_func has preselection?
+    # vmin, vmax = min(vmc.min(), vr3.min()), max(vmc.max(), vr3.max())
+
+    # **** #
     nmc, nr3 = _rdfs['mc'].Count().GetValue(), _rdfs['r3'].Count().GetValue()
     if isinstance(LOO_FRAC, float):
         idxs_mc = np.random.randint(0,nmc,int(LOO_FRAC*nmc))
@@ -287,28 +752,56 @@ def loo_score(_rdfs, vn, val, form, val0=None):
     elif LOO_FRAC == 'sqrt':
         idxs_mc = np.random.randint(0,nmc,int(nmc**0.5))
         idxs_r3 = np.random.randint(0,nr3,int(nr3**0.5))
-
-    vmc = _rdfs['mc'].AsNumpy(['weight',vn])
-    vr3 = _rdfs['r3'].AsNumpy(['weight',vn])
-    wmc, vmc = vmc['weight'], vmc[vn]
-    wr3, vr3 = vr3['weight'], vr3[vn]
-
-    if val0 is not None:
-        vmc0, vr30 = form(val0, vmc).sum(), form(val0, vr3).sum()
-        s2b0 = vmc0/(vr30**0.5) if vr30 else 0
-    
     wmc, vmc = wmc[idxs_mc], vmc[idxs_mc]
     wr3, vr3 = wr3[idxs_r3], vr3[idxs_r3]
 
-    vmc = np.array([wmc[form(v, vmc)].sum() for v in val])
-    vr3 = np.array([wr3[form(v, vr3)].sum() for v in val])
+    # **** #
+    # if 'ABCD' in CUTS:
+    #     ABCD_DPHI = CUT_VALUES['ABCD_DPHI']
+    #     ABCD_SIZE = CUT_VALUES['ABCD_SIZE']
+    #     a_mc, b_mc, c_mc, d_mc = 
 
-    s2b = np.divide(vmc, np.sqrt(vr3), out=np.zeros_like(vmc), where=(vr3>0))
-    idx = np.argmax(s2b)
+    wmc0, wr30 = wmc[cut_func(cut0, vmc)].sum(), wr3[cut_func(cut0, vr3)].sum()
+    wmc = np.array([wmc[cut_func(v, vmc)].sum() for v in cut_values])
+    wr3 = np.array([wr3[cut_func(v, vr3)].sum() for v in cut_values])
 
-    if val0 is not None:
-        return val[idx], s2b[idx], vmc[idx], vr3[idx], s2b0, vmc0, vr30
-    return val[idx], s2b[idx], vmc[idx], vr3[idx]
+    wmc_tot, wr3_tot = wmc.max(), wr3.max() # relative to itself? sorta fixes preselection bias
+    # **** #
+    # Scoring Metrics
+    # S/rtB, sometimes falls into minimum where B=1 and S=small
+    s2b0 = wmc0/(wr30**0.5) if wr30 else 0
+    s2b = np.divide(wmc, np.sqrt(wr3), out=np.zeros_like(wmc), where=(wr3>0))
+    # # F1 to balance precision/recall (avoid small S minimum?)
+    # f10 = wmc0 /(2*wmc0+wr30+(wmc_tot-wmc0)) if 2*wmc0+wr30+(wmc_tot-wmc0) else 0
+    # f1 = np.divide(wmc, 2*wmc+wr3+(wmc_tot-wmc),out=np.zeros_like(wmc), where=2*wmc+wr3+(wmc_tot-wmc)>0)
+    # # Modified F-score where precision = S / (S + rtB)
+    # f10 = wmc0 /(2*wmc0+(wr30**0.5)+(wmc_tot-wmc0)) if 2*wmc0+(wr30**0.5)+(wmc_tot-wmc0) else 0
+    # f1 = np.divide(wmc, 2*wmc+np.sqrt(wr3)+(wmc_tot-wmc),out=np.zeros_like(wmc), where=2*wmc+np.sqrt(wr3)+(wmc_tot-wmc)>0)
+    # # Modified F-score where precision = S / rtB, harmonic mean of S/rtB and S recall
+    # f10 = wmc0 /(wmc_tot+(wr30**0.5)) if wmc_tot+(wr30**0.5) else 0
+    # f1 = np.divide(wmc, wmc_tot+np.sqrt(wr3),out=np.zeros_like(wmc), where=wmc_tot+np.sqrt(wr3)>0)
+
+    # **** #
+    score0, score = s2b0, s2b
+    # score0, score = s2b0, s2b
+    # score0, score = f10, f1
+
+    # # Find best at this working point
+    # idx = np.argmax(score)
+    # Randomly select a new cut that's better than before
+    idx = rng.choice(np.arange(len(score))[score >= score0]) if (score >= score0).sum() else 0
+    
+    # # Best signal yield while still being a better s2b
+    # idx = np.argmax(wmc * (s2b >= s2b0))
+
+    # idx = np.argmax(score * (s2b >= s2b0))
+    # idx = np.argmax(s2b * (score >= score0))
+    # idx = rng.choice(np.arange(len(score))[s2b >= s2b0]) if (s2b >= s2b0).sum() else 0
+
+    # **** #
+    if cut0 is not None:
+        return cut_values[idx], s2b[idx], wmc[idx], wr3[idx], s2b0, wmc0, wr30
+    return cut_values[idx], s2b[idx], wmc[idx], wr3[idx]
 
 # **************************** #
 if __name__ == '__main__':
@@ -322,7 +815,6 @@ if __name__ == '__main__':
     # **************************** #
     N_ITERATIONS = 1
 
-    LOO_CUTS = ['MB1','CSC jet veto','DT jet veto','CSC muon veto','DT muon veto','halo veto','CSC DNN','DT DNN']#,'ME1']
     LOO_SCORES = []
     LOO_FRAC = 1.0 # if 1 just bootstrap, fraction with replacement
     LOO = False
@@ -376,7 +868,22 @@ if __name__ == '__main__':
         if OOT:
             print('        FORCING MC TO IN-TIME')
         LOO = True
-        N_ITERATIONS = 500
+        N_ITERATIONS = 5001
+    else:
+        CUTS = [c for c in CUTS if 'DT size' not in c]
+
+    if 'DNN' not in CUTSET:
+        print('    Removing DNN from CUTS')
+        CUTS = [c for c in CUTS if 'DNN' not in c]
+        LOO_CUTS = [c for c in LOO_CUTS if 'DNN' not in c]
+
+    if f'{CUTSET}_{MET_CATEGORY}' in CUT_VALUES:
+        CUT_VALUES = CUT_VALUES[f'{CUTSET}_{MET_CATEGORY}']
+    elif f'{CUTSET}_lt200' in CUT_VALUES:
+        CUT_VALUES = CUT_VALUES[f'{CUTSET}_lt200']
+        print(f'    No cutset for {MET_CATEGORY=} found, defaulting to \'lt200\'')
+    else:
+        raise ValueError(f'no cutset associated with {CUTSET=} and {MET_CATEGORY=} found')
 
     print('')
 
@@ -385,196 +892,33 @@ if __name__ == '__main__':
         raise NotImplementedError('cant handle multiple pairs yet')
 
     # **************************** #
-    if CUTSET == 'l1': # Level-1 & HLT Cuts only
-        MIN_CSC_TIME = -5.0
-        MAX_CSC_TIME =  12.5
-        MAX_CSC_TSPREAD =  20.0
-
-        MAX_RPC_BX = 0
-        MIN_RPC_HITS = 1
-
-        MAX_CSC_JET = 999
-        MAX_DT_JET = 999
-        MAX_CSC_MUON = 999
-        MAX_DT_MUON = 999
-
-        MAX_ME1 = 0
-        MAX_MB1 = 0
-
-        HALO_CUTOFF = 0
-        MIN_DPHI = 0
-
-        MIN_CSC_DNN = 0
-        MIN_DT_DNN = 0
-
-    if CUTSET == 'scs': # Standard cut selections for CSC-DT (no met categorization)
-        MIN_CSC_TIME = -5.0
-        MAX_CSC_TIME =  12.5
-        MAX_CSC_TSPREAD =  20.0
-
-        MAX_RPC_BX = 0
-        MIN_RPC_HITS = 1
-
-        MAX_CSC_JET = 30
-        MAX_DT_JET = 50
-        MAX_CSC_MUON = 30
-        MAX_DT_MUON = 10
-
-        MAX_ME1 = 0
-        MAX_MB1 = 0
-
-        HALO_CUTOFF = 0.4
-        MIN_DPHI = 0.4
-
-        MIN_CSC_DNN = 0
-        MIN_DT_DNN = 0
-
-    if CUTSET == 'ropt': # Randomly optimized using OOT data
-        if MET_CATEGORY == 'high':
-            MIN_CSC_TIME = -5.0
-            MAX_CSC_TIME =  12.5
-            MAX_CSC_TSPREAD =  20.0
-
-            MAX_RPC_BX = 0
-            MIN_RPC_HITS = 1
-
-            MAX_CSC_JET = 35 # optimized
-            MAX_DT_JET = 10 # optimized
-            MAX_CSC_MUON = 70 # optimized
-            MAX_DT_MUON = 95 # optimized
-
-            MAX_ME1 = 0
-            MAX_MB1 = 9 # optimized
-
-            HALO_CUTOFF = 0.0
-            MIN_DPHI = 0.4
-
-            MIN_CSC_DNN = 0
-            MIN_DT_DNN = 0
-        else:
-            MIN_CSC_TIME = -5.0
-            MAX_CSC_TIME =  12.5
-            MAX_CSC_TSPREAD =  20.0
-
-            MAX_RPC_BX = 0
-            MIN_RPC_HITS = 1
-
-            MAX_CSC_JET = 100 # optimized
-            MAX_DT_JET = 10 # optimized
-            MAX_CSC_MUON = 90 # optimized
-            MAX_DT_MUON = 60 # optimized
-
-            MAX_ME1 = 0
-            MAX_MB1 = 1 # optimized
-
-            HALO_CUTOFF = 0.15 # optimized
-            MIN_DPHI = 0.4
-
-            MIN_CSC_DNN = 0
-            MIN_DT_DNN = 0
-
-    if CUTSET == 'lopt': # LOO optimized using OOT data
-        if MET_CATEGORY == 'high':
-            # MIN_CSC_TIME=-5.0
-            # MAX_CSC_TIME=12.5
-            # MAX_CSC_TSPREAD=20.0
-
-            # MAX_RPC_BX=0
-            # MIN_RPC_HITS=1
-
-            # MAX_CSC_JET=5
-            # MAX_DT_JET=5
-            # MAX_CSC_MUON=85
-            # MAX_DT_MUON=195
-
-            # MAX_ME1=0
-            # MAX_MB1=0
-
-            # HALO_CUTOFF=0.05
-            # MIN_DPHI=0.4
-
-            # MIN_CSC_DNN=0
-            # MIN_DT_DNN=0
-
-            MIN_CSC_TIME=-5.0
-            MAX_CSC_TIME=12.5
-            MAX_CSC_TSPREAD=20.0
-            MAX_RPC_BX=0
-            MIN_RPC_HITS=1
-            MAX_CSC_JET=200
-            MAX_DT_JET=200
-            MAX_CSC_MUON=200
-            MAX_DT_MUON=200
-            MAX_ME1=0
-            MAX_MB1=10
-            HALO_CUTOFF=0
-            MIN_DPHI=0.4
-            MIN_CSC_DNN=0
-            MIN_DT_DNN=0
-
-        else:
-            # MIN_CSC_TIME = -5.0
-            # MAX_CSC_TIME =  12.5
-            # MAX_CSC_TSPREAD =  20.0
-
-            # MAX_RPC_BX = 0
-            # MIN_RPC_HITS = 1
-
-            # MAX_CSC_JET = 999 #100 # optimized
-            # MAX_DT_JET = 999 #10 # optimized
-            # MAX_CSC_MUON = 999 #90 # optimized
-            # MAX_DT_MUON = 999 #60 # optimized
-
-            # MAX_ME1 = 0
-            # MAX_MB1 = 1 # optimized
-
-            # HALO_CUTOFF = 0#0.15 # optimized
-            # MIN_DPHI = 0.4
-
-            # MIN_CSC_DNN = 0
-            # MIN_DT_DNN = 0
-
-            # MIN_CSC_TIME=-5.0
-            # MAX_CSC_TIME=12.5
-            # MAX_CSC_TSPREAD=20.0
-            # MAX_RPC_BX=0
-            # MIN_RPC_HITS=1
-            # MAX_CSC_JET=86.91030439
-            # MAX_DT_JET=65.73253104
-            # MAX_CSC_MUON=139.86654121
-            # MAX_DT_MUON=187.99151258
-            # MAX_ME1=0
-            # MAX_MB1=6.35000349
-            # HALO_CUTOFF=0.12688598
-            # MIN_DPHI=0.4
-            # MIN_CSC_DNN=0.83137871
-            # MIN_DT_DNN=0.81228065
-
-            MIN_CSC_TIME=-5.0
-            MAX_CSC_TIME=12.5
-            MAX_CSC_TSPREAD=20.0
-            MAX_RPC_BX=0
-            MIN_RPC_HITS=1
-            MAX_CSC_JET=200
-            MAX_DT_JET=200
-            MAX_CSC_MUON=200
-            MAX_DT_MUON=200
-            MAX_ME1=0
-            MAX_MB1=10
-            HALO_CUTOFF=0
-            MIN_DPHI=0.4
-            MIN_CSC_DNN=0
-            MIN_DT_DNN=0
-
-
-    # **************************** #
-    rng = np.random.default_rng()
-
     for iloo in range(N_ITERATIONS):
-        if iloo > 0 and iloo != N_ITERATIONS-1:
+        # if iloo % 100>0 and iloo != N_ITERATIONS-1:
+        if iloo != 0 and iloo != N_ITERATIONS-1:
             LOO_CUT = rng.choice([c for c in LOO_CUTS if c != LOO_CUT])
         else:
             LOO_CUT = ''
+
+        MIN_CSC_TIME = CUT_VALUES['MIN_CSC_TIME']
+        MAX_CSC_TIME = CUT_VALUES['MAX_CSC_TIME']
+        MAX_CSC_TSPREAD = CUT_VALUES['MAX_CSC_TSPREAD']
+        MAX_RPC_BX = CUT_VALUES['MAX_RPC_BX']
+        MIN_RPC_HITS = CUT_VALUES['MIN_RPC_HITS']
+        MAX_CSC_JET = CUT_VALUES['MAX_CSC_JET']
+        MAX_DT_JET = CUT_VALUES['MAX_DT_JET']
+        MAX_CSC_MUON = CUT_VALUES['MAX_CSC_MUON']
+        MAX_DT_MUON = CUT_VALUES['MAX_DT_MUON']
+        MAX_ME1 = CUT_VALUES['MAX_ME1']
+        MAX_MB1 = CUT_VALUES['MAX_MB1']
+        HALO_CUTOFF = CUT_VALUES['HALO_CUTOFF']
+        MIN_DPHI = CUT_VALUES['MIN_DPHI']
+        MIN_DETA = CUT_VALUES['MIN_DETA']
+        MAX_DETA = CUT_VALUES['MAX_DETA']
+        MIN_CSC_DNN = CUT_VALUES['MIN_CSC_DNN']
+        MIN_DT_DNN = CUT_VALUES['MIN_DT_DNN']
+        # ABCD_DPHI = CUT_VALUES['ABCD_DPHI']
+        # ABCD_SIZE = CUT_VALUES['ABCD_SIZE']
+        MIN_DT_SIZE = CUT_VALUES['MIN_DT_SIZE']
 
         rdfs = {
             'mc' : RDataFrame('MuonSystem', FN_MC),
@@ -761,8 +1105,13 @@ if __name__ == '__main__':
                     # rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && evtFlag && '+
                     #                    f'(reduce({C}Flag.begin(), {C}Flag.end()) == 1) && '+
                     #                    f'(reduce({D}Flag.begin(), {D}Flag.end()) == 1)')
-                    rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )')
-                    rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )')
+                    if LOO:
+                        icsc, idt = rng.random(2)
+                        rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == {C}Size[int({icsc}*reduce({C}Flag.begin(),{C}Flag.end()))] )')
+                        rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == {D}Size[int({idt}*reduce({D}Flag.begin(),{D}Flag.end()))] )')
+                    else:
+                        rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )')
+                        rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )')
 
                     # Apply our cluster level selections to relevant columns
                     columns_out = []
@@ -789,10 +1138,17 @@ if __name__ == '__main__':
                     raise NotImplementedError('dR')
 
                 if 'dEta' in cut:
-                    raise NotImplementedError('dEta')
+                    if LOO_CUT != 'min dEta':
+                        rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dEta > {MIN_DETA})')
+                    if LOO_CUT != 'max dEta':
+                        rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dEta < {MAX_DETA})')
 
-                if 'dPhi' in cut:
+                if 'dPhi' in cut and LOO_CUT != 'min dPhi':
                     rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (tag_dPhi > {MIN_DPHI})')
+
+                # **** #
+                if 'DT size' in cut and LOO_CUT != 'DT size': # for ABCD?
+                    rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( {MIN_DT_SIZE} <= {D}Size )')
 
                 # **** #
                 # Propagate to cumulative flags
@@ -850,141 +1206,34 @@ if __name__ == '__main__':
                 print('')
 
         if LOO:
-            nmc, nr3 = rdfs['mc'].Count().GetValue(), rdfs['r3'].Count().GetValue()
-            if isinstance(LOO_FRAC, float):
-                idxs_mc = np.random.randint(0,nmc,int(LOO_FRAC*nmc))
-                idxs_r3 = np.random.randint(0,nr3,int(LOO_FRAC*nr3))
-            elif LOO_FRAC == 'sqrt':
-                idxs_mc = np.random.randint(0,nmc,int(nmc**0.5))
-                idxs_r3 = np.random.randint(0,nr3,int(nr3**0.5))
-
-            if LOO_CUT == 'ME1':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'cscNHitME1',
-                    np.arange(0, 11, 1)[::-1],
-                    lambda v, vd: vd <= v,
-                    MAX_ME1
-                )
-                if vmc>0 and vr3>0:
-                    MAX_ME1 = (vmc*val + vmc0*MAX_ME1)/(vmc + vmc0)
-
-            if LOO_CUT == 'MB1':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'dtNHitStation1',
-                    np.arange(0, 11, 1)[::-1],
-                    lambda v, vd: vd <= v,
-                    MAX_MB1
-                )
-                if vmc>0 and vr3>0:
-                    MAX_MB1 = (vmc*val + vmc0*MAX_MB1)/(vmc + vmc0)
-
-            if LOO_CUT == 'CSC jet veto':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'cscJetVetoPt',
-                    np.arange(10, 201, 1)[::-1],
-                    lambda v, vd: (10 < vd) & (vd < v),
-                    MAX_CSC_JET
-                )
-                if vmc>0 and vr3>0:
-                    MAX_CSC_JET = (vmc*val + vmc0*MAX_CSC_JET)/(vmc + vmc0)
-
-            if LOO_CUT == 'DT jet veto':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'dtJetVetoPt',
-                    np.arange(10, 201, 1)[::-1],
-                    lambda v, vd: (10 < vd) & (vd < v),
-                    MAX_DT_JET
-                )
-                if vmc>0 and vr3>0:
-                    MAX_DT_JET = (vmc*val + vmc0*MAX_DT_JET)/(vmc + vmc0)
-
-            if LOO_CUT == 'CSC muon veto':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'cscMuonVetoPt',
-                    np.arange(0, 201, 1)[::-1],
-                    lambda v, vd: (0 < vd) & (vd < v),
-                    MAX_CSC_MUON
-                )
-                if vmc>0 and vr3>0:
-                    MAX_CSC_MUON = (vmc*val + vmc0*MAX_CSC_MUON)/(vmc + vmc0)
-
-            if LOO_CUT == 'DT muon veto':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'dtMuonVetoPt',
-                    np.arange(0, 201, 1)[::-1],
-                    lambda v, vd: (0 < vd) & (vd < v),
-                    MAX_DT_MUON
-                )
-                if vmc>0 and vr3>0:
-                    MAX_DT_MUON = (vmc*val + vmc0*MAX_DT_MUON)/(vmc + vmc0)
-
-            if LOO_CUT == 'halo veto':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'dtPhi',
-                    np.arange(0, 0.55, 0.05),
-                    lambda v, vd: (v < np.abs(vd)) & (np.abs(vd) < PI - v),
-                    HALO_CUTOFF
-                )
-                if vmc>0 and vr3>0:
-                    HALO_CUTOFF = (vmc*val + vmc0*HALO_CUTOFF)/(vmc + vmc0)
-
-            if LOO_CUT == 'CSC DNN':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'cscDNN',
-                    np.arange(0, 1.01, 0.01),
-                    lambda v, vd: v < vd,
-                    MIN_CSC_DNN
-                )
-                if vmc>0 and vr3>0:
-                    MIN_CSC_DNN = (vmc*val + vmc0*MIN_CSC_DNN)/(vmc + vmc0)
-
-            if LOO_CUT == 'DT DNN':
-                val, s2b, vmc, vr3, s2b0, vmc0, vr30 = loo_score(
-                    rdfs,
-                    'dtDNN',
-                    np.arange(0, 1.01, 0.01),
-                    lambda v, vd: v < vd,
-                    MIN_DT_DNN
-                )
-                if vmc>0 and vr3>0:
-                    MIN_DT_DNN = (vmc*val + vmc0*MIN_DT_DNN)/(vmc + vmc0)
-
+            _c = False
             if LOO_CUT == '':
-                vmc, vr3 = rdfs['mc'].Sum('weight').GetValue(), rdfs['r3'].Sum('weight').GetValue()
-                val, s2b = 0, vmc/(vr3**0.5) if vr3 else 0
+                val, wmc, wr3 = 0, rdfs['mc'].Sum('weight').GetValue(), rdfs['r3'].Sum('weight').GetValue()
+                s2b = wmc/(wr3**0.5) if wr3 else 0
+                val0, s2b0, wmc0, wr30 = 0, s2b, wmc, wr3
+            else:
+                val0 = CUT_VALUES[CUT_OPT_PARS[LOO_CUT]['cut']]
+                val, s2b, wmc, wr3, s2b0, wmc0, wr30 = optimize_cut(
+                    _rdfs=rdfs,
+                    col=CUT_OPT_PARS[LOO_CUT]['col'],
+                    cut_func=CUT_OPT_PARS[LOO_CUT]['func'],
+                    cut_values=CUT_OPT_PARS[LOO_CUT]['values'],
+                    cut0=CUT_VALUES[CUT_OPT_PARS[LOO_CUT]['cut']],
+                )
+                if wmc>0 and wr3>0:# and s2b > s2b0:#and wmc > wmc0:
+                    _c = True
+                    # CUT_VALUES[CUT_OPT_PARS[LOO_CUT]['cut']] = val
+                    # sometimes I fall into a local minimum where the nbkg~1 so I get large s2b but a low signal acceptance
+                    CUT_VALUES[CUT_OPT_PARS[LOO_CUT]['cut']] = (val*wmc/(10*(1-iloo/N_ITERATIONS)) + val0*wmc0)/(wmc/(10*(1-iloo/N_ITERATIONS)) + wmc0)
+                    # CUT_VALUES[CUT_OPT_PARS[LOO_CUT]['cut']] = (s2b*val + s2b0*val0)/(s2b + s2b0)
 
-            cut_vals = [
-                MIN_CSC_TIME,
-                MAX_CSC_TIME,
-                MAX_CSC_TSPREAD,
-                MAX_RPC_BX,
-                MIN_RPC_HITS,
-                MAX_CSC_JET,
-                MAX_DT_JET,
-                MAX_CSC_MUON,
-                MAX_DT_MUON,
-                MAX_ME1,
-                MAX_MB1,
-                HALO_CUTOFF,
-                MIN_DPHI,
-                MIN_CSC_DNN,
-                MIN_DT_DNN,
-            ]
+            # print(f'{iloo:>3} | {"Y" if _c else "X"} | {LOO_CUT:>13} = {val:>6.2f} | {s2b:>3.0f}, {wmc:>6.0f}, {wr3:>6.0f}')
+            # print(f'{iloo:>3} | {"Y" if _c else "X"} | {LOO_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {s2b:>3.0f} ({s2b0:>3.0f}), {wmc:>6.0f} ({wmc0:>6.0f}), {wr3:>6.0f} ({wr30:>6.0f})')
+            print(f'{iloo:>3} | {LOO_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {s2b:>3.0f} ({s2b0:>3.0f}), {wmc:>6.0f} ({wmc0:>6.0f}), {wr3:>6.0f} ({wr30:>6.0f})')
 
-            LOO_SCORES.append([LOO_CUT, val, s2b, vmc, vr3, cut_vals])
+            LOO_SCORES.append([LOO_CUT, val, s2b, wmc, wr3, {k:v for k,v in CUT_VALUES.items()}])
             with open(f'loo_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl', 'wb') as fout:
                 pickle.dump(LOO_SCORES, fout)
-
-            print(f'{iloo:>3} | {LOO_CUT:>13} = {val:>6.2f} | {s2b:>3.0f}, {vmc:>6.0f}, {vr3:>6.0f}')
-
 
     # **************** #
     if LOO:
@@ -1002,11 +1251,15 @@ if __name__ == '__main__':
         print(f'    {MAX_MB1=:.0f}')
         print(f'    {HALO_CUTOFF=:.2f}')
         print(f'    {MIN_DPHI=:.2f}')
+        print(f'    {MIN_DETA=:.1f}')
+        print(f'    {MAX_DETA=:.1f}')
         print(f'    {MIN_CSC_DNN=:.2f}')
         print(f'    {MIN_DT_DNN=:.2f}')
+        print(f'    {MIN_DT_SIZE=:.2f}')
         print('')
 
     print('Events out:')
+    hists = {}
     for key, rdf in rdfs.items():
         count, weight = rdf.Count(), rdf.Sum('weight')
         count, weight = count.GetValue(), weight.GetValue()
@@ -1026,12 +1279,32 @@ if __name__ == '__main__':
 
         print(f'  {key} = {count:,} ({weight:,.2f})')
         for xx in ('met', 'cscSize', 'cscR', 'cscEta', 'cscPhi', 'dtSize', 'dtR', 'dtEta', 'dtPhi', 'tag_dEta','tag_dPhi','tag_dR'):
-            canvas = rt.TCanvas('','',800,800)
-            xmin, xmax, std = rdf.Min(xx).GetValue(), rdf.Max(xx).GetValue(), rdf.StdDev(xx).GetValue()
-            nbins = int((xmax-xmin)/(2.718*std*count**(-1/3))) if std else 1
-            hh = rdf.Histo1D((f'{key}_{xx}',f'{key};{xx};count',nbins,xmin,xmax),f'{xx}').GetValue()
-            hh.SetMinimum(0)
-            hh.Draw()
-            canvas.Draw()
-            canvas.Print(f'{OUT_DIR}/{name}_{xx}.png')
+            hh = rdf.Histo1D(xx,'weight')
+            hh.SetName(f'{key}_{xx}')
+            hh.SetTitle(f'{key};{xx};count')
+
+            if xx not in hists:
+                hists[xx] = [hh]
+            else:
+                hists[xx].append(hh)
+    # for xx, hhs in hists.items():
+    #     canvas = rt.TCanvas('','',800,800)
+    #     # xmin, xmax, std = rdf.Min(xx).GetValue(), rdf.Max(xx).GetValue(), rdf.StdDev(xx).GetValue()
+    #     # nbins = int((xmax-xmin)/(2.718*std*count**(-1/3))) if std else 1
+    #     # hh = rdf.Histo1D((f'{key}_{xx}',f'{key};{xx};count',nbins,xmin,xmax),f'{xx}').GetValue()
+    #     hhs = [h.GetValue() for h in hhs]
+    #     hmax = max([h.GetMaximum() / h.Integral() if h.Integral() else 0 for h in hhs])
+    #     xmin = 
+    #     for ih, hh in enumerate(hhs):
+    #         if hmax < 1 and hh.Integral():
+    #             hh.Scale(1/hh.Integral())
+    #         hh.SetMinimum(0)
+    #         hh.SetMaximum(hmax*1.1)
+    #         hh.GetXaxis().SetRangeUser(xmin, xmax)
+    #         hh.SetLineColor(SCL[ih])
+    #         hh.SetLineWidth(3)
+    #         hh.Draw('hist same')
+    #     canvas.Draw()
+    #     canvas.Print(f'{OUT_DIR}/{name}_{xx}.png')
+
     print('')
