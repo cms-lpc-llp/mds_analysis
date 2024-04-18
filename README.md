@@ -10,14 +10,17 @@
 - closure_test.ipynb
 - datacard_scan.ipynb
 
-<!-- # Running the Analysis
-## Setting Up the Environment
+## Setting Up the Environment on lxplus
+- log in a lxplus8 machine
+- Do cmsenv in a CMSSW_14_X release
+- Run the .py script: python3 <script.py>
 
-## Cut Flow
 
 ## Program Flow
 
-Use skim.py to reduce the large MuonSystem TTree to a flattened TTree with only 1 CSC cluster and only 1 DT cluster. This allows for easy analysis using RDataFrames
+First, run rdf_hlt_builder.py to load and add the HLTDecision branch to the ntuple.
+
+Use skim_cscdt.py to reduce the large MuonSystem TTree to a flattened TTree with only 1 CSC cluster and only 1 DT cluster. This allows for easy analysis using RDataFrames
 
 Applies the following cuts:
 0. Matches gen LLP with reco LLP (MC only)
@@ -32,14 +35,3 @@ Applies the following cuts:
 
 If there are more than 1 CSC or 1 DT clusters, new rows are appended combinatorially.
 If there are fewer than 1 CSC or 1 DT clusters, the event is rejected.
-
-# Data
-
-
-
-## MC Event Generation
-
-## Run 3 (2022) Data
-
-
-# References -->
