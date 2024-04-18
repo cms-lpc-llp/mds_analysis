@@ -85,26 +85,30 @@ pyroot=/home/psimmerl/mambaforge/envs/pyroot/bin/python
 ##############
 # CSC-DT LOO #
 ##############
-# LOO without DNN
-echo "################################"
-echo "CSC-DT - LOO without DNN"
-$pyroot skim_cscdt.py lopt oot lt200 loo
-$pyroot skim_cscdt.py lopt oot low loo
-$pyroot skim_cscdt.py lopt oot high loo
-
-$pyroot skim_cscdt.py lopt it lt200 loo
 $pyroot skim_cscdt.py lopt it low loo
-$pyroot skim_cscdt.py lopt it high loo
-echo ""
-
-
-echo "################################"
-echo "CSC-DT - LOO without DNN"
-$pyroot skim_cscdt.py loptDNN oot lt200 loo
-$pyroot skim_cscdt.py loptDNN oot low loo
-$pyroot skim_cscdt.py loptDNN oot high loo
-
-$pyroot skim_cscdt.py loptDNN it lt200 loo
 $pyroot skim_cscdt.py loptDNN it low loo
+$pyroot skim_cscdt.py lopt it high loo
 $pyroot skim_cscdt.py loptDNN it high loo
-echo ""
+# # LOO without DNN
+# echo "################################"
+# echo "CSC-DT - LOO without DNN"
+# $pyroot skim_cscdt.py lopt oot lt200 loo
+# $pyroot skim_cscdt.py lopt oot low loo
+# $pyroot skim_cscdt.py lopt oot high loo
+
+# $pyroot skim_cscdt.py lopt it lt200 loo
+# $pyroot skim_cscdt.py lopt it low loo
+# $pyroot skim_cscdt.py lopt it high loo
+# echo ""
+
+
+# echo "################################"
+# echo "CSC-DT - LOO without DNN"
+# $pyroot skim_cscdt.py loptDNN oot lt200 loo
+# $pyroot skim_cscdt.py loptDNN oot low loo
+# $pyroot skim_cscdt.py loptDNN oot high loo
+
+# $pyroot skim_cscdt.py loptDNN it lt200 loo
+# $pyroot skim_cscdt.py loptDNN it low loo
+# $pyroot skim_cscdt.py loptDNN it high loo
+# echo ""
