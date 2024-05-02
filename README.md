@@ -33,5 +33,4 @@ Applies the following cuts:
 7. Rejects clusters matched to muons
 9. Beam halo selection
 
-If there are more than 1 CSC or 1 DT clusters, new rows are appended combinatorially.
-If there are fewer than 1 CSC or 1 DT clusters, the event is rejected.
+If there are more than 1 CSC or 1 DT clusters, the largest cluster selected to as the LLP candidate.

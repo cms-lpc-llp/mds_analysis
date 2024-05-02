@@ -74,41 +74,37 @@ pyroot=/home/psimmerl/mambaforge/envs/pyroot/bin/python
 # echo "################################"
 # echo "CSC-DT - Randomly Optimized Selections"
 # $pyroot skim_cscdt.py ropt it lt200
-# $pyroot skim_cscdt.py ropt it low
-# $pyroot skim_cscdt.py ropt it high
+$pyroot skim_cscdt.py ropt it low
+$pyroot skim_cscdt.py ropt it high
 
 # $pyroot skim_cscdt.py ropt oot lt200
-# $pyroot skim_cscdt.py ropt oot low
-# $pyroot skim_cscdt.py ropt oot high
+$pyroot skim_cscdt.py ropt oot low
+$pyroot skim_cscdt.py ropt oot high
 # echo ""
 
-##############
-# CSC-DT LOO #
-##############
-$pyroot skim_cscdt.py lopt it low loo
-$pyroot skim_cscdt.py loptDNN it low loo
-$pyroot skim_cscdt.py lopt it high loo
-$pyroot skim_cscdt.py loptDNN it high loo
+# ##############
+# # CSC-DT OPT #
+# ##############
 # # LOO without DNN
 # echo "################################"
-# echo "CSC-DT - LOO without DNN"
-# $pyroot skim_cscdt.py lopt oot lt200 loo
-# $pyroot skim_cscdt.py lopt oot low loo
-# $pyroot skim_cscdt.py lopt oot high loo
+# echo "CSC-DT - Opt without DNN"
+# $pyroot skim_cscdt.py ropt oot lt200 rand
+# $pyroot skim_cscdt.py ropt oot low rand
+# $pyroot skim_cscdt.py ropt oot high rand
 
-# $pyroot skim_cscdt.py lopt it lt200 loo
-# $pyroot skim_cscdt.py lopt it low loo
-# $pyroot skim_cscdt.py lopt it high loo
+# $pyroot skim_cscdt.py ropt it lt200 rand
+# $pyroot skim_cscdt.py ropt it low rand
+# $pyroot skim_cscdt.py ropt it high rand
 # echo ""
 
 
 # echo "################################"
-# echo "CSC-DT - LOO without DNN"
-# $pyroot skim_cscdt.py loptDNN oot lt200 loo
-# $pyroot skim_cscdt.py loptDNN oot low loo
-# $pyroot skim_cscdt.py loptDNN oot high loo
+# echo "CSC-DT - Opt with DNN"
+# $pyroot skim_cscdt.py roptDNN oot lt200 rand
+# $pyroot skim_cscdt.py roptDNN oot low rand
+# $pyroot skim_cscdt.py roptDNN oot high rand
 
-# $pyroot skim_cscdt.py loptDNN it lt200 loo
-# $pyroot skim_cscdt.py loptDNN it low loo
-# $pyroot skim_cscdt.py loptDNN it high loo
+# $pyroot skim_cscdt.py roptDNN it lt200 rand
+# $pyroot skim_cscdt.py roptDNN it low rand
+# $pyroot skim_cscdt.py roptDNN it high rand
 # echo ""
