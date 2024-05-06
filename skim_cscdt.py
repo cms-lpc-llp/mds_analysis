@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 
 import ROOT as rt
-from ROOT import RDataFrame
+from ROOT import RDataFrame, TFile
 
 from src.histo_utilities import std_color_list as SCL
 
@@ -57,8 +57,10 @@ CUTS = [
     "MB1",
     # 'n jets',
     # 'n leptons',
-    "jet veto",
-    "muon veto",
+    "CSC jet veto",
+    "DT jet veto",
+    "CSC muon veto",
+    "DT muon veto",
     "halo veto",
     # 'DT N Station',
     # 'DT Avg Station',
@@ -83,8 +85,8 @@ CUT_VALUES = {
         "MIN_RPC_HITS": 1,
         "MAX_CSC_JET": 200,
         "MAX_DT_JET": 200,
-        "MAX_CSC_MUON": 200,
-        "MAX_DT_MUON": 200,
+        "MAX_CSC_MUON": -200,
+        "MAX_DT_MUON": -200,
         "MAX_ME1": 0,
         "MAX_MB1": 10,
         "HALO_CUTOFF": 0,
@@ -151,225 +153,6 @@ CUT_VALUES = {
         "MIN_CSC_DNN": 0,
         # "MIN_DT_DNN": 0,
     },
-    "lopt_lt200": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-    },
-    "lopt_low": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # #
-        # 'MIN_CSC_TIME' : -5.00,
-        # 'MAX_CSC_TIME' : 12.50,
-        # 'MAX_CSC_TSPREAD' : 20.00,
-        # 'MAX_RPC_BX' : 0.00,
-        # 'MIN_RPC_HITS' : 1.00,
-        # # 'MAX_N_JETS' : 15,
-        # # 'MAX_N_LEPS' : 5,
-        # 'MAX_CSC_JET' : 141.81,
-        # 'MAX_DT_JET' : 10.01,
-        # 'MAX_CSC_MUON' : 200.00,
-        # 'MAX_DT_MUON' : 200.00,
-        # 'MAX_ME1' : 0.00,
-        # 'MAX_MB1' : 0.98,
-        # 'HALO_CUTOFF' : 0.00,
-        # 'MIN_DPHI' : 0.40,
-        # 'MIN_DETA' : 0.00,
-        # 'MAX_DETA' : 4.00,
-        # 'MIN_CSC_DNN' : 0.00,
-        # 'MIN_DT_DNN' : 0.00,
-    },
-    "lopt_high": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # #
-        # 'MIN_CSC_TIME' : -5.0,
-        # 'MAX_CSC_TIME' : 12.5,
-        # 'MAX_CSC_TSPREAD' : 20.0,
-        # 'MAX_RPC_BX' : 0,
-        # 'MIN_RPC_HITS' : 1,
-        # # 'MAX_N_JETS' : 15,
-        # # 'MAX_N_LEPS' : 5,
-        # 'MAX_CSC_JET' : 100,
-        # 'MAX_DT_JET' : 100,
-        # 'MAX_CSC_MUON' : 100,
-        # 'MAX_DT_MUON' : 100,
-        # 'MAX_ME1' : 0,
-        # 'MAX_MB1' : 1,
-        # # 10: S = 45.9, B = 9, S/sqrt[B] = 15.4
-        # #  9: S = 45.3, B = 9, S/sqrt[B] = 15.1
-        # #  8: S = 44.7, B = 9, S/sqrt[B] = 14.9
-        # #  7: S = 44.7, B = 8, S/sqrt[B] = 15.8
-        # #  6: S = 44.2, B = 8, S/sqrt[B] = 15.6
-        # #  5: S = 43.5, B = 6, S/sqrt[B] = 17.8
-        # #  4: S = 42.9, B = 6, S/sqrt[B] = 17.5
-        # #  3: S = 40.5, B = 6, S/sqrt[B] = 16.5
-        # #  2: S = 39.9, B = 5, S/sqrt[B] = 17.8
-        # #  1: S = 36.9, B = 3, S/sqrt[B] = 21.3
-        # #  0: S = 33.8, B = 2, S/sqrt[B] = 23.9
-        # 'HALO_CUTOFF' : 0.2,
-        # 'MIN_DPHI' : 0.4,
-        # 'MIN_DETA' : 0,
-        # 'MAX_DETA' : 4,
-        # 'MIN_CSC_DNN' : 0,
-        # 'MIN_DT_DNN' : 0,
-    },
-    "loptDNN_lt200": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-    },
-    "loptDNN_low": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # # Optimized with s2b
-        # 'MIN_CSC_TIME' : -5.00,
-        # 'MAX_CSC_TIME' : 12.50,
-        # 'MAX_CSC_TSPREAD' : 20.00,
-        # 'MAX_RPC_BX' : 0.00,
-        # 'MIN_RPC_HITS' : 1.00,
-        # 'MAX_CSC_JET' : 112.38,
-        # 'MAX_DT_JET' : 61.94,
-        # 'MAX_CSC_MUON' : 200.00,
-        # 'MAX_DT_MUON' : 198.72,
-        # 'MAX_ME1' : 0.00,
-        # 'MAX_MB1' : 0.36,
-        # 'HALO_CUTOFF' : 0.00,
-        # 'MIN_DPHI' : 0.40,
-        # 'MIN_DETA' : 0.00,
-        # 'MAX_DETA' : 4.00,
-        # 'MIN_CSC_DNN' : 0.69,
-        # 'MIN_DT_DNN' : 0.79,
-    },
-    "loptDNN_high": {
-        # Default guess
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        # 'MAX_N_JETS' : 15,
-        # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.2,
-        "MIN_DPHI": 0.4,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # #
-        # 'MIN_CSC_TIME' : -5.00,
-        # 'MAX_CSC_TIME' : 12.50,
-        # 'MAX_CSC_TSPREAD' : 20.00,
-        # 'MAX_RPC_BX' : 0.00,
-        # 'MIN_RPC_HITS' : 1.00,
-        # 'MAX_CSC_JET' : 100.00,
-        # 'MAX_DT_JET' : 100.00,
-        # 'MAX_CSC_MUON' : 100.00,
-        # 'MAX_DT_MUON' : 100.00,
-        # 'MAX_ME1' : 0.00,
-        # 'MAX_MB1' : 10.00,
-        # 'HALO_CUTOFF' : 0.20,
-        # 'MIN_DPHI' : 0.40,
-        # 'MIN_DETA' : 0.00,
-        # 'MAX_DETA' : 4.00,
-        # 'MIN_CSC_DNN' : 0.35,
-        # 'MIN_DT_DNN' : 0.00,
-    },
     "ropt_lt200": {
         # Default guess
         "MIN_CSC_TIME": -5.0,
@@ -379,10 +162,10 @@ CUT_VALUES = {
         "MIN_RPC_HITS": 1,
         # 'MAX_N_JETS' : 15,
         # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": 200,
+        "MAX_DT_MUON": 200,
         "MAX_ME1": 0,
         "MAX_MB1": 10,
         "HALO_CUTOFF": 0.2,
@@ -402,10 +185,10 @@ CUT_VALUES = {
         # "MIN_RPC_HITS": 1,
         # # 'MAX_N_JETS' : 15,
         # # 'MAX_N_LEPS' : 5,
-        # "MAX_CSC_JET": 100,
-        # "MAX_DT_JET": 100,
-        # "MAX_CSC_MUON": 100,
-        # "MAX_DT_MUON": 100,
+        # "MAX_CSC_JET": 200,
+        # "MAX_DT_JET": 200,
+        # "MAX_CSC_MUON": 200,
+        # "MAX_DT_MUON": 200,
         # "MAX_ME1": 0,
         # "MAX_MB1": 10,
         # "HALO_CUTOFF": 0.2,
@@ -414,34 +197,16 @@ CUT_VALUES = {
         # "MAX_DETA": 4,
         # "MIN_CSC_DNN": 0,
         # "MIN_DT_DNN": 0,
-        # Optimized with s2b12 and IT data
-        # "MIN_CSC_TIME": -5.00,
-        # "MAX_CSC_TIME": 12.50,
-        # "MAX_CSC_TSPREAD": 20.00,
-        # "MAX_RPC_BX": 0,
-        # "MIN_RPC_HITS": 1,
-        # "MAX_CSC_JET": 200,
-        # "MAX_DT_JET": 10,
-        # "MAX_CSC_MUON": 171,
-        # "MAX_DT_MUON": 198,
-        # "MAX_ME1": 0,
-        # "MAX_MB1": 0,
-        # "HALO_CUTOFF": 0.00,
-        # "MIN_DPHI": 0.40,
-        # "MIN_DETA": 0.0,
-        # "MAX_DETA": 4.0,
-        # "MIN_CSC_DNN": 0.00,
-        # "MIN_DT_DNN": 0.00,
-        # Optimized with s1 and IT data
+        # Optimized with s2b12 and IT data, USE THIS. s=1371 b=251
         "MIN_CSC_TIME": -5.00,
         "MAX_CSC_TIME": 12.50,
         "MAX_CSC_TSPREAD": 20.00,
         "MAX_RPC_BX": 0,
         "MIN_RPC_HITS": 1,
-        "MAX_CSC_JET": 10,
+        "MAX_CSC_JET": 180,
         "MAX_DT_JET": 10,
-        "MAX_CSC_MUON": 167,
-        "MAX_DT_MUON": 199,
+        "MAX_CSC_MUON": -158,
+        "MAX_DT_MUON": 196,
         "MAX_ME1": 0,
         "MAX_MB1": 0,
         "HALO_CUTOFF": 0.00,
@@ -449,6 +214,24 @@ CUT_VALUES = {
         "MIN_DETA": 0.0,
         "MAX_DETA": 4.0,
         "MIN_CSC_DNN": 0.00,
+        # "MIN_DT_DNN": 0.00,
+        # Optimized with s1 and IT data
+        # "MIN_CSC_TIME": -5.00,
+        # "MAX_CSC_TIME": 12.50,
+        # "MAX_CSC_TSPREAD": 20.00,
+        # "MAX_RPC_BX": 0,
+        # "MIN_RPC_HITS": 1,
+        # "MAX_CSC_JET": 10,
+        # "MAX_DT_JET": 10,
+        # "MAX_CSC_MUON": 167,
+        # "MAX_DT_MUON": 199,
+        # "MAX_ME1": 0,
+        # "MAX_MB1": 0,
+        # "HALO_CUTOFF": 0.00,
+        # "MIN_DPHI": 0.40,
+        # "MIN_DETA": 0.0,
+        # "MAX_DETA": 4.0,
+        # "MIN_CSC_DNN": 0.00,
         # "MIN_DT_DNN": 0.00,
     },
     "ropt_high": {
@@ -460,10 +243,10 @@ CUT_VALUES = {
         # "MIN_RPC_HITS": 1,
         # # 'MAX_N_JETS' : 15,
         # # 'MAX_N_LEPS' : 5,
-        # "MAX_CSC_JET": 100,
-        # "MAX_DT_JET": 100,
-        # "MAX_CSC_MUON": 100,
-        # "MAX_DT_MUON": 100,
+        # "MAX_CSC_JET": 200,
+        # "MAX_DT_JET": 200,
+        # "MAX_CSC_MUON": 200,
+        # "MAX_DT_MUON": 200,
         # "MAX_ME1": 0,
         # "MAX_MB1": 10,
         # "HALO_CUTOFF": 0.2,
@@ -472,7 +255,7 @@ CUT_VALUES = {
         # "MAX_DETA": 4,
         # "MIN_CSC_DNN": 0,
         # "MIN_DT_DNN": 0,
-        # Found manually
+        # Found manually, USE THIS.
         "MIN_CSC_TIME": -5.0,
         "MAX_CSC_TIME": 12.5,
         "MAX_CSC_TSPREAD": 20.0,
@@ -480,10 +263,10 @@ CUT_VALUES = {
         "MIN_RPC_HITS": 1,
         # 'MAX_N_JETS' : 15,
         # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 999,
-        "MAX_DT_JET": 999,
-        "MAX_CSC_MUON": 999,
-        "MAX_DT_MUON": 999,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": -200,
+        "MAX_DT_MUON": -200,
         "MAX_ME1": 0,
         "MAX_MB1": 10,
         "HALO_CUTOFF": 0.0,
@@ -502,10 +285,10 @@ CUT_VALUES = {
         "MIN_RPC_HITS": 1,
         # 'MAX_N_JETS' : 15,
         # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": 200,
+        "MAX_DT_MUON": 200,
         "MAX_ME1": 0,
         "MAX_MB1": 10,
         "HALO_CUTOFF": 0.2,
@@ -525,10 +308,10 @@ CUT_VALUES = {
         # "MIN_RPC_HITS": 1,
         # # 'MAX_N_JETS' : 15,
         # # 'MAX_N_LEPS' : 5,
-        # "MAX_CSC_JET": 100,
-        # "MAX_DT_JET": 100,
-        # "MAX_CSC_MUON": 100,
-        # "MAX_DT_MUON": 100,
+        # "MAX_CSC_JET": 200,
+        # "MAX_DT_JET": 200,
+        # "MAX_CSC_MUON": 200,
+        # "MAX_DT_MUON": 200,
         # "MAX_ME1": 0,
         # "MAX_MB1": 10,
         # "HALO_CUTOFF": 0.2,
@@ -568,10 +351,10 @@ CUT_VALUES = {
         "MIN_RPC_HITS": 1,
         # 'MAX_N_JETS' : 15,
         # 'MAX_N_LEPS' : 5,
-        "MAX_CSC_JET": 100,
-        "MAX_DT_JET": 100,
-        "MAX_CSC_MUON": 100,
-        "MAX_DT_MUON": 100,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": 200,
+        "MAX_DT_MUON": 200,
         "MAX_ME1": 0,
         "MAX_MB1": 10,
         "HALO_CUTOFF": 0.2,
@@ -625,14 +408,14 @@ CUT_OPT_PARS = {
     "CSC muon veto": {
         "col": "cscMuonVetoPt",
         "cut": "MAX_CSC_MUON",
-        "values": np.arange(0, 201, 1)[::-1],
+        "values": np.arange(-200, 201, 1)[::-1],
         # 'func' : lambda v, vd: (0 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
     "DT muon veto": {
         "col": "dtMuonVetoPt",
         "cut": "MAX_DT_MUON",
-        "values": np.arange(0, 201, 1)[::-1],
+        "values": np.arange(-200, 201, 1)[::-1],
         # 'func' : lambda v, vd: (0 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
@@ -907,6 +690,118 @@ PI = rt.TMath.Pi()
 
 gc = []  # ROOT garbage collector
 
+# **** #
+HISTO_FORMS_1D = {
+    "cscAvgStation10": ("", ";cscAvgStation10;count", 6, -0.5, 5.5),
+    "cscEta": ("", ";cscEta;count", 20, -5, 5),
+    "cscJetVetoE": ("", ";cscJetVetoE;count", 20, 0, 200),
+    "cscJetVetoLooseId": ("", ";cscJetVetoLooseId;count", 3, -0.5, 2.5),
+    "cscJetVetoPt": ("", ";cscJetVetoPt;count", 20, 0, 200),
+    "cscJetVetoTightId": ("", ";cscJetVetoTightId;count", 3, -0.5, 2.5),
+    "cscMaxChamber": ("", ";cscMaxChamber;count", 21, -0.5, 20.5),
+    "cscMaxChamberRatio": ("", ";cscMaxChamberRatio;count", 20, 0, 1),
+    "cscMaxStation": ("", ";cscMaxStation;count", 6, -0.5, 5.5),
+    "cscMaxStationRatio": ("", ";cscMaxStationRatio;count", 20, 0, 1),
+    "cscMet_dPhi": ("", ";cscMet_dPhi;count", 20, -PI, PI),
+    "cscMuonVetoE": ("", ";cscMuonVetoE;count", 20, 0, 200),
+    "cscMuonVetoGlobal": ("", ";cscMuonVetoGlobal;count", 3, -0.5, 2.5),
+    "cscMuonVetoLooseId": ("", ";cscMuonVetoLooseId;count", 3, -0.5, 2.5),
+    "cscMuonVetoPt": ("", ";cscMuonVetoPt;count", 20, 0, 200),
+    "cscNChamber": ("", ";cscNChamber;count", 21, -0.5, 20.5),
+    "cscNRechitChamberMinus11": ("", ";cscNRechitChamberMinus11;count", 20, 0, 200),
+    "cscNRechitChamberMinus12": ("", ";cscNRechitChamberMinus12;count", 20, 0, 200),
+    "cscNRechitChamberMinus13": ("", ";cscNRechitChamberMinus13;count", 20, 0, 200),
+    "cscNRechitChamberMinus21": ("", ";cscNRechitChamberMinus21;count", 20, 0, 200),
+    "cscNRechitChamberMinus22": ("", ";cscNRechitChamberMinus22;count", 20, 0, 200),
+    "cscNRechitChamberMinus31": ("", ";cscNRechitChamberMinus31;count", 20, 0, 200),
+    "cscNRechitChamberMinus32": ("", ";cscNRechitChamberMinus32;count", 20, 0, 200),
+    "cscNRechitChamberMinus41": ("", ";cscNRechitChamberMinus41;count", 20, 0, 200),
+    "cscNRechitChamberMinus42": ("", ";cscNRechitChamberMinus42;count", 20, 0, 200),
+    "cscNRechitChamberPlus11": ("", ";cscNRechitChamberPlus11;count", 20, 0, 200),
+    "cscNRechitChamberPlus12": ("", ";cscNRechitChamberPlus12;count", 20, 0, 200),
+    "cscNRechitChamberPlus13": ("", ";cscNRechitChamberPlus13;count", 20, 0, 200),
+    "cscNRechitChamberPlus21": ("", ";cscNRechitChamberPlus21;count", 20, 0, 200),
+    "cscNRechitChamberPlus22": ("", ";cscNRechitChamberPlus22;count", 20, 0, 200),
+    "cscNRechitChamberPlus31": ("", ";cscNRechitChamberPlus31;count", 20, 0, 200),
+    "cscNRechitChamberPlus32": ("", ";cscNRechitChamberPlus32;count", 20, 0, 200),
+    "cscNRechitChamberPlus41": ("", ";cscNRechitChamberPlus41;count", 20, 0, 200),
+    "cscNRechitChamberPlus42": ("", ";cscNRechitChamberPlus42;count", 20, 0, 200),
+    "cscNStation10": ("", ";cscNStation10;count", 6, -0.5, 5.5),
+    "cscPhi": ("", ";cscPhi;count", 20, -PI, PI),
+    "cscSize": ("", ";cscSize;count", 20, 0, 200),
+    "cscTime": ("", ";cscTime;count", 20, -10, 20),
+    "cscTimeSpread": ("", ";cscTimeSpread;count", 20, 0, 50),
+    "cscTimeSpreadWeightedAll": ("", ";cscTimeSpreadWeightedAll;count", 20, 0, 50),
+    "cscTimeWeighted": ("", ";cscTimeWeighted;count", 20, -20, 20),
+    "cscX": ("", ";cscX;count", 20, -1500, 1500),
+    "cscY": ("", ";cscY;count", 20, -1500, 1500),
+    "cscZ": ("", ";cscZ;count", 20, -1500, 1500),
+    "csc_match_MB1Seg_0p4": ("", ";csc_match_MB1Seg_0p4;count", 20, 0, 200),
+    "csc_match_RB1_0p4": ("", ";csc_match_RB1_0p4;count", 20, 0, 200),
+    "csc_match_RE12_0p4": ("", ";csc_match_RE12_0p4;count", 20, 0, 200),
+    "csc_match_dtSeg_0p4": ("", ";csc_match_dtSeg_0p4;count", 20, 0, 200),
+    #
+    "cscDNN_bkgMC": ("", ";cscDNN_bkgMC;count", 20, 0, 1),
+    "cscDNN_bkgMC_plusBeamHalo": ("", ";cscDNN_bkgMC_plusBeamHalo;count", 20, 0, 1),
+    "cscDNN_bkgOOTData": ("", ";cscDNN_bkgOOTData;count", 20, 0, 1),
+    #
+    "dtAvgStation10": ("", ";dtAvgStation10:count", 6, -0.5, 5.5),
+    "dtEta": ("", ";dtEta:count", 20, -5, 5),
+    "dtJetVetoE": ("", ";dtJetVetoE:count", 20, 0, 200),
+    "dtJetVetoLooseId": ("", ";dtJetVetoLooseId:count", 3, -0.5, 2.5),
+    "dtJetVetoPt": ("", ";dtJetVetoPt:count", 20, 0, 200),
+    "dtJetVetoTightId": ("", ";dtJetVetoTightId:count", 3, -0.5, 2.5),
+    "dtMaxChamber": ("", ";dtMaxChamber:count", 21, -0.5, 20.5),
+    "dtMaxChamberRatio": ("", ";dtMaxChamberRatio:count", 20, 0, 1),
+    "dtMaxStation": ("", ";dtMaxStation:count", 6, -0.5, 5.5),
+    "dtMaxStationRatio": ("", ";dtMaxStationRatio:count", 20, 0, 1),
+    "dtMet_dPhi": ("", ";dtMet_dPhi:count", 20, -PI, PI),
+    "dtMuonVetoE": ("", ";dtMuonVetoE:count", 20, 0, 200),
+    "dtMuonVetoGlobal": ("", ";dtMuonVetoGlobal:count", 3, -0.5, 2.5),
+    "dtMuonVetoLooseId": ("", ";dtMuonVetoLooseId:count", 3, -0.5, 2.5),
+    "dtMuonVetoPt": ("", ";dtMuonVetoPt:count", 20, 0, 200),
+    "dtMuonVetoTightId": ("", ";dtMuonVetoTightId:count", 3, -0.5, 2.5),
+    "dtNChamber": ("", ";dtNChamber:count", 21, -0.5, 20.5),
+    "dtNHitStation1": ("", ";dtNHitStation1:count", 20, 0, 200),
+    "dtNHitStation2": ("", ";dtNHitStation2:count", 20, 0, 200),
+    "dtNHitStation3": ("", ";dtNHitStation3:count", 20, 0, 200),
+    "dtNHitStation4": ("", ";dtNHitStation4:count", 20, 0, 200),
+    "dtNOppositeSegStation1": ("", ";dtNOppositeSegStation1:count", 20, 0, 200),
+    "dtNOppositeSegStation2": ("", ";dtNOppositeSegStation2:count", 20, 0, 200),
+    "dtNOppositeSegStation3": ("", ";dtNOppositeSegStation3:count", 20, 0, 200),
+    "dtNOppositeSegStation4": ("", ";dtNOppositeSegStation4:count", 20, 0, 200),
+    "dtNSegStation1": ("", ";dtNSegStation1:count", 20, 0, 200),
+    "dtNSegStation2": ("", ";dtNSegStation2:count", 20, 0, 200),
+    "dtNSegStation3": ("", ";dtNSegStation3:count", 20, 0, 200),
+    "dtNSegStation4": ("", ";dtNSegStation4:count", 20, 0, 200),
+    "dtNStation10": ("", ";dtNStation10:count", 6, -0.5, 5.5),
+    "dtNoiseHit": ("", ";dtNoiseHit:count", 20, 0, 200),
+    "dtNoiseHitStation1": ("", ";dtNoiseHitStation1:count", 20, 0, 200),
+    "dtNoiseHitStation2": ("", ";dtNoiseHitStation2:count", 20, 0, 200),
+    "dtNoiseHitStation3": ("", ";dtNoiseHitStation3:count", 20, 0, 200),
+    "dtNoiseHitStation4": ("", ";dtNoiseHitStation4:count", 20, 0, 200),
+    "dtOverlap": ("", ";dtOverlap:count", 20, 0, 1),
+    "dtPhi": ("", ";dtPhi:count", 20, -PI, PI),
+    "dtSize": ("", ";dtSize:count", 20, 0, 200),
+    "dtWheel": ("", ";dtWheel:count", 21, -0.5, 20.5),
+    "dtX": ("", ";dtX:count", 20, -1500, 1500),
+    "dtY": ("", ";dtY:count", 20, -1500, 1500),
+    "dtZ": ("", ";dtZ:count", 20, -1500, 1500),
+    "dt_match_MB1Seg_0p4": ("", ";dt_match_MB1Seg_0p4:count", 20, 0, 200),
+    "dt_match_MB1Seg_0p5": ("", ";dt_match_MB1Seg_0p5:count", 20, 0, 200),
+    "dt_match_MB1hits_0p4": ("", ";dt_match_MB1hits_0p4:count", 20, 0, 200),
+    "dt_match_MB1hits_0p5": ("", ";dt_match_MB1hits_0p5:count", 20, 0, 200),
+    "dt_match_MB1hits_cosmics_minus": ("", ";dt_match_MB1hits_cosmics_minus:count", 20, 0, 200),
+    "dt_match_MB1hits_cosmics_plus": ("", ";dt_match_MB1hits_cosmics_plus:count", 20, 0, 200),
+    "dt_match_RB1_0p4": ("", ";dt_match_RB1_0p4:count", 20, 0, 200),
+    "dt_match_RB1_dPhi0p5": ("", ";dt_match_RB1_dPhi0p5:count", 20, 0, 200),
+    "dt_match_RPCBx_dPhi0p5": ("", ";dt_match_RPCBx_dPhi0p5:count", 11, -5.5, 5.5),
+    "dt_match_RPChits_dPhi0p5": ("", ";dt_match_RPChits_dPhi0p5:count", 20, 0, 200),
+    #
+    "met": ("", ";met;count", 20, 0, 200),
+    "metPhi": ("", ";metPhi;count", 20, -PI, PI),
+}
+
 
 # **************************** #
 def optimize_cut(_rdfs, col, cut_func, cut_values=None, cut0=None):
@@ -984,14 +879,14 @@ if __name__ == "__main__":
     print("| Starting skim_cscdt.py |")
     print("+------------------------+")
 
-    rt.EnableImplicitMT(0)
+    rt.EnableImplicitMT()
     print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
 
     # **************************** #
     N_ITERATIONS = 1
 
     OPT_SCORES = []
-    OPT_FRAC = 1.0  # if 1 just bootstrap, fraction with replacement
+    OPT_FRAC = 1.0  # fraction with replacement, if 1 just bootstrap
     LOO = False
     RAND = False
 
@@ -1002,7 +897,7 @@ if __name__ == "__main__":
 
     DNN_VERSION = (None, "bkgMC", "bkgMC_plusBeamHalo", "bkgOOTData")[0]
 
-    args = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
+    args = " " + " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 
     if "cutflow" in args:
         print("    Printing cutflow tables")
@@ -1013,20 +908,20 @@ if __name__ == "__main__":
         CUTS = CUTS_L1
         CUTSET = "l1"
 
-    if " low" in args:  # need space otherwise cutflow breaks it
+    if " low" in args:  # otherwise cutflow breaks it
         print("    Low met category")
         CUTS = [c.replace("MET", "low MET") if "MET" == c else c for c in CUTS]
         MET_CATEGORY = "low"
     elif "high" in args:
         print("    High met category")
-        print("        REMOVING HALO, JET, & MUON VETOS")
+        # print("        REMOVING HALO, JET, & MUON VETOS")
         CUTS = [c.replace("MET", "high MET") if "MET" == c else c for c in CUTS]
-        CUTS = [c for c in CUTS if "halo" not in c]
-        CUTS = [c for c in CUTS if "jet" not in c]
-        CUTS = [c for c in CUTS if "muon" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
+        # CUTS = [c for c in CUTS if "halo" not in c]
+        # CUTS = [c for c in CUTS if "jet" not in c]
+        # CUTS = [c for c in CUTS if "muon" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
         MET_CATEGORY = "high"
     else:
         print("    No met categorization (only met<200)")
@@ -1107,6 +1002,13 @@ if __name__ == "__main__":
     if "1 CSC-DT" not in CUTS:
         raise NotImplementedError("cant handle multiple pairs yet")
 
+    # # if PRINT_CUTFLOW:
+    # name = f'cscdt{"OOT" if OOT else ""}_{CUTSET}'
+    # if DNN_VERSION is not None and "DNN" in CUTSET:
+    #     name += f"_{DNN_VERSION}"
+    # name += f"_{MET_CATEGORY}"
+    # froot_out = TFile(f"data/processed/{name}_histos.root", "RECREATE")
+
     # **************************** #
     for iopt in range(N_ITERATIONS):
         # if iopt % 100>0 and iopt != N_ITERATIONS-1:
@@ -1120,14 +1022,17 @@ if __name__ == "__main__":
             cn = CUT_OPT_PARS[OPT_CUT]["cut"]
             val0 = CUT_VALUES[cn]
             skip_vals = [val0]
-            for i in range(len(CUT_OPT_PARS[OPT_CUT]["values"]) - 1):
-                val = rng.choice([v for v in CUT_OPT_PARS[OPT_CUT]["values"] if v not in skip_vals])
-                CUT_VALUES[cn] = val
-                if CUT_VALUES not in cv_history:
-                    break
-                skip_vals.append(val)
-            if len(skip_vals) == len(CUT_OPT_PARS[OPT_CUT]["values"]):
-                continue
+            # for i in range(len(CUT_OPT_PARS[OPT_CUT]["values"]) - 1): # doesn't really help
+            val = rng.choice([v for v in CUT_OPT_PARS[OPT_CUT]["values"] if v not in skip_vals])
+            CUT_VALUES[cn] = val
+            #     if np.prod([[CUT_VALUES[cv_k] == cv_v for cv_k, cv_v in cv.items()] for cv in cv_history], 1).any():
+            #         print("skipping already tested!", cn, val)
+            #         skip_vals.append(val)
+            #     else:
+            #         break
+            # if len(skip_vals) == len(CUT_OPT_PARS[OPT_CUT]["values"]):
+            #     print("all test exhausted", cn)
+            #     continue
 
         MIN_CSC_TIME = CUT_VALUES["MIN_CSC_TIME"]
         MAX_CSC_TIME = CUT_VALUES["MAX_CSC_TIME"]
@@ -1231,33 +1136,41 @@ if __name__ == "__main__":
                 print(r"    \hline")
                 print(f"    sample & {ec0:,.0f} & -- & -- & {cc0:,} & -- & -- & {dc0:,} & -- & -- \\\\")
 
-            for cut in CUTS:
+            #! move all of my instant actions into a list (make them lazy) so I can reduce the number of event loops?
+            #! about as fast as before, need to see if it fixes jit memory issues
+            columns_out = []
+            eflags, cflags, dflags = ["weight > 0"], [f"{C}Size > 0"], [f"{D}Size > 0"]
+            for cut in CUTS:  #! Can I run this in a subprocess?
                 # **** #
                 # Reset cut flags
-                rdf = rdf.Redefine("evtCutFlag", "weight > 0")
-                rdf = rdf.Redefine(f"{C}CutFlag", f"{C}Size > 0")
-                rdf = rdf.Redefine(f"{D}CutFlag", f"{D}Size > 0")
+                # rdf = rdf.Redefine("evtCutFlag", "weight > 0")
+                # rdf = rdf.Redefine(f"{C}CutFlag", f"{C}Size > 0")
+                # rdf = rdf.Redefine(f"{D}CutFlag", f"{D}Size > 0")
 
                 # **** #
                 # Signal matching for MC
                 if "acceptance" in cut:
                     if "mc" in key:
-                        rdf = rdf.Redefine(
-                            f"{C}CutFlag",
-                            f"{C}CutFlag && {C}_match_gLLP && "
+                        # rdf = rdf.Redefine(
+                        #     f"{C}CutFlag",f"{C}CutFlag &&
+                        cflags.append(
+                            f"{C}_match_gLLP && "
                             + f"(abs({C}_match_gLLP_eta) < 3) && "
                             + f"({C}_match_gLLP_decay_r < 800) && "
                             + f"(400 < abs({C}_match_gLLP_decay_z)) &&"
-                            + f" (abs({C}_match_gLLP_decay_z) < 1200)",
+                            + f" (abs({C}_match_gLLP_decay_z) < 1200)"
                         )
+                        # )
 
-                        rdf = rdf.Redefine(
-                            f"{D}CutFlag",
-                            f"{D}CutFlag && {D}_match_gLLP && "
+                        # rdf = rdf.Redefine(
+                        # f"{D}CutFlag",f"{D}CutFlag &&
+                        dflags.append(
+                            f"{D}_match_gLLP && "
                             + f"(200 < {D}_match_gLLP_decay_r) && "
                             + f"({D}_match_gLLP_decay_r < 800) && "
                             + f"(abs({D}_match_gLLP_decay_z) < 700)",
                         )
+                        # )
                     elif "r3" in key:
                         continue
 
@@ -1267,16 +1180,18 @@ if __name__ == "__main__":
                     if "mc" in key and "hlt" not in FN_MC:
                         continue
                     elif "r3" in key and "hlt" not in FN_R3:
-                        rdf = rdf.Redefine(
-                            "evtCutFlag", "evtCutFlag && HLTDecision[569]"
-                        )  # 569 = HLT_L1CSCCluster_DTCluster50
+                        # rdf = rdf.Redefine(
+                        #     "evtCutFlag", "evtCutFlag &&
+                        eflags.append("HLTDecision[569]")
+                        # )  # 569 = HLT_L1CSCCluster_DTCluster50
                     else:
                         continue
 
                 if "L1" in cut:
-                    rdf = rdf.Redefine(
-                        f"{C}CutFlag",
-                        f"{C}CutFlag && ( "
+                    # rdf = rdf.Redefine(
+                    #     f"{C}CutFlag",f"{C}CutFlag &&
+                    cflags.append(
+                        f"( "
                         + f"((100 < {C}R) && ({C}R < 275) && (580 < abs({C}Z)) && (abs({C}Z) < 632) && (500 <= {C}Size)) || "  # ME 11
                         + f"((275 < {C}R) && ({C}R < 465) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 12
                         + f"((505 < {C}R) && ({C}R < 700) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 13
@@ -1292,21 +1207,22 @@ if __name__ == "__main__":
                         #
                         f"((178 < {C}R) && ({C}R < 345) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (500 <= {C}Size)) || "  # ME 41
                         + f"((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )",
-                    )  # ME 42
+                    )
+                # )  # ME 42
 
                 # **** #
                 # Missing Et requirements & categorization
                 if "MET" in cut:
-                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (met < 200)")
+                    eflags.append(f"(met < 200)")  # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag &&
 
                 if "low MET" in cut:
-                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (met < {LOW_MET_CUTOFF})")
+                    eflags.append(f"(met < {LOW_MET_CUTOFF})")  # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag &&
 
                 if "high MET" in cut:
-                    rdf = rdf.Redefine(
-                        "evtCutFlag",
-                        f"evtCutFlag && (({HIGH_MET_CUTOFF} < met) && (met < 200))",
-                    )
+                    # rdf = rdf.Redefine(
+                    #     "evtCutFlag", f"evtCutFlag &&
+                    eflags.append(f"(({HIGH_MET_CUTOFF} < met) && (met < 200))")
+                    # )
 
                 # **** #
                 # Cluster time requirements
@@ -1314,26 +1230,34 @@ if __name__ == "__main__":
                     cut = cut.replace(" OOT", " IT")
 
                 if "CSC IT" in cut:
-                    rdf = rdf.Redefine(
-                        f"{C}CutFlag",
-                        f"{C}CutFlag && ( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )",
+                    # rdf = rdf.Redefine(
+                    #     f"{C}CutFlag",f"{C}CutFlag &&
+                    cflags.append(
+                        f"( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
                     )
+                    # )
                 elif "CSC OOT" in cut:
-                    rdf = rdf.Redefine(
-                        f"{C}CutFlag",
-                        f"{C}CutFlag && !( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )",
+                    # rdf = rdf.Redefine(
+                    #     f"{C}CutFlag",f"{C}CutFlag &&
+                    cflags.append(
+                        f"!( ({MIN_CSC_TIME} < {C}TimeWeighted) && ({C}TimeWeighted < {MAX_CSC_TIME}) && ({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
                     )
+                    # )
 
                 if "DT IT" in cut:
-                    rdf = rdf.Redefine(
-                        f"{D}CutFlag",
-                        f"{D}CutFlag && ( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )",
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag",f"{D}CutFlag &&
+                    dflags.append(
+                        f"( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )"
                     )
+                    # )
                 elif "DT OOT" in cut:
-                    rdf = rdf.Redefine(
-                        f"{D}CutFlag",
-                        f"{D}CutFlag && !( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )",
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag",f"{D}CutFlag &&
+                    dflags.append(
+                        f"!( (abs({D}_match_RPCBx_dPhi0p5) <= {MAX_RPC_BX}) && ({D}_match_RPChits_dPhi0p5 >= {MIN_RPC_HITS}) )"
                     )
+                    # )
 
                 # **** #
                 # Station requirements from L1 trigger
@@ -1343,50 +1267,57 @@ if __name__ == "__main__":
                     #                 f'({C}NRechitChamberPlus12 <= {MAX_ME1}) &&'+
                     #                 f'({C}NRechitChamberMinus11 <= {MAX_ME1}) &&'+
                     #                 f'({C}NRechitChamberMinus12 <= {MAX_ME1}) )')
-                    rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
+                    cflags.append(f"( {C}NHitME1 <= {MAX_ME1} ) ")  # rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag &&
 
                 if "MB1" in cut and (OPT_CUT != "MB1" or not LOO):
-                    rdf = rdf.Redefine(f"{D}CutFlag", f"{D}CutFlag && ( {D}NHitStation1 <= {MAX_MB1} )")
+                    dflags.append(
+                        f"( {D}NHitStation1 <= {MAX_MB1} )"
+                    )  # rdf = rdf.Redefine(f"{D}CutFlag", f"{D}CutFlag &&
 
                 if "DT stn" in cut:
-                    rdf = rdf.Redefine(
-                        f"{D}CutFlag",
-                        f"{D}CutFlag && ( ({D}NStation10 < 3) && !(({D}NStation10 == 2) && ({D}MaxStation == 4)) )",
-                    )
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag",f"{D}CutFlag &&
+                    dflags.append(f"( ({D}NStation10 < 3) && !(({D}NStation10 == 2) && ({D}MaxStation == 4)) )")
+                    # )
 
                 # **** #
-                if "jet veto" in cut:
-                    if OPT_CUT != "CSC jet veto" or not LOO:
-                        rdf = rdf.Redefine(
-                            f"{C}CutFlag",
-                            f"{C}CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})",
-                        )
-                    if OPT_CUT != "DT jet veto" or not LOO:
-                        rdf = rdf.Redefine(
-                            f"{D}CutFlag",
-                            f"{D}CutFlag && ({D}JetVetoPt < {MAX_DT_JET})",
-                        )
+                # if "jet veto" in cut:
+                if "CSC jet veto" in cut and (OPT_CUT != "CSC jet veto" or not LOO):
+                    # rdf = rdf.Redefine(
+                    #     f"{C}CutFlag", f"{C}CutFlag &&
+                    cflags.append(f"({C}JetVetoPt < {MAX_CSC_JET})")
+                    # )
+                if "DT jet veto" in cut and (OPT_CUT != "DT jet veto" or not LOO):
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag", f"{D}CutFlag &&
+                    dflags.append(f"({D}JetVetoPt < {MAX_DT_JET})")
+                    # )
 
-                if "muon veto" in cut:
-                    rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag && ({C}MuonVetoGlobal == 0)")
-                    rdf = rdf.Redefine(f"{D}CutFlag", f"{D}CutFlag && ({D}MuonVetoLooseId == 0)")
-
-                    if OPT_CUT != "CSC muon veto" or not LOO:
-                        rdf = rdf.Redefine(
-                            f"{C}CutFlag",
-                            f"{C}CutFlag && ({C}MuonVetoPt < {MAX_CSC_MUON})",
-                        )
-                    if OPT_CUT != "DT muon veto" or not LOO:
-                        rdf = rdf.Redefine(
-                            f"{D}CutFlag",
-                            f"{D}CutFlag && ({D}MuonVetoPt < {MAX_DT_MUON})",
-                        )
+                # if "muon veto" in cut:
+                #     # cflags.append(f"({C}MuonVetoGlobal == 0)")  # rdf = rdf.Redefine(f"{C}CutFlag",f"{C}CutFlag &&
+                #     # dflags.append(f"({D}MuonVetoLooseId == 0)")  # rdf = rdf.Redefine(f"{D}CutFlag",f"{D}CutFlag &&
+                if "CSC muon veto" in cut and (OPT_CUT != "CSC muon veto" or not LOO):
+                    # rdf = rdf.Redefine(
+                    #     f"{C}CutFlag", f"{C}CutFlag &&
+                    if MAX_CSC_MUON > 0:
+                        cflags.append(f"({C}MuonVetoGlobal == 0) && ({C}MuonVetoPt < {MAX_CSC_MUON})")
+                    else:
+                        cflags.append(f"({C}MuonVetoPt < {abs(MAX_CSC_MUON)})")
+                    # )
+                if "DT muon veto" in cut and (OPT_CUT != "DT muon veto" or not LOO):
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag", f"{D}CutFlag &&
+                    if MAX_DT_MUON > 0:
+                        dflags.append(f"({D}MuonVetoLooseId == 0) && ({D}MuonVetoPt < {MAX_DT_MUON})")
+                    else:
+                        dflags.append(f"({D}MuonVetoPt < {abs(MAX_DT_MUON)})")
+                    # )
 
                 if "halo veto" in cut and (OPT_CUT != "halo veto" or not LOO):
-                    rdf = rdf.Redefine(
-                        f"{D}CutFlag",
-                        f"{D}CutFlag && ( ({HALO_CUTOFF} < abs({D}Phi)) && (abs({D}Phi) < {PI} - {HALO_CUTOFF}) )",
-                    )
+                    # rdf = rdf.Redefine(
+                    #     f"{D}CutFlag",f"{D}CutFlag &&
+                    dflags.append(f"( ({HALO_CUTOFF} < abs({D}Phi)) && (abs({D}Phi) < {PI} - {HALO_CUTOFF}) )")
+                    # )
 
                 # **** #
                 if "BDT" in cut:
@@ -1394,10 +1325,10 @@ if __name__ == "__main__":
 
                 if "DNN" in cut:
                     if True:  # OPT_CUT != "CSC DNN" or not LOO:
-                        rdf = rdf.Redefine(
-                            f"{C}CutFlag",
-                            f"{C}CutFlag && ( Take({C}DNN_{DNN_VERSION},nCscRechitClusters) > {MIN_CSC_DNN} )",
-                        )
+                        # rdf = rdf.Redefine(
+                        #     f"{C}CutFlag",f"{C}CutFlag &&
+                        cflags.append(f"( Take({C}DNN_{DNN_VERSION},nCscRechitClusters) > {MIN_CSC_DNN} )")
+                        # )
                     # if OPT_CUT != "DT DNN" or not LOO:
                     #     rdf = rdf.Redefine(
                     #         f"{D}CutFlag",
@@ -1414,11 +1345,20 @@ if __name__ == "__main__":
                     #     rdf = rdf.Redefine(f'{C}Flag', f'{C}Flag && ( {C}Size == {C}Size[int({icsc}*reduce({C}Flag.begin(),{C}Flag.end()))] )')
                     #     rdf = rdf.Redefine(f'{D}Flag', f'{D}Flag && ( {D}Size == {D}Size[int({idt}*reduce({D}Flag.begin(),{D}Flag.end()))] )')
                     # else:
+                    #! insert full cutflag application and propagation here
+                    # print("flags")
+                    eflags.append(f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0)")
+                    eflags.append(f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0)")
+                    rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && (" + ") && (".join(cflags) + ")")
+                    rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && (" + ") && (".join(dflags) + ")")
+                    rdf = rdf.Redefine("evtFlag", f"evtFlag && (" + ") && (".join(eflags) + ")")
+                    rdf = rdf.Filter("evtFlag")
                     rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )")
                     rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )")
+                    eflags, cflags, dflags = [], [], []
+                    #!
 
                     # Apply our cluster level selections to relevant columns
-                    columns_out = []
                     for col in COLUMNS_OUT:
                         ocol = col.replace("RechitCluster", "")
                         if C in col[: len(C)]:
@@ -1478,36 +1418,58 @@ if __name__ == "__main__":
 
                 if "dEta" in cut:
                     if OPT_CUT != "min dEta" or not LOO:
-                        rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (tag_dEta > {MIN_DETA})")
+                        eflags.append(f"(tag_dEta > {MIN_DETA})")  # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag &&
                     if OPT_CUT != "max dEta" or not LOO:
-                        rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (tag_dEta < {MAX_DETA})")
+                        eflags.append(f"(tag_dEta < {MAX_DETA})")  # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag &&
 
                 if "dPhi" in cut and (OPT_CUT != "min dPhi" or not LOO):
-                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (tag_dPhi > {MIN_DPHI})")
+                    eflags.append(f"(tag_dPhi > {MIN_DPHI})")  # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag &&
 
                 # **** #
-                # Propagate to cumulative flags
-                rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && {C}CutFlag")
-                rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && {D}CutFlag")
+                # # Propagate to cumulative flags
+                # rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && {C}CutFlag")
+                # rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && {D}CutFlag")
 
-                rdf = rdf.Redefine(
-                    "evtFlag",
-                    "evtFlag && evtCutFlag && ("
-                    + f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0) && "
-                    + f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0))",
-                )
+                # rdf = rdf.Redefine(
+                #     "evtFlag",
+                #     "evtFlag && evtCutFlag && ("
+                #     + f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0) && "
+                #     + f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0))",
+                # )
 
                 # rdf = rdf.Redefine(f'nC{C[1:]}s', f'reduce({C}Flag.begin(), {C}Flag.end())')
                 # rdf = rdf.Redefine(f'nD{D[1:]}s', f'reduce({D}Flag.begin(), {D}Flag.end())')
 
                 # **** #
-                if PRINT_CUTFLOW:
+                if PRINT_CUTFLOW:  #! broken as CutFlags are no longer used (due to "lazy" speedup)
+                    #! insert cut level cutflag here
+                    # print("flags")
+                    eflags.append(f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0)")
+                    eflags.append(f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0)")
+                    rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && (" + ") && (".join(cflags) + ")")
+                    rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && (" + ") && (".join(dflags) + ")")
+                    rdf = rdf.Redefine("evtFlag", f"evtFlag && (" + ") && (".join(eflags) + ")")
+                    # rdf = rdf.Filter("evtFlag")
+                    rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )")
+                    rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )")
+                    eflags, cflags, dflags = [], [], []
+                    rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && {C}CutFlag")
+                    rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && {D}CutFlag")
+
+                    rdf = rdf.Redefine(
+                        "evtFlag",
+                        "evtFlag && evtCutFlag && ("
+                        + f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0) && "
+                        + f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0))",
+                    )
+
                     rdf = rdf.Redefine(
                         "evtCutFlag",
                         "evtCutFlag && ("
                         + f"(reduce({C}CutFlag.begin(), {C}CutFlag.end()) > 0) && "
                         + f"(reduce({D}CutFlag.begin(), {D}CutFlag.end()) > 0))",
                     )
+                    #!
 
                     ec, cc, dc = (
                         rdf.Filter("evtFlag").Sum("weight"),
@@ -1540,21 +1502,55 @@ if __name__ == "__main__":
                         print(r"    \hline")
                         ec0, cc0, dc0 = ec, cc, dc
 
+                        #! propagate cutflag here
+                        #!
                         rdf = rdf.Filter("evtFlag")
                         rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
                         rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
-                else:
-                    rdf = rdf.Filter("evtFlag")
-                    rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
-                    rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
+                # else:
+                #     rdf = rdf.Filter("evtFlag")
+                #     rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
+                #     rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
 
-                #! Assumes we don't optimize all cuts with DNN, for some optimization targets such as f1
-                if (LOO or RAND) and (("DT IT" in cut or "DT OOT" in cut) or ("DNN" in CUTSET and "halo" in cut)):
-                    if "mc" in key:
-                        wmc_nocuts = rdf.Sum("weight").GetValue()
-                    else:
-                        wr3_nocuts = rdf.Sum("weight").GetValue()
+                # # Make plots
+                # # TODO: add a flag to disable or enable this
+                # # TODO: really slow how do I fix that
+                # _rdf, hists = rdf.Filter("evtFlag"), []
+                # print(cut)
+                # for xv, form in HISTO_FORMS_1D.items():
+                #     # print(xv)
+                #     if "DNN" in xv and xv not in columns_out:
+                #         _rdf = _rdf.Define(xv, f"Take({C}{xv[3:]},nCscRechitClusters)[{C}Flag]")
+                #     elif "csc" in xv[:3] and xv not in columns_out:
+                #         _rdf = _rdf.Define(xv, f"{C}{xv[3:]}[{C}Flag]")
+                #     elif "dt" in xv[:2] and xv not in columns_out:
+                #         _rdf = _rdf.Define(xv, f"{D}{xv[2:]}[{D}Flag]")
+                # for xv, form in HISTO_FORMS_1D.items():
+                #     hists.append((f"{key}_{cut}_{xv}", _rdf.Histo1D(form, xv, "weight")))
+                # for hn, hh in hists:
+                #     hh.GetValue().SetName(hn)
+                #     hh.GetValue().Write()
+                # del _rdf
 
+                # #! Assumes we don't optimize all cuts with DNN, for some optimization targets such as f1
+                # if (LOO or RAND) and (("DT IT" in cut or "DT OOT" in cut) or ("DNN" in CUTSET and "halo" in cut)):
+                #     if "mc" in key:
+                #         wmc_nocuts = rdf.Sum("weight").GetValue()
+                #     else:
+                #         wr3_nocuts = rdf.Sum("weight").GetValue()
+
+            #! insert event cutflag application here
+            # print("flags")
+            # eflags.append(f"(reduce({C}Flag.begin(), {C}Flag.end()) > 0)")
+            # eflags.append(f"(reduce({D}Flag.begin(), {D}Flag.end()) > 0)")
+            # rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && (" + ") && (".join(cflags) + ")")
+            # rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && (" + ") && (".join(dflags) + ")")
+            rdf = rdf.Redefine("evtFlag", f"evtFlag && (" + ") && (".join(eflags) + ")")
+            rdf = rdf.Filter("evtFlag")
+            # rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )")
+            # rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )")
+            # eflags, cflags, dflags = [], [], []
+            #!
             rdfs[key] = rdf.Filter("evtFlag")  # Apply the final filter and update the dictionary with the new RDF
 
             if PRINT_CUTFLOW:
@@ -1562,6 +1558,7 @@ if __name__ == "__main__":
                 print(r"\end{tabular}")
                 print(r"\end{center}")
                 print("")
+            # froot_out.Close()
 
         if LOO:
             _c = False
@@ -1596,7 +1593,7 @@ if __name__ == "__main__":
                 del rdf
 
             print(
-                f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})'
+                f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>7.2f} ({val0:>7.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})'
             )
 
             OPT_SCORES.append(
@@ -1613,11 +1610,11 @@ if __name__ == "__main__":
                     {k: v for k, v in CUT_VALUES.items()},
                 ]
             )
-            with open(
-                f'loo_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl',
-                "wb",
-            ) as fout:
-                pickle.dump(OPT_SCORES, fout)
+            # with open(
+            #     f'loo_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl',
+            #     "wb",
+            # ) as fout:
+            #     pickle.dump(OPT_SCORES, fout)
         if RAND:
             _c = False
             wmc = rdfs["mc"].Sum("weight").GetValue()
@@ -1648,7 +1645,7 @@ if __name__ == "__main__":
 
             # print(f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})')
             print(
-                f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>7.3f} ({val0:>7.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})'
+                f'{iopt:>3} | {"Y" if _c else " "} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})'
             )
             # print(f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {limit:>.2e} ({limit0:>.2e}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})')
 
@@ -1666,11 +1663,11 @@ if __name__ == "__main__":
                     {k: v for k, v in CUT_VALUES.items()},
                 ]
             )
-            with open(
-                f'rand_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl',
-                "wb",
-            ) as fout:
-                pickle.dump(OPT_SCORES, fout)
+            # with open(
+            #     f'rand_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl',
+            #     "wb",
+            # ) as fout:
+            #     pickle.dump(OPT_SCORES, fout)
 
             if _c:
                 score0, wmc0, wr30 = score, wmc, wr3
