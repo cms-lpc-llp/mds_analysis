@@ -914,14 +914,14 @@ if __name__ == "__main__":
         MET_CATEGORY = "low"
     elif "high" in args:
         print("    High met category")
-        # print("        REMOVING HALO, JET, & MUON VETOS")
+        print("        REMOVING HALO, JET, & MUON VETOS")
         CUTS = [c.replace("MET", "high MET") if "MET" == c else c for c in CUTS]
-        # CUTS = [c for c in CUTS if "halo" not in c]
-        # CUTS = [c for c in CUTS if "jet" not in c]
-        # CUTS = [c for c in CUTS if "muon" not in c]
-        # OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
-        # OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
-        # OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
+        CUTS = [c for c in CUTS if "halo" not in c]
+        CUTS = [c for c in CUTS if "jet" not in c]
+        CUTS = [c for c in CUTS if "muon" not in c]
+        OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
+        OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
+        OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
         MET_CATEGORY = "high"
     else:
         print("    No met categorization (only met<200)")
