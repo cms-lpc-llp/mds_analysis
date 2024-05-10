@@ -177,44 +177,44 @@ CUT_VALUES = {
         #
     },
     "ropt_low": {
-        # # Default guess
-        # "MIN_CSC_TIME": -5.0,
-        # "MAX_CSC_TIME": 12.5,
-        # "MAX_CSC_TSPREAD": 20.0,
-        # "MAX_RPC_BX": 0,
-        # "MIN_RPC_HITS": 1,
-        # # 'MAX_N_JETS' : 15,
-        # # 'MAX_N_LEPS' : 5,
-        # "MAX_CSC_JET": 200,
-        # "MAX_DT_JET": 200,
-        # "MAX_CSC_MUON": 200,
-        # "MAX_DT_MUON": 200,
-        # "MAX_ME1": 0,
-        # "MAX_MB1": 10,
-        # "HALO_CUTOFF": 0.2,
-        # "MIN_DPHI": 0.4,
-        # "MIN_DETA": 0,
-        # "MAX_DETA": 4,
-        # "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # Optimized with s2b12 and IT data, USE THIS. s=1371 b=251
-        "MIN_CSC_TIME": -5.00,
-        "MAX_CSC_TIME": 12.50,
-        "MAX_CSC_TSPREAD": 20.00,
+        # Default guess
+        "MIN_CSC_TIME": -5.0,
+        "MAX_CSC_TIME": 12.5,
+        "MAX_CSC_TSPREAD": 20.0,
         "MAX_RPC_BX": 0,
         "MIN_RPC_HITS": 1,
-        "MAX_CSC_JET": 180,
-        "MAX_DT_JET": 10,
-        "MAX_CSC_MUON": -158,
-        "MAX_DT_MUON": 196,
+        # 'MAX_N_JETS' : 15,
+        # 'MAX_N_LEPS' : 5,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": 200,
+        "MAX_DT_MUON": 200,
         "MAX_ME1": 0,
-        "MAX_MB1": 0,
-        "HALO_CUTOFF": 0.00,
-        "MIN_DPHI": 0.40,
-        "MIN_DETA": 0.0,
-        "MAX_DETA": 4.0,
-        "MIN_CSC_DNN": 0.00,
-        # "MIN_DT_DNN": 0.00,
+        "MAX_MB1": 10,
+        "HALO_CUTOFF": 0.2,
+        "MIN_DPHI": 0.4,
+        "MIN_DETA": 0,
+        "MAX_DETA": 4,
+        "MIN_CSC_DNN": 0,
+        "MIN_DT_DNN": 0,
+        # # Optimized with s2b12 and IT data, USE THIS. s=1371 b=251
+        # "MIN_CSC_TIME": -5.00,
+        # "MAX_CSC_TIME": 12.50,
+        # "MAX_CSC_TSPREAD": 20.00,
+        # "MAX_RPC_BX": 0,
+        # "MIN_RPC_HITS": 1,
+        # "MAX_CSC_JET": 180,
+        # "MAX_DT_JET": 10,
+        # "MAX_CSC_MUON": -158,
+        # "MAX_DT_MUON": 196,
+        # "MAX_ME1": 0,
+        # "MAX_MB1": 0,
+        # "HALO_CUTOFF": 0.00,
+        # "MIN_DPHI": 0.40,
+        # "MIN_DETA": 0.0,
+        # "MAX_DETA": 4.0,
+        # "MIN_CSC_DNN": 0.00,
+        # # "MIN_DT_DNN": 0.00,
         # Optimized with s1 and IT data
         # "MIN_CSC_TIME": -5.00,
         # "MAX_CSC_TIME": 12.50,
@@ -382,40 +382,40 @@ CUT_OPT_PARS = {
     "ME1": {
         "col": "cscNHitME1",
         "cut": "MAX_ME1",
-        "values": np.arange(0, 11, 1)[::-1],
+        "values": np.arange(0, 11, 1),
         "func": lambda v, vd: vd <= v,
     },
     "MB1": {
         "col": "dtNHitStation1",
         "cut": "MAX_MB1",
-        "values": np.arange(0, 11, 1)[::-1],
+        "values": np.arange(0, 11, 1),
         "func": lambda v, vd: vd <= v,
     },
     "CSC jet veto": {
         "col": "cscJetVetoPt",
         "cut": "MAX_CSC_JET",
-        "values": np.arange(10, 201, 1)[::-1],
+        "values": np.arange(-20, 201, 1),
         # 'func' : lambda v, vd: (10 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
     "DT jet veto": {
         "col": "dtJetVetoPt",
         "cut": "MAX_DT_JET",
-        "values": np.arange(10, 201, 1)[::-1],
+        "values": np.arange(-20, 201, 1),
         # 'func' : lambda v, vd: (10 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
     "CSC muon veto": {
         "col": "cscMuonVetoPt",
         "cut": "MAX_CSC_MUON",
-        "values": np.arange(-200, 201, 1)[::-1],
+        "values": np.arange(-200, 201, 1),
         # 'func' : lambda v, vd: (0 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
     "DT muon veto": {
         "col": "dtMuonVetoPt",
         "cut": "MAX_DT_MUON",
-        "values": np.arange(-200, 201, 1)[::-1],
+        "values": np.arange(-200, 201, 1),
         # 'func' : lambda v, vd: (0 < vd) & (vd < v),
         "func": lambda v, vd: vd < v,
     },
@@ -440,7 +440,7 @@ CUT_OPT_PARS = {
     "max dEta": {
         "col": "tag_dEta",
         "cut": "MAX_DETA",
-        "values": np.arange(0, 4.1, 0.1)[::-1],
+        "values": np.arange(0, 4.1, 0.1),
         "func": lambda v, vd: vd < v,
     },
     "CSC DNN": {
@@ -886,6 +886,7 @@ if __name__ == "__main__":
     N_ITERATIONS = 1
 
     OPT_SCORES = []
+    OPT_BEST = {"score": 0, "wmc": 0, "wr3": 0, "cut_values": {}}
     OPT_FRAC = 1.0  # fraction with replacement, if 1 just bootstrap
     LOO = False
     RAND = False
@@ -907,6 +908,21 @@ if __name__ == "__main__":
         print("    Using the reduced cut set (l1)")
         CUTS = CUTS_L1
         CUTSET = "l1"
+    elif "roptDNN" in args:
+        print("    Using the randomly optimized cut set with DNN (roptDNN)")
+        CUTSET = "roptDNN"
+    elif "ropt" in args:
+        print("    Using the randomly optimized cut set (ropt)")
+        CUTSET = "ropt"
+    elif "loptDNN" in args:
+        print("    Using the leave-one-out optimized cut set with DNN (loptDNN)")
+        CUTSET = "loptDNN"
+    elif "lopt" in args:
+        print("    Using the leave-one-out optimized cut set (lopt)")
+        CUTSET = "lopt"
+    else:
+        print("    Using the standard cut set (scs)")
+        CUTSET = "scs"
 
     if " low" in args:  # otherwise cutflow breaks it
         print("    Low met category")
@@ -926,22 +942,6 @@ if __name__ == "__main__":
     else:
         print("    No met categorization (only met<200)")
         MET_CATEGORY = "lt200"
-
-    if "roptDNN" in args:
-        print("    Using the randomly optimized cut set with DNN (roptDNN)")
-        CUTSET = "roptDNN"
-    elif "ropt" in args:
-        print("    Using the randomly optimized cut set (ropt)")
-        CUTSET = "ropt"
-    elif "loptDNN" in args:
-        print("    Using the leave-one-out optimized cut set with DNN (loptDNN)")
-        CUTSET = "loptDNN"
-    elif "lopt" in args:
-        print("    Using the leave-one-out optimized cut set (lopt)")
-        CUTSET = "lopt"
-    else:
-        print("    Using the standard cut set (scs)")
-        CUTSET = "scs"
 
     if "oot" in args:
         print("    Using out-of-time 2nd cluster")
@@ -995,6 +995,25 @@ if __name__ == "__main__":
         print(f"    No cutset for {MET_CATEGORY=} found, defaulting to 'lt200'")
     else:
         raise ValueError(f"no cutset associated with {CUTSET=} and {MET_CATEGORY=} found")
+
+    if "noMB1Veto" in args:
+        print("    Removing MB1 from cuts")
+        CUTS = [c for c in CUTS if "MB1" not in c]
+    if "noCSCJetVeto" in args:
+        print("    Removing CSC jet veto from cuts")
+        CUTS = [c for c in CUTS if "CSC jet veto" not in c]
+    if "noDTJetVeto" in args:
+        print("    Removing DT jet veto from cuts")
+        CUTS = [c for c in CUTS if "DT jet veto" not in c]
+    if "noCSCMuonVeto" in args:
+        print("    Removing CSC muon veto from cuts")
+        CUTS = [c for c in CUTS if "CSC muon veto" not in c]
+    if "noDTMuonVeto" in args:
+        print("    Removing DT muon veto from cuts")
+        CUTS = [c for c in CUTS if "DT muon veto" not in c]
+    if "noHaloVeto" in args:
+        print("    Removing halo veto from cuts")
+        CUTS = [c for c in CUTS if "halo veto" not in c]
 
     print("")
 
@@ -1285,12 +1304,18 @@ if __name__ == "__main__":
                 if "CSC jet veto" in cut and (OPT_CUT != "CSC jet veto" or not LOO):
                     # rdf = rdf.Redefine(
                     #     f"{C}CutFlag", f"{C}CutFlag &&
-                    cflags.append(f"({C}JetVetoPt < {MAX_CSC_JET})")
+                    if MAX_CSC_MUON > 0:
+                        cflags.append(f"({C}JetVetoPt < {MAX_CSC_JET})")
+                    else:
+                        cflags.append(f"({C}JetVetoLooseId == 0) && ({C}JetVetoPt < {abs(MAX_CSC_JET)})")
                     # )
                 if "DT jet veto" in cut and (OPT_CUT != "DT jet veto" or not LOO):
                     # rdf = rdf.Redefine(
                     #     f"{D}CutFlag", f"{D}CutFlag &&
-                    dflags.append(f"({D}JetVetoPt < {MAX_DT_JET})")
+                    if MAX_CSC_MUON > 0:
+                        dflags.append(f"({D}JetVetoPt < {MAX_DT_JET})")
+                    else:
+                        dflags.append(f"({D}JetVetoLooseId == 0) && ({D}JetVetoPt < {abs(MAX_DT_JET)})")
                     # )
 
                 # if "muon veto" in cut:
@@ -1355,7 +1380,9 @@ if __name__ == "__main__":
                     rdf = rdf.Filter("evtFlag")
                     rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && ( {C}Size == Max({C}Size*{C}Flag) )")
                     rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )")
-                    eflags, cflags, dflags = [], [], []
+                    rdf = rdf.Redefine(f"{C}Size", f"{C}Size*{C}Flag")
+                    rdf = rdf.Redefine(f"{D}Size", f"{D}Size*{D}Flag")
+                    eflags, cflags, dflags = ["weight > 0"], [f"{C}Size > 0"], [f"{D}Size > 0"]
                     #!
 
                     # Apply our cluster level selections to relevant columns
@@ -1619,8 +1646,8 @@ if __name__ == "__main__":
             _c = False
             wmc = rdfs["mc"].Sum("weight").GetValue()
             wr3 = rdfs["r3"].Sum("weight").GetValue()
-            # score = wmc / (wr3**0.5) if wr3 else 0  # if b~1 then s2b explodes and falls into a false minimum
-            score = 2 * ((wmc + wr3) ** 0.5 - wr3**0.5)  # https://arxiv.org/pdf/hep-ph/0204326.pdf
+            score = wmc / (wr3**0.5) if wr3 else 0  # if b~1 then s2b explodes and falls into a false minimum
+            # score = 2 * ((wmc + wr3) ** 0.5 - wr3**0.5)  # https://arxiv.org/pdf/hep-ph/0204326.pdf
             # score = 2*((wmc*2.16e-03+wr3)**0.5 - wr3**0.5)
             # score = 2*((wmc*(2.16e-03**(iopt/N_ITERATIONS))+wr3)**0.5 - wr3**0.5) # fix score0 for next iteration too
             # limit = ((1.5/2+np.sqrt(wr3))**2-wr3)/wmc if wmc else 1
@@ -1636,16 +1663,37 @@ if __name__ == "__main__":
                 score0, wmc0, wr30 = score, wmc, wr3
                 val, val0 = 999, 999
             else:
+                if wmc > 0 and wr3 > 0 and score > OPT_BEST["score"]:
+                    OPT_BEST["score"], OPT_BEST["wmc"], OPT_BEST["wr3"] = score, wmc, wr3
+                    OPT_BEST["cut_values"] = {k: v for k, v in CUT_VALUES.items()}
                 # if wmc>0 and wr3>0 and limit <= limit0:# and wmc/wmc0 > 0.9:
-                if wmc > 0 and wr3 > 0 and score >= score0:  # and wmc/wmc0 > 0.9:
+                # if wmc > 0 and wr3 > 0 and score >= score0:  # and wmc/wmc0 > 0.9:
+                thresh = score / (score + score0)
+                # thresh = score * (1 - iopt / N_ITERATIONS) / (score * (1 - iopt / N_ITERATIONS) + score0)
+                # min_s = np.min([x[2] for x in OPT_SCORES[-20:] if x[2]>0]) if OPT_SCORES else 0
+                # thresh = (score-min_s) / ((score-min_s) + (score0-min_s))
+                # mean_s = np.mean([x[2] for x in OPT_SCORES[-20:] if x[2]>0]) if len(OPT_SCORES) > 3 else 0
+                # std_s = np.std([x[2] for x in OPT_SCORES[-20:] if x[2]>0]) if len(OPT_SCORES) > 3 else 1
+                mean_s = np.mean([x[6] for x in OPT_SCORES[-50:] if x[6]>0]) if len(OPT_SCORES) > 3 else 0
+                std_s = np.std([x[6] for x in OPT_SCORES[-50:] if x[6]>0]) if len(OPT_SCORES) > 3 else 1
+                std_s = std_s if std_s>0 else 1
+                thresh = np.exp((score - mean_s) / std_s) / (
+                    np.exp((score - mean_s) / std_s) + np.exp((score0 - mean_s) / std_s)
+                )
+                # print(mean_s, std_s, score, score0, np.exp((score - mean_s) / std_s), np.exp((score0 - mean_s) / std_s), thresh)
+                if wmc > 0 and wr3 > 0 and rng.random() < thresh:
                     _c = True
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
                 else:
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val0
 
             # print(f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})')
+            ud_dphi_check = 100 * ( # percent error wrt uniform distribution
+                rdfs["r3"].StdDev("tag_dPhi").GetValue() / (1 / 12 * (PI - MIN_DPHI) ** 2) ** 0.5 - 1
+            )
             print(
-                f'{iopt:>3} | {"Y" if _c else " "} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})'
+                f"{iopt:>3} | {'Y' if _c else ' '} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>6.2f} ({score0:>6.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>4.0f} ({wr30:>4.0f})"
+                + f" || {ud_dphi_check:>7.2f}"
             )
             # print(f'{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {limit:>.2e} ({limit0:>.2e}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})')
 
@@ -1676,7 +1724,32 @@ if __name__ == "__main__":
 
     # **************** #
     if LOO or RAND:
-        print("\nOptimized Cuts:")
+        print("")
+        print(64 * "-")
+
+        scoreb, wmcb, wr3b, best_cuts = OPT_BEST["score"], OPT_BEST["wmc"], OPT_BEST["wr3"], OPT_BEST["cut_values"]
+        print(f"Best Cuts: mc, r3 = {wmcb:.1f}, {wr3b:.1f} (S/rtB, score = {wmcb/wr3b**0.5:.2f}, {scoreb:.2f})")
+        print(f"    {best_cuts['MIN_CSC_TIME']=:.2f}")
+        print(f"    {best_cuts['MAX_CSC_TIME']=:.2f}")
+        print(f"    {best_cuts['MAX_CSC_TSPREAD']=:.2f}")
+        print(f"    {best_cuts['MAX_RPC_BX']=:.0f}")
+        print(f"    {best_cuts['MIN_RPC_HITS']=:.0f}")
+        print(f"    {best_cuts['MAX_CSC_JET']=:.0f}")
+        print(f"    {best_cuts['MAX_DT_JET']=:.0f}")
+        print(f"    {best_cuts['MAX_CSC_MUON']=:.0f}")
+        print(f"    {best_cuts['MAX_DT_MUON']=:.0f}")
+        print(f"    {best_cuts['MAX_ME1']=:.0f}")
+        print(f"    {best_cuts['MAX_MB1']=:.0f}")
+        print(f"    {best_cuts['HALO_CUTOFF']=:.2f}")
+        print(f"    {best_cuts['MIN_DPHI']=:.2f}")
+        print(f"    {best_cuts['MIN_DETA']=:.1f}")
+        print(f"    {best_cuts['MAX_DETA']=:.1f}")
+        print(f"    {best_cuts['MIN_CSC_DNN']=:.3f}")
+        print(f"  {np.sum([x[2]>=scoreb for x in OPT_SCORES])} best cut combinations.")
+        # print(f"    {best_cuts['MIN_DT_DNN']=:.2f}")
+
+        print("")
+        print(f"Final Cuts: mc, r3 = {wmc0:.1f}, {wr30:.1f} (S/rtB, score = {wmc0/wr30**0.5:.2f}, {score0:.2f})")
         print(f"    {MIN_CSC_TIME=:.2f}")
         print(f"    {MAX_CSC_TIME=:.2f}")
         print(f"    {MAX_CSC_TSPREAD=:.2f}")
