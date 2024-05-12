@@ -6,7 +6,7 @@ import ROOT as rt
 from ROOT import RDataFrame
 
 # **************************** #
-LOCAL_DIR = '/home/psimmerl/mds_analysis'
+LOCAL_DIR = '/eos/user/f/fernanpe/mds_analysis/'
 OUT_DIR = f'{LOCAL_DIR}/reports/weekly/2024-04-15'
 
 # STAT = 'raw'
@@ -15,14 +15,13 @@ OUT_DIR = f'{LOCAL_DIR}/reports/weekly/2024-04-15'
 # FN_R3 = f'{LOCAL_DIR}/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root'
 
 STAT = 'pedro'
-LUMI = 1.1328524540090597e-06 * 23.02 * 1000 # ???
-FN_MC = f'{LOCAL_DIR}/data/raw/mc_pedro.root'
-# FN_R3 = f'{LOCAL_DIR}/data/raw/data_pedro.root'
-# FN_MC = f'{LOCAL_DIR}/data/processed/mc_pedro_hlt566.root'
-FN_R3 = f'{LOCAL_DIR}/data/processed/r3_pedro_hlt566.root'
+LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
+
+FN_MC = f'{LOCAL_DIR}/data/processed/mc_pedro_hlt566_2023.root'
+FN_R3 = f'{LOCAL_DIR}/data/processed/r3_pedro_hlt566_2023.root'
 
 # **** #
-LOW_MET_CUTOFF = 75
+LOW_MET_CUTOFF = 150
 HIGH_MET_CUTOFF = 150
 
 # **** #
@@ -49,20 +48,23 @@ CUTS = [
     #! I reset cutflow indices here
     'CSC0 IT',
     'CSC1 IT',
-    'DT IT',
+    #'DT IT',
     'ME1',
-    'MB1',
-    'jet veto',
-    'muon veto',
+    #'MB1',
     # 'no leptons',
     # 'halo veto',
     # 'DT stn',
     # 'BDT',
-    # 'DNN',
     '1 CSC-CSC',
     # 'dR',
     # 'dEta',
-    'dPhi',
+#    'jet veto',
+    'dPhi $>$ 1.8',
+    'DNN $>$ 0.96',
+    
+    # TO BE REMOVED?
+    #'muon veto',
+
 ]
 # **************************** #
 C, D = 'cscRechitCluster', 'dtRechitCluster'
@@ -139,6 +141,9 @@ COLUMNS_OUT = [
     'cscRechitCluster_match_RB1_0p4',
     'cscRechitCluster_match_RE12_0p4',
     'cscRechitCluster_match_dtSeg_0p4',
+    #'cscRechitClusterDNN_bkgMC',
+    #'cscRechitClusterDNN_bkgMC_plusBeamHalo',
+    #'cscRechitClusterDNN_bkgOOTData',
     # 'cscRechitCluster_match_gLLP',
     # 'cscRechitCluster_match_gLLP_csc',
     # 'cscRechitCluster_match_gLLP_decay_r',
@@ -295,7 +300,7 @@ if __name__ == '__main__':
 
     args = ' '.join(sys.argv[1:]) if len(sys.argv) > 1 else ''
 
-    if 'cutflow' in args:
+    if 'CUTFLOW' in args:
         print('    Printing cutflow tables')
         PRINT_CUTFLOW = True
 
@@ -385,22 +390,22 @@ if __name__ == '__main__':
         MAX_CSC_TIME =  12.5
         MAX_CSC_TSPREAD =  20.0
 
-        MAX_RPC_BX = 0
-        MIN_RPC_HITS = 1
+        #MAX_RPC_BX = 0
+        #MIN_RPC_HITS = 1
 
-        MAX_CSC_JET = 10
-        MAX_DT_JET = 50
-        MAX_CSC_MUON = 100
-        MAX_DT_MUON = 100
+        #MAX_CSC_JET = 30
+        #MAX_DT_JET = 50
+        #MAX_CSC_MUON = 10
+        #MAX_DT_MUON = 100
 
-        MAX_ME1 = 2
-        MAX_MB1 = 0
+        MAX_ME1 = 0
+        #MAX_MB1 = 0
 
-        HALO_CUTOFF = 0
-        MIN_DPHI = 1.0
+        #HALO_CUTOFF = 0
+        MIN_DPHI = 1.8
 
-        MIN_CSC_DNN = 0
-        MIN_DT_DNN = 0
+        MIN_CSC_DNN = 0.96137905
+        #MIN_DT_DNN = 0
     
     # **************************** #
     rdfs = {
@@ -545,7 +550,7 @@ if __name__ == '__main__':
                 rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && (met < {LOW_MET_CUTOFF})')
 
             if 'high MET' in cut:
-                rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && ((150 < {HIGH_MET_CUTOFF}) && (met < 200))')
+                rdf = rdf.Redefine('evtCutFlag', f'evtCutFlag && ((met > {HIGH_MET_CUTOFF}) && (met < 200))')
 
             # **** #
             # Cluster time requirements
@@ -584,12 +589,12 @@ if __name__ == '__main__':
             if 'jet veto' in cut:
                 rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})')
                 rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})')
-                rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ({D}JetVetoPt < {MAX_DT_JET})')
+                #rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ({D}JetVetoPt < {MAX_DT_JET})')
             
             if 'muon veto' in cut:
-                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ( ({C}MuonVetoGlobal == 0) && ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
-                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( ({C}MuonVetoGlobal == 0) && ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
-                rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}MuonVetoLooseId == 0) && ({D}MuonVetoPt < {MAX_DT_MUON}) )')
+                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ( ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
+                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
+                #rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}MuonVetoLooseId == 0) && ({D}MuonVetoPt < {MAX_DT_MUON}) )')
 
             if 'halo veto' in cut:
                 rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({HALO_CUTOFF} < abs({D}Phi)) && (abs({D}Phi) < {PI} - {HALO_CUTOFF}) )')
@@ -599,9 +604,9 @@ if __name__ == '__main__':
                 raise NotImplementedError('BDT')
 
             if 'DNN' in cut:
-                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
-                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( Take({C}DNN,nCscRechitClusters) > {MIN_CSC_DNN} )')
-                rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
+                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ( Take({C}DNN_bkgMC_plusBeamHalo,nCscRechitClusters) > {MIN_CSC_DNN} )')
+                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( Take({C}DNN_bkgMC_plusBeamHalo,nCscRechitClusters) > {MIN_CSC_DNN} )')
+                #rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( Take({D}DNN,nDtRechitClusters) > {MIN_DT_DNN} )')
 
             # **** #
             if '1 CSC-CSC' in cut:
@@ -717,8 +722,9 @@ if __name__ == '__main__':
         if count == 0:
             print(f'{key} is empty')
             continue
-
-        name = f'{key}_csccsc{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}'
+        
+        name = f'{key}_csccsc{"OOT" if OOT else ""}_{CUTSET}'
+        name += f"_{MET_CATEGORY}"
         rdf = rdf.Snapshot('MuonSystem_flat', f'data/processed/{name}_rdf.root', columns_out)
         rdfs[key] = rdf
 
