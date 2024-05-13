@@ -58,12 +58,12 @@ CUTS = [
     '1 CSC-CSC',
     # 'dR',
     # 'dEta',
-#    'jet veto',
     'dPhi $>$ 1.8',
     'DNN $>$ 0.96',
+    # TO BE REMOVED? vetoes doesn't seem to help s/sqrt(b)
+    'muon veto',
+    'jet veto',
     
-    # TO BE REMOVED?
-    #'muon veto',
 
 ]
 # **************************** #
@@ -393,9 +393,9 @@ if __name__ == '__main__':
         #MAX_RPC_BX = 0
         #MIN_RPC_HITS = 1
 
-        #MAX_CSC_JET = 30
+        MAX_CSC_JET = 20
         #MAX_DT_JET = 50
-        #MAX_CSC_MUON = 10
+        MAX_CSC_MUON = 10
         #MAX_DT_MUON = 100
 
         MAX_ME1 = 0
@@ -589,12 +589,11 @@ if __name__ == '__main__':
             if 'jet veto' in cut:
                 rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})')
                 rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})')
-                #rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ({D}JetVetoPt < {MAX_DT_JET})')
+
             
             if 'muon veto' in cut:
-                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && ( ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
-                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && ( ({C}MuonVetoPt < {MAX_CSC_MUON}) )')
-                #rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({D}MuonVetoLooseId == 0) && ({D}MuonVetoPt < {MAX_DT_MUON}) )')
+                rdf = rdf.Redefine(f'{C}0CutFlag', f'{C}0CutFlag && (({C}MuonVetoGlobal == 0) || (({C}MuonVetoGlobal == 1) && ({C}MuonVetoPt < {MAX_CSC_MUON})))')
+                rdf = rdf.Redefine(f'{C}1CutFlag', f'{C}1CutFlag && (({C}MuonVetoGlobal == 0) || (({C}MuonVetoGlobal == 1) && ({C}MuonVetoPt < {MAX_CSC_MUON})))')
 
             if 'halo veto' in cut:
                 rdf = rdf.Redefine(f'{D}CutFlag', f'{D}CutFlag && ( ({HALO_CUTOFF} < abs({D}Phi)) && (abs({D}Phi) < {PI} - {HALO_CUTOFF}) )')
