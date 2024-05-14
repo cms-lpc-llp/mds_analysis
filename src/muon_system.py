@@ -51,73 +51,72 @@ SCL = std_color_list
 
 
 class MuonSystemAwkward:
-    """Handler for working with muon system ntuples using an Awkward arrays"""
+    """Handler for working with 'MuonSystem' TTrees using Awkward arrays"""
 
     def __init__(
         self,
-        file_name: str,
         name: str,
+        file_name: str,
         tree_name: str="MuonSystem",
-        nev: int=None,
-        is_mc: bool=False,
-        lumi: float = None,
-        cache=False,
-        implicit: bool = True,
-        verbose: bool = True
+        **kwargs
     ) -> None:
         """Initialize a new instance of MuonSystemAwkward"""
 
-        if verbose:
-            print(f"Building MuonSystemAwkward '{name}' -")
-            print(f"  is_mc  = {is_mc}")
-            print(f"  events = {nev}")
-            print(f"  tree   = '{tree_name}'")
-            print(f"  file   = '{file_name}'")
-
-        ##########
-
-        self.file_name = file_name
         self.name = name
+        self.file_name = file_name
         self.tree_name = tree_name
-        self.is_mc = is_mc
-        self.lumi = lumi
-        self.nev = nev
-        self.cache = cache
-        self.implicit = implicit
-        self.verbose = verbose
 
-        ##########
+        self.cut = kwargs["cut"] if "cut" in kwargs else True 
+        self.nev = kwargs["nev"] if "nev" in kwargs else None
+        self.lumi = kwargs["lumi"] if "lumi" in kwargs else 1
+        self.is_mc = kwargs["is_mc"] if "is_mc" in kwargs else False
+        self.array_cache = kwargs["array_cache"] if "array_cache" in kwargs else "100 MB"
 
-        self.cut = True
+        self.verbose = kwargs["verbose"] if "verbose" in kwargs else False
+        self.implicit = kwargs["implicit"] if "implicit" in kwargs else True
+
+        if self.verbose:
+            print(f"Building MuonSystemAwkward '{name}'")
+            print(f"  tree_name = '{self.tree_name}'")
+            print(f"  file_name = '{self.file_name}'")
+            print(f"      is_mc = {self.is_mc}")
+
+        ########
+
         self.efficiency_denom = None
         self.efficiency = None
         self.colors = None
 
-        ##########
+        ########
 
-        # From uproot documentation:
-        # "entry_stop (None or int) –
-        # The first entry to exclude (i.e. one greater than the last entry to include).
-        # If None, stop at num_entries. If negative, count from the end, like a Python slice."
-        if self.nev < 0:
+        # # From uproot documentation:
+        # # "entry_stop (None or int) –
+        # # The first entry to exclude (i.e. one greater than the last entry to include).
+        # # If None, stop at num_entries. If negative, count from the end, like a Python slice."
+        # if self.nev < 0:
+        #     self.nev = None
+        if self.nev == -1: # I do this because in other libraries/readers '-1' means all events
             self.nev = None
 
-        if not self.implicit:
+        if not self.implicit: # I want to return a copy of the class if implicit is false
             raise NotImplementedError("Non-implicit cuts do not work yet.")
 
-        ##########
+        ########
 
-        self.ms_read = {}
-        self.ms = upr.open(path=self.file_name + ":" + self.tree_name)  # , array_cache='100 kB')
-        self.ms_read["sel_evt"] = ak.ones_like(self.ms["met"].array(entry_stop=self.nev), dtype=bool)
-        self.ms_read["sel_csc"] = ak.ones_like(self.ms["cscRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
-        self.ms_read["sel_dt"] = ak.ones_like(self.ms["dtRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
+        self.ttree = upr.open(path=self.file_name + ":" + self.tree_name)  # , array_cache='100 kB')
 
-        if len(self.ms_read["sel_evt"]) != self.nev:
-            self.nev = len(self.ms_read["sel_evt"])
-        print(f"  Extracted {self.nev:,} events")
+        self.features = {}
+        self.features["sel_evt"] = ak.ones_like(self.ttree["met"].array(entry_stop=self.nev), dtype=bool)
+        self.features["sel_csc"] = ak.ones_like(self.ttree["cscRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
+        self.features["sel_dt"] = ak.ones_like(self.ttree["dtRechitClusterSize"].array(entry_stop=self.nev), dtype=bool)
 
-        ##########
+        if len(self.features["sel_evt"]) != self.nev:
+            self.nev = len(self.features["sel_evt"])
+        
+        if self.verbose:
+            print(f"     events = {self.nev:,}")
+
+        ########
 
         # self.aliases = {
         #         "cscRechitClusterMe11Ratio" : "(cscRechitClusterNRechitChamberPlus11 + cscRechitClusterNRechitChamberMinus11) / cscRechitClusterSize",
@@ -144,43 +143,45 @@ class MuonSystemAwkward:
 
         # self.aliases = self.aliases | {k: f"HLTDecision[:{self.nev},c]" for k,c in hlt_info.items()}
 
-        ##########
+        ########
 
-        # ! I cannot figure out how to load HLTDecision without overflowing memory
-        dev = 100_000
-        hlt = np.array([], dtype=bool)
-        for i in range(0, nev//dev + 1):
-            # hlt = np.r_[hlt, ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev)[:,569]]
-            hlt = np.r_[hlt, np.take(self.ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev), 569, 1)]
-        self.ms_read["HLT_L1CSCCluster_DTCluster50"] = hlt
-        # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms["HLTDecision"].array(entry_stop=self.nev)[:,569]
-        # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms.arrays(
-        #     "HLT_L1CSCCluster_DTCluster50", aliases=self.hlt_aliases, entry_stop=self.nev
-        # )["HLT_L1CSCCluster_DTCluster50"]
+        # # These are various attempts to load load HLTDecision without overflowing memory
+        # # Unfortunately none of them worked so you need to preskim using rdf_hlt_builder.py
 
-        # self.ms_read["nCscRechitClusters"] = np.sum(self.ms_read["sel_csc"], axis=1)
-        # self.ms_read["nDtRechitClusters"] = np.sum(self.ms_read["sel_dt"], axis=1)
+        # dev = 100_000
+        # hlt = np.array([], dtype=bool)
+        # for i in range(0, self.nev//dev + 1):
+        #     # hlt = np.r_[hlt, ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev)[:,569]]
+        #     hlt = np.r_[hlt, np.take(self.ms["HLTDecision"].array(entry_start=i*dev, entry_stop=(i+1)*dev), 569, 1)]
+        # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = hlt
+        # # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms["HLTDecision"].array(entry_stop=self.nev)[:,569]
+        # # self.ms_read["HLT_L1CSCCluster_DTCluster50"] = self.ms.arrays(
+        # #     "HLT_L1CSCCluster_DTCluster50", aliases=self.hlt_aliases, entry_stop=self.nev
+        # # )["HLT_L1CSCCluster_DTCluster50"]
+
+        self.features["nCscRechitClusters"] = np.sum(self.features["sel_csc"], axis=1)
+        self.features["nDtRechitClusters"] = np.sum(self.features["sel_dt"], axis=1)
 
     def __getitem__(self, key):
         # hlt_aa = self.ms.arrays(list(self.hlt_aliases.keys()), , entry_stop=self.nev)
         # for k, v in self.hlt_info.items():
         #     self.ms_read[k] = hlt_aa[k]
 
-        mods = [""]
+        # mods = [""] # this was to let you do some math easier but I think it just obfuscates the code
         if isinstance(key, str):
             key = self._fix_key(key)
 
-            if "." in key:
-                key, mods = key.split(".")[0], key.split(".")[1:]
+            # if "." in key:
+            #     key, mods = key.split(".")[0], key.split(".")[1:]
 
-            if key in self.ms_read:
-                arr = self.ms_read[key]
+            if key in self.features:
+                arr = self.features[key]
             elif "nCsc" in key:
-                arr = np.sum(self.ms_read["sel_csc"], axis=1)
+                arr = np.sum(self.features["sel_csc"], axis=1)
             elif "nDt" in key:
-                arr = np.sum(self.ms_read["sel_dt"], axis=1)
-            elif key in self.ms:# or key in self.aliases:
-                arr = self.ms[key].array(entry_stop=self.nev)
+                arr = np.sum(self.features["sel_dt"], axis=1)
+            elif key in self.ttree:# or key in self.aliases:
+                arr = self.ttree[key].array(entry_stop=self.nev)
                 # arr = self.ms.arrays(key, aliases=self.aliases, entry_stop=self.nev)[key]
             # else:
             #     raise ValueError(f"Invalid key '{key}'.")
@@ -189,11 +190,11 @@ class MuonSystemAwkward:
             else:
                 # self.cut, pcut = False, self.cut
                 if key == "cscRechitClusterMe11Ratio":
-                    arr = (
+                    arr = ( # there should *only* be hits in one of these chambers so adding them is fine
                         self["cscRechitClusterNRechitChamberPlus11"] + self["cscRechitClusterNRechitChamberMinus11"]
                     ) / self["cscRechitClusterSize"]
                 elif key == "cscRechitClusterMe12Ratio":
-                    arr = (
+                    arr = ( # there should *only* be hits in one of these chambers so adding them is fine
                         self["cscRechitClusterNRechitChamberPlus12"] + self["cscRechitClusterNRechitChamberMinus12"]
                     ) / self["cscRechitClusterSize"]
                 elif key == "dtRechitClusterMb1Ratio":
@@ -209,27 +210,27 @@ class MuonSystemAwkward:
 
             if self.cut and key not in ("sel_evt","sel_csc","sel_dt") and len(arr) == self.nev:
                 if "csc" in key[:3]:
-                    arr = arr[self.ms_read["sel_csc"]]
+                    arr = arr[self.features["sel_csc"]]
                 elif "dt" in key[:2]:
-                    arr = arr[self.ms_read["sel_dt"]]
-                arr = arr[self.ms_read["sel_evt"]]
+                    arr = arr[self.features["sel_dt"]]
+                arr = arr[self.features["sel_evt"]]
 
             if self.lumi is not None and key == "weight":
                 if self.is_mc:
                     arr = arr * self.lumi
 
-            if self.cache and key not in self.ms_read:
-                self.ms_read[key] = arr
+            if self.array_cache and key not in self.features:
+                self.features[key] = arr
 
-            #TODO: for loop through mods so it's in order and chainable (move to front?)
-            if "abs" in mods: 
-                arr = np.abs(arr)
-            if "log" in mods:
-                arr = np.log(arr)
-            if "log10" in mods:
-                arr = np.log10(arr)
-            if "sqrt" in mods:
-                arr = np.log10(arr)
+            # #TODO: for loop through mods so it's in order and chainable (move to front?)
+            # if "abs" in mods: 
+            #     arr = np.abs(arr)
+            # if "log" in mods:
+            #     arr = np.log(arr)
+            # if "log10" in mods:
+            #     arr = np.log10(arr)
+            # if "sqrt" in mods:
+            #     arr = np.log10(arr)
 
             return arr
 
@@ -244,7 +245,7 @@ class MuonSystemAwkward:
     def __setitem__(self, key, value):
         # print(key, value)
         key = self._fix_key(key)
-        self.ms_read[key] = value
+        self.features[key] = value
 
     def __copy__(self):
         pass
@@ -307,11 +308,11 @@ class MuonSystemAwkward:
             ed = self.efficiency_denom
             self.efficiency = np.sum(sel & self[f"{ed}_{system}"]) / np.sum(self[f"{ed}_{system}"])
 
-        self.ms_read[f"sel_{system}"] = self.ms_read[f"sel_{system}"] & sel
+        self.features[f"sel_{system}"] = self.features[f"sel_{system}"] & sel
 
         if has_clusters and system != "evt":
             # self.filter(self['nCscRechitClusters'] + self['nDtRechitClusters'] > 0, system='evt')
-            self.ms_read["sel_evt"] = self.ms_read["sel_evt"] & (np.sum(self.ms_read[f"sel_{system}"], axis=1) > 0)
+            self.features["sel_evt"] = self.features["sel_evt"] & (np.sum(self.features[f"sel_{system}"], axis=1) > 0)
 
         return self
 
