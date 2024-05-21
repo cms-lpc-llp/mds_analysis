@@ -612,22 +612,23 @@ if __name__ == "__main__":
 
     DNN_VERSION = (None, "bkgMC", "bkgMC_plusBeamHalo", "bkgOOTData")[2]
 
-    args = " " + " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
+    args = " " + (" ".join(sys.argv[1:]) if len(sys.argv) > 1 else "") + " "
 
-    if "cutflow" in args.lower():
+    # surround with spaces so you get who word matching (eg 'cutflow' contains 'low' )
+    if " cutflow " in args.lower():
         print("    Printing cutflow tables")
         PRINT_CUTFLOW = True
 
-    if "l1" in args:
+    if " l1 " in args:
         print("    Using the reduced cut set (l1)")
         CUTS = CUTS_L1
         CUTSET = "l1"
 
-    if " low" in args:  # otherwise cutflow breaks it
+    if " low " in args:  # otherwise cutflow breaks it
         print("    Low met category")
         CUTS = [c.replace("MET", "low MET") if "MET" == c else c for c in CUTS]
         MET_CATEGORY = "low"
-    elif "high" in args:
+    elif " high " in args:
         print("    High met category")
         print("        REMOVING HALO, JET, & MUON VETOS")
         CUTS = [c.replace("MET", "high MET") if "MET" == c else c for c in CUTS]
@@ -642,23 +643,23 @@ if __name__ == "__main__":
         print("    No met categorization (only met<200)")
         MET_CATEGORY = "lt200"
 
-    if "roptDNN" in args: # I removed the separate cutset since we don"t optimize both
+    if " roptDNN " in args: # I removed the separate cutset since we don"t optimize both
         print("    Using the randomly optimized cut set with DNN (roptDNN)")
         CUTSET = "ropt"
-    elif "ropt" in args:
+    elif " ropt " in args:
         print("    Using the randomly optimized cut set (ropt)")
         CUTSET = "ropt"
-    elif "tightDNN" in args: # I removed the separate cutset since we don't optimize both
+    elif " tightDNN " in args: # I removed the separate cutset since we don't optimize both
         print("    Using the tight cut set with DNN (tightDNN)")
         CUTSET = "tight"
-    elif "tight" in args:
+    elif " tight " in args:
         print("    Using the tight cut set (tight)")
         CUTSET = "tight"
-    elif "loptDNN" in args:
+    elif " loptDNN " in args:
         print("    Using the leave-one-out optimized cut set with DNN (loptDNN)")
         CUTSET = "loptDNN"
         raise DeprecationWarning("lopt/LOO was removed, use random opt (ropt/RAND)")
-    elif "lopt" in args:
+    elif " lopt " in args:
         print("    Using the leave-one-out optimized cut set (lopt)")
         CUTSET = "lopt"
         raise DeprecationWarning("lopt/LOO was removed, use random opt (ropt/RAND)")
@@ -666,31 +667,31 @@ if __name__ == "__main__":
         print("    Using the standard cut set (scs)")
         CUTSET = "scs"
 
-    if "oot" in args:
+    if " oot " in args:
         print("    Using out-of-time 2nd cluster")
         CUTS = [c.replace("CSC1 IT", "CSC1 OOT") if "CSC1 IT" == c else c for c in CUTS]
         OOT = True
     else:
         print("    Using in-time 2nd cluster")
 
-    if "ITVal1" in args:
+    if " ITVal1 " in args:
         print("    Reverting the DNN selection")
         CUTS = [c.replace("DNN $>$ 0.96", "DNN $<$ 0.96") if "DNN $>$ 0.96" == c else c for c in CUTS]
         ITVal1 = True
 
-    if "ITVal2" in args:
+    if " ITVal2 " in args:
         print("    Reverting the jet veto")
         CUTS = [c.replace("CSC jet veto", "CSC jet req") if "CSC jet veto" == c else c for c in CUTS]
         ITVal2 = True
 
-    if "loo" in args:
+    if " loo " in args:
         print("    PERFORMING LOO OPTIMIZATION")
         if OOT:
             print("        FORCING MC TO IN-TIME")
         LOO = True
         N_ITERATIONS = 501
         raise DeprecationWarning("lopt/LOO was removed, use random opt (ropt/RAND)")
-    if "rand" in args:
+    if " rand " in args:
         print("    PERFORMING RAND OPTIMIZATION")
         if OOT:
             print("        FORCING MC TO IN-TIME")
@@ -700,7 +701,8 @@ if __name__ == "__main__":
     #     print("    REMOVING DT SIZE CUT")
     #     CUTS = [c for c in CUTS if "DT size" not in c]
 
-    if "dnn" not in args.lower(): #if "DNN" not in CUTSET:
+    #if "DNN" not in CUTSET:
+    if "dnn" not in args.lower(): # note this isnt a whole word match
         print("    Removing DNN from CUTS")
         CUTS = [c for c in CUTS if "DNN" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "DNN" not in c]
@@ -709,14 +711,14 @@ if __name__ == "__main__":
             print("        OPTIMIZING JUST DNN")
             OPT_CUTS = [c for c in OPT_CUTS if "DNN" in c]
 
-    if "bkgMC_plusBeamHalo" in args:
+    if " bkgMC_plusBeamHalo " in args:
         print("    Using DNN version bkgMC_plusBeamHalo")
         DNN_VERSION = "bkgMC_plusBeamHalo"
-    elif "bkgMC" in args:
+    elif " bkgMC " in args:
         print("    Using DNN version bkgMC")
         DNN_VERSION = "bkgMC"
         CUT_OPT_PARS["CSC DNN"]["values"] = np.arange(0.830, 1.001, 0.001)[::-1]
-    elif "bkgOOTData" in args:
+    elif " bkgOOTData " in args:
         print("    Using DNN version bkgOOTData")
         DNN_VERSION = "bkgOOTData"
     if DNN_VERSION is not None:
@@ -1114,7 +1116,7 @@ if __name__ == "__main__":
                     rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && "
                         + f"( Take({C}DNN_{DNN_VERSION},nCscRechitClusters) > {MIN_CSC_DNN} )"
                     )
-                elif "DNN $<$" in cut: 
+                if "DNN $<$" in cut: 
                     rdf = rdf.Redefine("evtCutFlag",
                     f"auto invertDNN = ({C}0Flag || {C}1Flag) && (Take({C}DNN_{DNN_VERSION},nCscRechitClusters) <= {MIN_CSC_DNN});"
                     f"return evtFlag && (reduce(invertDNN.begin(), invertDNN.end()) > 0)"
