@@ -33,7 +33,7 @@ OUT_DIR = f"{LOCAL_DIR}/reports/weekly/2024-04-15"
 # FN_R3 = f"{LOCAL_DIR}/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root"
 
 # **** #
-LOW_MET_CUTOFF = 75
+LOW_MET_CUTOFF = 150  # 75
 HIGH_MET_CUTOFF = 150
 
 # **** #
@@ -42,9 +42,10 @@ CUTS_L1 = [
     "HLT",
     "L1",
     "MET",
-    #! reset cutflow indices here
+    #! Reset cutflow indices here
     "CSC IT",
     "DT IT",
+    # "ME1",
     "MB1",
     "1 CSC-DT",
     # "dPhi",
@@ -55,10 +56,10 @@ CUTS = [
     "HLT",
     "L1",
     "MET",
-    #! reset cutflow indices here
+    #! Reset cutflow indices here
     "CSC IT",
     "DT IT",
-    # "ME1",
+    "ME1",
     "MB1",
     # "n leptons",
     # "n jets",
@@ -182,47 +183,48 @@ CUT_VALUES = {
         #
     },
     "ropt_low": {
-        # # Default guess
-        # "MIN_CSC_TIME": -5.0,
-        # "MAX_CSC_TIME": 12.5,
-        # "MAX_CSC_TSPREAD": 20.0,
-        # "MAX_RPC_BX": 0,
-        # "MIN_RPC_HITS": 1,
-        # # "MAX_N_JETS" : 15,
-        # # "MAX_N_LEPS" : 5,
-        # "MAX_CSC_JET": 200,
-        # "MAX_DT_JET": 200,
-        # "MAX_CSC_MUON": 200,
-        # "MAX_DT_MUON": 200,
-        # "MAX_ME1": 0,
-        # "MAX_MB1": 10,
-        # "HALO_CUTOFF": 0.4,
-        # "MIN_DPHI": 0.4,
-        # "MIN_DETA": 0,
-        # "MAX_DETA": 4,
-        # "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # Optimized with IT S/rt[B]. S=1175.4, B=163, S/rt[B]=92.06
-        "MIN_CSC_TIME": -5.00,
-        "MAX_CSC_TIME": 12.50,
-        "MAX_CSC_TSPREAD": 20.00,
+        # Default guess
+        "MIN_CSC_TIME": -5.0,
+        "MAX_CSC_TIME": 12.5,
+        "MAX_CSC_TSPREAD": 20.0,
         "MAX_RPC_BX": 0,
         "MIN_RPC_HITS": 1,
-        "MAX_CSC_JET": 12,
-        "MAX_DT_JET": 10,
-        "MAX_CSC_MUON": 5,
-        "MAX_DT_MUON": 13,
-        "MAX_ME1": 0,
+        # "MAX_N_JETS" : 15,
+        # "MAX_N_LEPS" : 5,
+        "MAX_CSC_JET": 200,
+        "MAX_DT_JET": 200,
+        "MAX_CSC_MUON": 200,
+        "MAX_DT_MUON": 200,
+        "MAX_ME1": 10,
         "MAX_MB1": 0,
-        "HALO_CUTOFF": 0.00,
-        "MIN_DPHI": 0.40,
-        "MIN_DETA": 0.0,
-        "MAX_DETA": 4.0,
-        "MIN_CSC_DNN": 0.00,
-        # "MIN_CSC_DNN": 0.948,  # bkgMC: S=1129, B=142, S/rt[B]=94.71
-        # "MIN_CSC_DNN": 0.971,  # bkgMC_plusBeamHalo: S=990, B=78, S/rt[B]=112.09
-        # "MIN_CSC_DNN": 0.966,  # bkgOOTData: S=648, B=9, S/rt[B]=216.10
-        # "MIN_DT_DNN": 0.00,
+        "HALO_CUTOFF": 0.4,
+        "MIN_DPHI": 0.4,
+        "MIN_DETA": 0,
+        "MAX_DETA": 4,
+        "MIN_CSC_DNN": 0,
+        "MIN_DT_DNN": 0,
+        # # Optimized with IT S/rt[B]. S=1175.4, B=163, S/rt[B]=92.06
+        # "MIN_CSC_TIME": -5.00,
+        # "MAX_CSC_TIME": 12.50,
+        # "MAX_CSC_TSPREAD": 20.00,
+        # "MAX_RPC_BX": 0,
+        # "MIN_RPC_HITS": 1,
+        # "MAX_CSC_JET": 12,
+        # "MAX_DT_JET": 10,
+        # "MAX_CSC_MUON": 5,
+        # "MAX_DT_MUON": 13,
+        # "MAX_ME1": 0,
+        # "MAX_MB1": 0, # HLT requires this to be 0
+        # "HALO_CUTOFF": 0.00,
+        # "MIN_DPHI": 0.40,
+        # "MIN_DETA": 0.0,
+        # "MAX_DETA": 4.0,
+        # # "MIN_CSC_DNN": 0.00,
+        # # "MIN_CSC_DNN": 0.948,  # bkgMC: S=1129, B=142, S/rt[B]=94.71
+        # "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=, B=, S/rt[B]=
+        # # "MIN_CSC_DNN": 0.971,  # bkgMC_plusBeamHalo: S=990, B=78, S/rt[B]=112.09
+        # # "MIN_CSC_DNN": 0.888,  # bkgOOTData: S=944, B=25, S/rt[B]=188.79
+        # # "MIN_DT_DNN": 0.00,
     },
     "ropt_high": {
         # # Default guess
@@ -269,7 +271,8 @@ CUT_VALUES = {
 }
 
 OPT_CUTS = [
-    "MB1",
+    "ME1",
+    # "MB1",
     "CSC jet veto",
     "DT jet veto",
     "CSC muon veto",
@@ -866,6 +869,7 @@ if __name__ == "__main__":
             print("        FORCING MC TO IN-TIME")
         RAND = True
         N_ITERATIONS = 501
+        N_ITERATIONS = 2001
     # else:
     #     print("    REMOVING DT SIZE CUT")
     #     CUTS = [c for c in CUTS if "DT size" not in c]
@@ -916,27 +920,35 @@ if __name__ == "__main__":
     # **************************** #
     for iopt in range(N_ITERATIONS):
         # if iopt % 100>0 and iopt != N_ITERATIONS-1:
-        if iopt != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        if (iopt%2) != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        # if iopt != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
             OPT_CUT = rng.choice([c for c in OPT_CUTS if c != OPT_CUT or len(OPT_CUTS) == 1])
         else:
             OPT_CUT = ""
 
         if RAND and OPT_CUT != "":
-            cv_history = [x[-1] for x in OPT_SCORES]
             cn = CUT_OPT_PARS[OPT_CUT]["cut"]
+            cvals = CUT_OPT_PARS[OPT_CUT]["values"]
             val0 = CUT_VALUES[cn]
-            skip_vals = [val0]
-            # for i in range(len(CUT_OPT_PARS[OPT_CUT]["values"]) - 1): # doesn't really help
-            val = rng.choice([v for v in CUT_OPT_PARS[OPT_CUT]["values"] if v not in skip_vals])
+            nc, pvals = len(cvals), np.ones_like(cvals) # initially no prior
+            ic, ic0 = np.arange(nc), np.searchsorted(cvals, val0)
+            if (ic<ic0).sum():
+                pvals = (ic<ic0)*(nc-(ic<ic0).sum())/(ic<ic0).sum() + ~(ic<ic0) # 50% chance tighter/looser
+            val = rng.choice(cvals, p=pvals)
             CUT_VALUES[cn] = val
-            #     if np.prod([[CUT_VALUES[cv_k] == cv_v for cv_k, cv_v in cv.items()] for cv in cv_history], 1).any():
-            #         print("skipping already tested!", cn, val)
-            #         skip_vals.append(val)
-            #     else:
-            #         break
-            # if len(skip_vals) == len(CUT_OPT_PARS[OPT_CUT]["values"]):
-            #     print("all test exhausted", cn)
-            #     continue
+            # cv_history = [x[-1] for x in OPT_SCORES]
+            # skip_vals = [val0]
+            # # for i in range(len(CUT_OPT_PARS[OPT_CUT]["values"]) - 1): # doesn't really help
+            # val = rng.choice([v for v in CUT_OPT_PARS[OPT_CUT]["values"] if v not in skip_vals])
+            # CUT_VALUES[cn] = val
+            # #     if np.prod([[CUT_VALUES[cv_k] == cv_v for cv_k, cv_v in cv.items()] for cv in cv_history], 1).any():
+            # #         print("skipping already tested!", cn, val)
+            # #         skip_vals.append(val)
+            # #     else:
+            # #         break
+            # # if len(skip_vals) == len(CUT_OPT_PARS[OPT_CUT]["values"]):
+            # #     print("all test exhausted", cn)
+            # #     continue
 
         # **************************** #
         MIN_CSC_TIME = CUT_VALUES["MIN_CSC_TIME"]
@@ -1144,14 +1156,16 @@ if __name__ == "__main__":
                 # **** #
                 # Station requirements from L1 trigger
                 if "ME1" in cut: # and OPT_CUT != "ME1":
+                    # If the CSC is the largest cluster then it needs to pass the HLT ME1 requirement
+                    rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
                     # rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag && ( "+
                     #                 f"({C}NRechitChamberPlus11 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberPlus12 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberMinus11 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberMinus12 <= {MAX_ME1}) )")
-                    rdf = rdf.Redefine(f"{C}CutFlag", f"{C}CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
 
                 if "MB1" in cut: # and OPT_CUT != "MB1":
+                    # If the DT is the largest cluster then it needs to pass the HLT ME1 requirement
                     rdf = rdf.Redefine(f"{D}CutFlag", f"{D}CutFlag && ( {D}NHitStation1 <= {MAX_MB1} )")
 
                 if "DT stn" in cut:
@@ -1445,12 +1459,15 @@ if __name__ == "__main__":
                 score0, wmc0, wr30 = score, wmc, wr3
                 val, val0 = 999, 999
             else:
-                cv_idx = np.argwhere(val == CUT_OPT_PARS[OPT_CUT]["values"])
-                cv0_idx = np.argwhere(val0 == CUT_OPT_PARS[OPT_CUT]["values"])
+                # cv_idx = np.argwhere(val == CUT_OPT_PARS[OPT_CUT]["values"])
+                # cv0_idx = np.argwhere(val0 == CUT_OPT_PARS[OPT_CUT]["values"])
+                cv_idx = np.searchsorted(CUT_OPT_PARS[OPT_CUT]["values"], val)
+                cv0_idx = np.searchsorted(CUT_OPT_PARS[OPT_CUT]["values"], val0)
                 # if wmc>0 and wr3>0 and limit <= limit0:# and wmc/wmc0 > 0.9:
-                if wmc > 900 and wr3 > 0 and (score > score0 or (score==score0 and cv_idx<cv0_idx)):  # and wmc/wmc0 > 0.9:
+                if wmc > 0 and wr3 > 0 and (score > score0 or (score==score0 and cv_idx<cv0_idx)):  # and wmc/wmc0 > 0.9:
                     _c = True
-                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
+                    # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
+                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (wmc*val + wmc0*val0)/(wmc+wmc0)
                 else:
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val0
 

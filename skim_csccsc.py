@@ -27,13 +27,18 @@ elif "psimmerl-LAU248" in NODENAME:
 
 OUT_DIR = f"{LOCAL_DIR}/reports/weekly/2024-04-15"
 
+
+# FN_MC = f"{LOCAL_DIR}/data/raw/mc_pedro.root"
+# FN_R3 = f"{LOCAL_DIR}/data/raw/data_pedro.root"
+
+
 # STAT = "raw"
 # LUMI = 23.02 * 1000
 # FN_MC = f"{LOCAL_DIR}/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root"
 # FN_R3 = f"{LOCAL_DIR}/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root"
 
 # **** #
-LOW_MET_CUTOFF = 150
+LOW_MET_CUTOFF = 150  # 75
 HIGH_MET_CUTOFF = 150
 
 # **** #
@@ -42,12 +47,11 @@ CUTS_L1 = [
     "HLT",
     "L1",
     "MET",
-    #! I reset cutflow indices here
+    #! Reset cutflow indices here
     "CSC0 IT",
     "CSC1 IT",
     "DT IT",
-    "ME1",
-    "MB1",
+    "CSC0 ME1",
     "1 CSC-CSC",
     # "dPhi",
 ]
@@ -55,26 +59,32 @@ CUTS_L1 = [
 CUTS = [
     "acceptance",
     "HLT",
-    "L1",
-    "MET",
-    #! I reset cutflow indices here
     "CSC0 IT",
+    "L1",
+    "CSC0 largest",
+    "CSC0 ME1",
+    # "CSC1 not CSC0"
+    "MET",
+    #! Reset cutflow indices here
+    # "CSC0 IT",
     "CSC1 IT",
     "DT IT",
-    "ME1",
-    "MB1",
+    # "CSC0 ME1",
+    "CSC1 ME1",
+    # "MB1",
     # "n leptons",
     # "n jets",
-    #! TO BE REMOVED? vetoes doesn"t seem to help s/sqrt(b)
+    #! TO BE REMOVED? vetoes doesn't seem to help s/sqrt(b)
     "CSC muon veto", 
-    # "DT muon veto",
+    "DT muon veto",
     "CSC jet veto", 
-    # "DT jet veto",
+    "DT jet veto",
     #!
     # "halo veto",
     # "DT stn",
     # "BDT",
     "DNN $>$ 0.96",
+    "0 DT",
     "1 CSC-CSC",
     # "dR",
     # "dEta",
@@ -179,43 +189,43 @@ CUT_VALUES = {
         # "MIN_DT_DNN": 0,
     },
     "ropt_low" : {
-        "MIN_CSC_TIME": -5.0,
-        "MAX_CSC_TIME": 12.5,
-        "MAX_CSC_TSPREAD": 20.0,
-        "MAX_RPC_BX": 0,
-        "MIN_RPC_HITS": 1,
-        "MAX_CSC_JET": 200,#20,
-        "MAX_DT_JET": 200,#50,
-        "MAX_CSC_MUON": 200,#10,
-        "MAX_DT_MUON": 200,#100,
-        "MAX_ME1": 10,
-        "MAX_MB1": 0,
-        "HALO_CUTOFF": 0.4,
-        "MIN_DPHI": 1.8,
-        "MIN_DETA": 0,
-        "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_CSC_DNN": 0.96137905,  # bkgMC
-        # "MIN_CSC_DNN": 0.96137905,  # bkgMC_plusBeamHalo
-        # "MIN_CSC_DNN": 0.96137905,  # bkgOOTData
-        # "MIN_DT_DNN": 0,
-        # # Optimized with IT S/rt[B]. S=1187.8, B=336, S/rt[B]=64.8
         # "MIN_CSC_TIME": -5.0,
         # "MAX_CSC_TIME": 12.5,
         # "MAX_CSC_TSPREAD": 20.0,
         # "MAX_RPC_BX": 0,
         # "MIN_RPC_HITS": 1,
-        # "MAX_CSC_JET": 10,
-        # "MAX_DT_JET": 10,
-        # "MAX_CSC_MUON": 41,
-        # "MAX_DT_MUON": 0,
-        # "MAX_ME1": 3,
-        # "MAX_MB1": 9,
-        # "HALO_CUTOFF": 0.5,
+        # "MAX_CSC_JET": 200,#20,
+        # "MAX_DT_JET": 200,#50,
+        # "MAX_CSC_MUON": 200,#10,
+        # "MAX_DT_MUON": 200,#100,
+        # "MAX_ME1": 10,
+        # "MAX_MB1": 10,
+        # "HALO_CUTOFF": 0.0,
         # "MIN_DPHI": 1.8,
         # "MIN_DETA": 0,
         # "MAX_DETA": 4,
         # "MIN_CSC_DNN": 0,
+        # # "MIN_DT_DNN": 0,
+        # Optimized with IT S/rt[B]. S=1187.8, B=336, S/rt[B]=64.8
+        "MIN_CSC_TIME": -5.0,
+        "MAX_CSC_TIME": 12.5,
+        "MAX_CSC_TSPREAD": 20.0,
+        "MAX_RPC_BX": 0,
+        "MIN_RPC_HITS": 1,
+        "MAX_CSC_JET": 10,
+        "MAX_DT_JET": 10, #! redo this
+        "MAX_CSC_MUON": 10,# 45,
+        "MAX_DT_MUON": 10, # 0, #! redo this
+        "MAX_ME1": 0,  # 3,  # HLT requires this to be 0
+        "MAX_MB1": 0,
+        "HALO_CUTOFF": 0.0, # applied to dt phi #! redo this
+        "MIN_DPHI": 1.8,
+        "MIN_DETA": 0,
+        "MAX_DETA": 4,
+        # "MIN_CSC_DNN": 0,
+        # "MIN_CSC_DNN": 0,  # bkgMC: S=, B=, S/rt[B]=
+        "MIN_CSC_DNN": 0.96,  # pedro's value, bkgMC_plusBeamHalo: S=, B=, S/rt[B]=
+        # "MIN_CSC_DNN": 0,  # bkgOOTData: S=, B=, S/rt[B]=
     },
     "ropt_high" : {
         "MIN_CSC_TIME": -5.0,
@@ -233,7 +243,8 @@ CUT_VALUES = {
         "MIN_DPHI": 1.8,
         "MIN_DETA": 0,
         "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
+        # "MIN_CSC_DNN": 0,
+        "MIN_CSC_DNN": 0.96,  # pedro's value, bkgMC_plusBeamHalo: S=, B=, S/rt[B]=
         # "MIN_CSC_DNN": 0.96137905,  # bkgMC
         # "MIN_CSC_DNN": 0.96137905,  # bkgMC_plusBeamHalo
         # "MIN_CSC_DNN": 0.96137905,  # bkgOOTData
@@ -573,7 +584,7 @@ if __name__ == "__main__":
     print("| Starting skim_csccsc.py |")
     print("+ ------------------------+")
 
-    rt.EnableImplicitMT()
+    rt.EnableImplicitMT(2)
     print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
 
     # **************************** #
@@ -657,7 +668,7 @@ if __name__ == "__main__":
         if OOT:
             print("        FORCING MC TO IN-TIME")
         RAND = True
-        N_ITERATIONS = 501
+        N_ITERATIONS = 2001#501
     # else:
     #     print("    REMOVING DT SIZE CUT")
     #     CUTS = [c for c in CUTS if "DT size" not in c]
@@ -700,7 +711,8 @@ if __name__ == "__main__":
 
     # **************************** #
     for iopt in range(N_ITERATIONS):
-        if iopt != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        if (iopt%2) != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        # if iopt != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
             OPT_CUT = rng.choice([c for c in OPT_CUTS if c != OPT_CUT or len(OPT_CUTS) == 1])
         else:
             OPT_CUT = ""
@@ -811,11 +823,12 @@ if __name__ == "__main__":
                 #fmt: off
                 print(r"    \hline")
                 print(f"    \\textbf{{{'Signal' if 'mc' in key else 'Data'}}}"
-                      + r" & \multicolumn{3}{c}{CSC-CSC} & \multicolumn{3}{c}{Trigger CSC} & \multicolumn{3}{c}{Second CSC} & \multicolumn{3}{c}{DT} \\")
+                      + r" & \multicolumn{3}{c}{CSC-CSC} & \multicolumn{3}{c}{First CSC} & \multicolumn{3}{c}{Second CSC} & \multicolumn{3}{c}{DT} \\")
                 print(r"    \hline")
-                print(r"    Selection & N Events & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff \\")
+                # print(r"    Selection & N Events & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff \\")
+                print(r"    Selection & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff \\")
                 print(r"    \hline")
-                print(f"    sample & {ec0:,.0f} & -- & -- & {cc00:,} & -- & -- & {cc10:,} & -- & -- & {dc0:,} & -- & -- \\\\")
+                print(f"    sample & {ec0:,.0f} & -- & -- & {cc00:,.0f} & -- & -- & {cc10:,.0f} & -- & -- & {dc0:,.0f} & -- & -- \\\\")
                 #fmt: on
 
             columns_out = []
@@ -858,6 +871,7 @@ if __name__ == "__main__":
                 # **** #
                 # Trigger selections (HLT may be wrong in MC?)
                 if "HLT" in cut:
+                    # rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && HLTDecision[566]")
                     if "mc" in key and "hlt" not in FN_MC:
                         continue
                     elif "r3" in key and "hlt" not in FN_R3:
@@ -869,7 +883,9 @@ if __name__ == "__main__":
 
                 if "L1" in cut: # First passes, second fails
                     #fmt: off
-                    rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( "
+                    # At least 1 IT cluster needs to pass the L1-turn on
+                    # rdf = rdf.Redefine(f"evtCutFlag", f"evtCutFlag && {C}0CutFlag && ( "
+                    rdf = rdf.Define(f"passL1", f"{C}0CutFlag && ( "
                         + f"((100 < {C}R) && ({C}R < 275) && (580 < abs({C}Z)) && (abs({C}Z) < 632) && (500 <= {C}Size)) || "  # ME 11
                         + f"((275 < {C}R) && ({C}R < 465) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 12
                         + f"((505 < {C}R) && ({C}R < 700) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 13
@@ -883,22 +899,47 @@ if __name__ == "__main__":
                         + f"((178 < {C}R) && ({C}R < 345) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (500 <= {C}Size)) || "  # ME 41
                         + f"((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )"  # ME 42
                     )
+                    rdf = rdf.Redefine(f"evtCutFlag", f"evtCutFlag && (reduce(passL1.begin(), passL1.end()) > 0)")
 
-                    rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && !( "
-                        + f"((100 < {C}R) && ({C}R < 275) && (580 < abs({C}Z)) && (abs({C}Z) < 632) && (500 <= {C}Size)) || "  # ME 11
-                        + f"((275 < {C}R) && ({C}R < 465) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 12
-                        + f"((505 < {C}R) && ({C}R < 700) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 13
-                        #
-                        + f"((139 < {C}R) && ({C}R < 345) && (789 < abs({C}Z)) && (abs({C}Z) < 850) && (500 <= {C}Size)) || "  # ME 21
-                        + f"((357 < {C}R) && ({C}R < 700) && (791 < abs({C}Z)) && (abs({C}Z) < 850) && (200 <= {C}Size)) || "  # ME 22
-                        #
-                        + f"((160 < {C}R) && ({C}R < 345) && (915 < abs({C}Z)) && (abs({C}Z) < 970) && (500 <= {C}Size)) || "  # ME 31
-                        + f"((357 < {C}R) && ({C}R < 700) && (911 < abs({C}Z)) && (abs({C}Z) < 970) && (200 <= {C}Size)) || "  # ME 32
-                        #
-                        + f"((178 < {C}R) && ({C}R < 345) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (500 <= {C}Size)) || "  # ME 41
-                        + f"((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )"  # ME 42
-                    )
+                    # The 1st cluster (largest cluster) needs to pass the L1-turn on
+                    # rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( "
+                    #     + f"((100 < {C}R) && ({C}R < 275) && (580 < abs({C}Z)) && (abs({C}Z) < 632) && (500 <= {C}Size)) || "  # ME 11
+                    #     + f"((275 < {C}R) && ({C}R < 465) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 12
+                    #     + f"((505 < {C}R) && ({C}R < 700) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 13
+                    #     #
+                    #     + f"((139 < {C}R) && ({C}R < 345) && (789 < abs({C}Z)) && (abs({C}Z) < 850) && (500 <= {C}Size)) || "  # ME 21
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (791 < abs({C}Z)) && (abs({C}Z) < 850) && (200 <= {C}Size)) || "  # ME 22
+                    #     #
+                    #     + f"((160 < {C}R) && ({C}R < 345) && (915 < abs({C}Z)) && (abs({C}Z) < 970) && (500 <= {C}Size)) || "  # ME 31
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (911 < abs({C}Z)) && (abs({C}Z) < 970) && (200 <= {C}Size)) || "  # ME 32
+                    #     #
+                    #     + f"((178 < {C}R) && ({C}R < 345) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (500 <= {C}Size)) || "  # ME 41
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )"  # ME 42
+                    # )
+
+                    # # The 2nd cluster does not need to pass the L1 turn-on
+                    # rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && !( "
+                    #     + f"((100 < {C}R) && ({C}R < 275) && (580 < abs({C}Z)) && (abs({C}Z) < 632) && (500 <= {C}Size)) || "  # ME 11
+                    #     + f"((275 < {C}R) && ({C}R < 465) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 12
+                    #     + f"((505 < {C}R) && ({C}R < 700) && (668 < abs({C}Z)) && (abs({C}Z) < 724) && (200 <= {C}Size)) || "  # ME 13
+                    #     #
+                    #     + f"((139 < {C}R) && ({C}R < 345) && (789 < abs({C}Z)) && (abs({C}Z) < 850) && (500 <= {C}Size)) || "  # ME 21
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (791 < abs({C}Z)) && (abs({C}Z) < 850) && (200 <= {C}Size)) || "  # ME 22
+                    #     #
+                    #     + f"((160 < {C}R) && ({C}R < 345) && (915 < abs({C}Z)) && (abs({C}Z) < 970) && (500 <= {C}Size)) || "  # ME 31
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (911 < abs({C}Z)) && (abs({C}Z) < 970) && (200 <= {C}Size)) || "  # ME 32
+                    #     #
+                    #     + f"((178 < {C}R) && ({C}R < 345) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (500 <= {C}Size)) || "  # ME 41
+                    #     + f"((357 < {C}R) && ({C}R < 700) && (1002 < abs({C}Z)) && (abs({C}Z) < 1063) && (200 <= {C}Size)) )"  # ME 42
+                    # )
                     #fmt: on
+
+                if "CSC0 largest" in cut:
+                    rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( {C}0Size == Max({C}Size*{C}0Flag) )")
+                    rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && !{C}0CutFlag")
+                # if "CSC1 not CSC0" in cut:
+                #     rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}0CutFlag && ( {C}0Size == Max({C}Size*{C}0CutFlag) )")
+
 
 
                 # **** #
@@ -954,14 +995,21 @@ if __name__ == "__main__":
                 # **** #
                 # Station requirements from L1 trigger
                 if "ME1" in cut: # and OPT_CUT != "ME1":
+                    # The 1st cluster (largest) needs to pass the ME1=0 requirement from the HLT
+                    if "CSC0" in cut or "CSC" not in cut:
+                        rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( {C}NHitME1 <= 0 ) ")
+                        # rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
+                    # The 2nd cluster does not have the requirement from the HLT
+                    if "CSC1" in cut or "CSC" not in cut:
+                        rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
                     # rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ( "+
                     #                 f"({C}NRechitChamberPlus11 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberPlus12 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberMinus11 <= {MAX_ME1}) &&"+
                     #                 f"({C}NRechitChamberMinus12 <= {MAX_ME1}) )")
-                    rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ( {C}NHitME1 <= {MAX_ME1} ) ")
 
                 if "MB1" in cut: # and OPT_CUT != "MB1":
+                    # No HLT MB1 requirement when using HLT='CscCluster_Loose'
                     rdf = rdf.Redefine(f"{D}CutFlag", f"{D}CutFlag && ( {D}NHitStation1 <= {MAX_MB1} )")
 
                 if "DT stn" in cut:
@@ -1014,14 +1062,17 @@ if __name__ == "__main__":
                     # )
 
                 # **** #
+                if "0 DT" in cut:
+                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (reduce({D}Flag.begin(), {D}Flag.end()) == 0)")
+        
                 if "1 CSC-CSC" in cut:
                     # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && evtFlag && "+
                     #                    f"(reduce({C}0Flag.begin(), {C}0Flag.end()) == 1) && "+
                     #                    f"(reduce({C}1Flag.begin(), {C}1Flag.end()) == 1)")
                     rdf = rdf.Redefine(f"{C}0Flag", f"{C}0Flag && ( {C}0Size == Max({C}Size*{C}0Flag) )")
-                    rdf = rdf.Redefine(f"{C}1Flag", f"{C}1Flag && ( {C}1Size == Max({C}Size*{C}1Flag) )")
+                    rdf = rdf.Redefine(f"{C}1Flag", f"{C}1Flag && ( {C}1Size == Max({C}Size*({C}1Flag && !{C}0Flag)) )")
 
-                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && evtFlag && (reduce({D}Flag.begin(), {D}Flag.end()) == 0)")
+                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && evtFlag")
                     # rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && ( {D}Size == Max({D}Size*{D}Flag) )")
 
                     # Apply our cluster level selections to relevant columns
@@ -1099,15 +1150,37 @@ if __name__ == "__main__":
                 rdf = rdf.Redefine(f"{C}1Flag", f"{C}1Flag && {C}1CutFlag")
                 rdf = rdf.Redefine(f"{D}Flag", f"{D}Flag && {D}CutFlag")
 
-                rdf = rdf.Redefine( "evtCutFlag", "evtCutFlag && ("
+                # print(
+                #     rdf.Filter("evtFlag").Sum(f"{C}0Flag").GetValue(),
+                #     rdf.Filter("evtFlag").Sum(f"{C}1Flag").GetValue(),
+                #     rdf.Filter("evtFlag").Sum(f"{D}Flag").GetValue()
+                # )
+
+                rdf = rdf.Redefine("evtCutFlag", 
+                    f"auto {C}01CutFlag = {C}0CutFlag || {C}1CutFlag;"
+                    + f"return evtCutFlag && ( "
                     + f"(reduce({C}0CutFlag.begin(), {C}0CutFlag.end()) > 0) && "
-                    + f"(reduce({C}1CutFlag.begin(), {C}1CutFlag.end()) > 0) )"
+                    + f"(reduce({C}1CutFlag.begin(), {C}1CutFlag.end()) > 0) && "
+                    + f"(reduce({C}01CutFlag.begin(), {C}01CutFlag.end()) > 1) );"
                 )
 
-                rdf = rdf.Redefine("evtFlag", "evtFlag && evtCutFlag && ("
+                rdf = rdf.Redefine("evtFlag", 
+                    f"auto {C}01Flag = {C}0Flag || {C}1Flag;"
+                    + f"return evtFlag && evtCutFlag && ( "
                     + f"(reduce({C}0Flag.begin(), {C}0Flag.end()) > 0) && "
-                    + f"(reduce({C}1Flag.begin(), {C}1Flag.end()) > 0) )"
+                    + f"(reduce({C}1Flag.begin(), {C}1Flag.end()) > 0) && "
+                    + f"(reduce({C}01Flag.begin(), {C}01Flag.end()) > 1) );"
                 )
+
+                # rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && ("
+                #     + f"(reduce({C}0CutFlag.begin(), {C}0CutFlag.end()) > 0) && "
+                #     + f"(reduce({C}1CutFlag.begin(), {C}1CutFlag.end()) > 0) )"
+                # )
+
+                # rdf = rdf.Redefine("evtFlag", "evtFlag && evtCutFlag && ("
+                #     + f"(reduce({C}0Flag.begin(), {C}0Flag.end()) > 0) && "
+                #     + f"(reduce({C}1Flag.begin(), {C}1Flag.end()) > 0) )"
+                # )
 
                 # rdf = rdf.Redefine(f"nC{C[1:]}s", f"reduce({C}Flag.begin(), {C}Flag.end())")
                 # rdf = rdf.Redefine(f"nD{D[1:]}s", f"reduce({D}Flag.begin(), {D}Flag.end())")
@@ -1134,7 +1207,7 @@ if __name__ == "__main__":
                         f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
                     
                     # Only filter (reset indices) after the MET cut when printing cutflow
-                    if "MET" in cut:
+                    if any([_cut in cut for _cut in ("MET","acceptance")]):
                         print(r"    \hline")
                         ec0, cc00, cc10, dc0 = ec, cc0, cc1, dc
                         
@@ -1171,12 +1244,15 @@ if __name__ == "__main__":
                 score0, wmc0, wr30 = score, wmc, wr3
                 val, val0 = 999, 999
             else:
-                cv_idx = np.argwhere(val == CUT_OPT_PARS[OPT_CUT]["values"])
-                cv0_idx = np.argwhere(val0 == CUT_OPT_PARS[OPT_CUT]["values"])
+                # cv_idx = np.argwhere(val == CUT_OPT_PARS[OPT_CUT]["values"])
+                # cv0_idx = np.argwhere(val0 == CUT_OPT_PARS[OPT_CUT]["values"])
+                cv_idx = np.searchsorted(CUT_OPT_PARS[OPT_CUT]["values"], val)
+                cv0_idx = np.searchsorted(CUT_OPT_PARS[OPT_CUT]["values"], val0)
                 # if wmc>0 and wr3>0 and limit <= limit0:# and wmc/wmc0 > 0.9:
                 if wmc > 0 and wr3 > 0 and (score > score0 or (score==score0 and cv_idx<cv0_idx)):  # and wmc/wmc0 > 0.9:
                     _c = True
-                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
+                    # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
+                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (wmc*val + wmc0*val0)/(wmc+wmc0)
                 else:
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val0
 
