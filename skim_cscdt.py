@@ -59,7 +59,7 @@ CUTS = [
     #! Reset cutflow indices here
     "CSC IT",
     "DT IT",
-    "ME1",
+    # "ME1", # this usually hurts s/rt[B]
     "MB1",
     # "n leptons",
     # "n jets",
@@ -183,95 +183,88 @@ CUT_VALUES = {
         #
     },
     "ropt_low": {
-        # Default guess
+        # Optimized with IT S/rt[B]. S=1601.0, B=236, S/rt[B]=104.2 (no dnn)
+        "MIN_CSC_TIME": -5.00,
+        "MAX_CSC_TIME": 12.50,
+        "MAX_CSC_TSPREAD": 20.00,
+        "MAX_RPC_BX": 0,
+        "MIN_RPC_HITS": 1,
+        "MAX_CSC_JET": 185.5,
+        "MAX_DT_JET": 10.0,
+        "MAX_CSC_MUON": 5.5,
+        "MAX_DT_MUON": 6.8,
+        "MAX_ME1": 999,
+        "MAX_MB1": 0, # HLT requires this to be 0
+        "HALO_CUTOFF": 0.03,
+        "MIN_DPHI": 0.40,
+        "MIN_DETA": 0.0,
+        "MAX_DETA": 4.0,
+        "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=1441.9, B=142, S/rt[B]=121.0
+        # "MIN_CSC_DNN": 0.948,  # bkgMC: S=1129, B=142, S/rt[B]=94.71
+        # "MIN_CSC_DNN": 0.971,  # bkgMC_plusBeamHalo: S=990, B=78, S/rt[B]=112.09
+        # "MIN_CSC_DNN": 0.888,  # bkgOOTData: S=944, B=25, S/rt[B]=188.79
+    },
+    "ropt_high": {
+        # Optimized with IT S/rt[B]. S=34.3, B=2, S/rt[B]=24.3 (no dnn)
         "MIN_CSC_TIME": -5.0,
         "MAX_CSC_TIME": 12.5,
         "MAX_CSC_TSPREAD": 20.0,
         "MAX_RPC_BX": 0,
         "MIN_RPC_HITS": 1,
-        # "MAX_N_JETS" : 15,
-        # "MAX_N_LEPS" : 5,
-        "MAX_CSC_JET": 200,
-        "MAX_DT_JET": 200,
-        "MAX_CSC_MUON": 200,
-        "MAX_DT_MUON": 200,
-        "MAX_ME1": 10,
+        "MAX_CSC_JET": 200,#999,
+        "MAX_DT_JET": 200,#999,
+        "MAX_CSC_MUON": 200,#999,
+        "MAX_DT_MUON": 200,#999,
+        "MAX_ME1": 999,
+        "MAX_MB1": 0,
+        "HALO_CUTOFF": 0.0,
+        "MIN_DPHI": 0.4,
+        "MIN_DETA": 0,
+        "MAX_DETA": 4,
+        "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=34.3, B=2, S/rt[B]=24.3
+    },
+    "tight_low": {
+        # S=1007.5, B=106, S/rt[B]=97.9 (no dnn)
+        "MIN_CSC_TIME": -5.0,
+        "MAX_CSC_TIME": 12.5,
+        "MAX_CSC_TSPREAD": 20.0,
+        "MAX_RPC_BX": 0,
+        "MIN_RPC_HITS": 1,
+        "MAX_CSC_JET": 10,
+        "MAX_DT_JET": 10,
+        "MAX_CSC_MUON": 10,
+        "MAX_DT_MUON": 10,
+        "MAX_ME1": 999,
         "MAX_MB1": 0,
         "HALO_CUTOFF": 0.4,
         "MIN_DPHI": 0.4,
         "MIN_DETA": 0,
         "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        "MIN_DT_DNN": 0,
-        # # Optimized with IT S/rt[B]. S=1175.4, B=163, S/rt[B]=92.06
-        # "MIN_CSC_TIME": -5.00,
-        # "MAX_CSC_TIME": 12.50,
-        # "MAX_CSC_TSPREAD": 20.00,
-        # "MAX_RPC_BX": 0,
-        # "MIN_RPC_HITS": 1,
-        # "MAX_CSC_JET": 12,
-        # "MAX_DT_JET": 10,
-        # "MAX_CSC_MUON": 5,
-        # "MAX_DT_MUON": 13,
-        # "MAX_ME1": 0,
-        # "MAX_MB1": 0, # HLT requires this to be 0
-        # "HALO_CUTOFF": 0.00,
-        # "MIN_DPHI": 0.40,
-        # "MIN_DETA": 0.0,
-        # "MAX_DETA": 4.0,
-        # # "MIN_CSC_DNN": 0.00,
-        # # "MIN_CSC_DNN": 0.948,  # bkgMC: S=1129, B=142, S/rt[B]=94.71
-        # "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=, B=, S/rt[B]=
-        # # "MIN_CSC_DNN": 0.971,  # bkgMC_plusBeamHalo: S=990, B=78, S/rt[B]=112.09
-        # # "MIN_CSC_DNN": 0.888,  # bkgOOTData: S=944, B=25, S/rt[B]=188.79
-        # # "MIN_DT_DNN": 0.00,
+        "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=915.5, B=61, S/rt[B]=117.2
     },
-    "ropt_high": {
-        # # Default guess
-        # "MIN_CSC_TIME": -5.0,
-        # "MAX_CSC_TIME": 12.5,
-        # "MAX_CSC_TSPREAD": 20.0,
-        # "MAX_RPC_BX": 0,
-        # "MIN_RPC_HITS": 1,
-        # # "MAX_N_JETS" : 15,
-        # # "MAX_N_LEPS" : 5,
-        # "MAX_CSC_JET": 200,
-        # "MAX_DT_JET": 200,
-        # "MAX_CSC_MUON": 200,
-        # "MAX_DT_MUON": 200,
-        # "MAX_ME1": 0,
-        # "MAX_MB1": 10,
-        # "HALO_CUTOFF": 0.2,
-        # "MIN_DPHI": 0.4,
-        # "MIN_DETA": 0,
-        # "MAX_DETA": 4,
-        # "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
-        # Found manually, USE THIS.
+    "tight_high": {
+        # S=34.3, B=2, S/rt[B]=24.3 (no dnn)
         "MIN_CSC_TIME": -5.0,
         "MAX_CSC_TIME": 12.5,
         "MAX_CSC_TSPREAD": 20.0,
         "MAX_RPC_BX": 0,
         "MIN_RPC_HITS": 1,
-        # "MAX_N_JETS" : 15,
-        # "MAX_N_LEPS" : 5,
-        "MAX_CSC_JET": 200,
-        "MAX_DT_JET": 200,
-        "MAX_CSC_MUON": 200,
-        "MAX_DT_MUON": 200,
-        "MAX_ME1": 0,
-        "MAX_MB1": 10,
-        "HALO_CUTOFF": 0.0,
+        "MAX_CSC_JET": 999,
+        "MAX_DT_JET": 999,
+        "MAX_CSC_MUON": 999,
+        "MAX_DT_MUON": 999,
+        "MAX_ME1": 999,
+        "MAX_MB1": 0,
+        "HALO_CUTOFF": 0.4,
         "MIN_DPHI": 0.4,
         "MIN_DETA": 0,
         "MAX_DETA": 4,
-        "MIN_CSC_DNN": 0,
-        # "MIN_DT_DNN": 0,
+        "MIN_CSC_DNN": 0.96,  # bkgMC_plusBeamHalo: S=34.3, B=2, S/rt[B]=24.3
     },
 }
 
 OPT_CUTS = [
-    "ME1",
+    # "ME1",
     # "MB1",
     "CSC jet veto",
     "DT jet veto",
@@ -569,9 +562,9 @@ COLUMNS_OUT = [
     # "mX",
     "met",
     "metPhi",
-    # "nCscRechitClusters",
+    "nCscRechitClusters",
     # "nCscRings",
-    # "nDtRechitClusters",
+    "nDtRechitClusters",
     # "nDtRings",
     # "nGLLP",
     "nJets",
@@ -784,7 +777,7 @@ if __name__ == "__main__":
     print("| Starting skim_cscdt.py |")
     print("+------------------------+")
 
-    rt.EnableImplicitMT()
+    rt.EnableImplicitMT(2)
     print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
 
     # **************************** #
@@ -793,6 +786,7 @@ if __name__ == "__main__":
     OPT_FRAC = 1.0  # fraction with replacement, if 1 just bootstrap
     LOO = False
     RAND = False
+    accepted_cut = False
 
     PRINT_CUTFLOW = False
     MET_CATEGORY = ("lt200", "low", "high")[0]
@@ -818,14 +812,14 @@ if __name__ == "__main__":
         MET_CATEGORY = "low"
     elif "high" in args:
         print("    High met category")
-        print("        REMOVING HALO, JET, & MUON VETOS")
         CUTS = [c.replace("MET", "high MET") if "MET" == c else c for c in CUTS]
-        CUTS = [c for c in CUTS if "halo" not in c]
-        CUTS = [c for c in CUTS if "jet" not in c]
-        CUTS = [c for c in CUTS if "muon" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
-        OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
+        # print("        REMOVING HALO, JET, & MUON VETOS")
+        # CUTS = [c for c in CUTS if "halo" not in c]
+        # CUTS = [c for c in CUTS if "jet" not in c]
+        # CUTS = [c for c in CUTS if "muon" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
+        # OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
         MET_CATEGORY = "high"
     else:
         print("    No met categorization (only met<200)")
@@ -837,6 +831,12 @@ if __name__ == "__main__":
     elif "ropt" in args:
         print("    Using the randomly optimized cut set (ropt)")
         CUTSET = "ropt"
+    elif "tightDNN" in args: # I removed the separate cutset since we don't optimize both
+        print("    Using the tight cut set with DNN (tightDNN)")
+        CUTSET = "tight"
+    elif "tight" in args:
+        print("    Using the tight cut set (tight)")
+        CUTSET = "tight"
     elif "loptDNN" in args:
         print("    Using the leave-one-out optimized cut set with DNN (loptDNN)")
         CUTSET = "loptDNN"
@@ -869,7 +869,7 @@ if __name__ == "__main__":
             print("        FORCING MC TO IN-TIME")
         RAND = True
         N_ITERATIONS = 501
-        N_ITERATIONS = 2001
+        N_ITERATIONS = 1001
     # else:
     #     print("    REMOVING DT SIZE CUT")
     #     CUTS = [c for c in CUTS if "DT size" not in c]
@@ -920,8 +920,9 @@ if __name__ == "__main__":
     # **************************** #
     for iopt in range(N_ITERATIONS):
         # if iopt % 100>0 and iopt != N_ITERATIONS-1:
-        if (iopt%2) != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        # if (iopt%2) != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
         # if iopt != 0 and iopt != N_ITERATIONS - 1 and (LOO or RAND):
+        if (iopt%100 != 0) and iopt != N_ITERATIONS - 1 and (LOO or RAND) and not accepted_cut:
             OPT_CUT = rng.choice([c for c in OPT_CUTS if c != OPT_CUT or len(OPT_CUTS) == 1])
         else:
             OPT_CUT = ""
@@ -930,10 +931,12 @@ if __name__ == "__main__":
             cn = CUT_OPT_PARS[OPT_CUT]["cut"]
             cvals = CUT_OPT_PARS[OPT_CUT]["values"]
             val0 = CUT_VALUES[cn]
-            nc, pvals = len(cvals), np.ones_like(cvals) # initially no prior
+            nc, pvals = len(cvals), np.ones_like(cvals, float) # initially no prior
             ic, ic0 = np.arange(nc), np.searchsorted(cvals, val0)
-            if (ic<ic0).sum():
+            if (ic<ic0).sum() and ic0<nc:
                 pvals = (ic<ic0)*(nc-(ic<ic0).sum())/(ic<ic0).sum() + ~(ic<ic0) # 50% chance tighter/looser
+            # print(iopt, OPT_CUT, val0, ic0, nc, pvals)
+            pvals /= pvals.sum()
             val = rng.choice(cvals, p=pvals)
             CUT_VALUES[cn] = val
             # cv_history = [x[-1] for x in OPT_SCORES]
@@ -1383,63 +1386,63 @@ if __name__ == "__main__":
             # froot_out.Close()
 
         # **************** #
-        if LOO:
-            _c = False
-            if OPT_CUT == "":
-                val, wmc, wr3 = (
-                    0,
-                    rdfs["mc"].Sum("weight").GetValue(),
-                    rdfs["r3"].Sum("weight").GetValue(),
-                )
-                # score = wmc/(wr3**0.5) if wr3 else 0 # if b~1 then s2b explodes and falls into a false minimum
-                score = 2 * ((wmc + wr3) ** 0.5 - wr3**0.5)  # https://arxiv.org/pdf/hep-ph/0204326.pdf
-                val0, score0, wmc0, wr30 = 0, score, wmc, wr3
-            else:
-                val0 = CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]]
-                val, score, wmc, wr3, score0, wmc0, wr30 = optimize_cut(
-                    _rdfs=rdfs,
-                    col=CUT_OPT_PARS[OPT_CUT]["col"],
-                    cut_func=CUT_OPT_PARS[OPT_CUT]["func"],
-                    cut_values=CUT_OPT_PARS[OPT_CUT]["values"],
-                    cut0=CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]],
-                )
-                if wmc >= 1 and wr3 >= 3 and score >= score0:
-                    _c = True
-                    # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
-                    # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (val*wmc + val0*wmc0)/(wmc + wmc0)
-                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (
-                        val * wmc / (5 * (1 - iopt / N_ITERATIONS)) + val0 * wmc0
-                    ) / (wmc / (5 * (1 - iopt / N_ITERATIONS)) + wmc0)
+        # if LOO:
+        #     _c = False
+        #     if OPT_CUT == "":
+        #         val, wmc, wr3 = (
+        #             0,
+        #             rdfs["mc"].Sum("weight").GetValue(),
+        #             rdfs["r3"].Sum("weight").GetValue(),
+        #         )
+        #         # score = wmc/(wr3**0.5) if wr3 else 0 # if b~1 then s2b explodes and falls into a false minimum
+        #         score = 2 * ((wmc + wr3) ** 0.5 - wr3**0.5)  # https://arxiv.org/pdf/hep-ph/0204326.pdf
+        #         val0, score0, wmc0, wr30 = 0, score, wmc, wr3
+        #     else:
+        #         val0 = CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]]
+        #         val, score, wmc, wr3, score0, wmc0, wr30 = optimize_cut(
+        #             _rdfs=rdfs,
+        #             col=CUT_OPT_PARS[OPT_CUT]["col"],
+        #             cut_func=CUT_OPT_PARS[OPT_CUT]["func"],
+        #             cut_values=CUT_OPT_PARS[OPT_CUT]["values"],
+        #             cut0=CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]],
+        #         )
+        #         if wmc >= 1 and wr3 >= 3 and score >= score0:
+        #             _c = True
+        #             # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
+        #             # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (val*wmc + val0*wmc0)/(wmc + wmc0)
+        #             CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (
+        #                 val * wmc / (5 * (1 - iopt / N_ITERATIONS)) + val0 * wmc0
+        #             ) / (wmc / (5 * (1 - iopt / N_ITERATIONS)) + wmc0)
 
-                del rdfs["mc"]
-                del rdfs["r3"]
-                del rdf
+        #         del rdfs["mc"]
+        #         del rdfs["r3"]
+        #         del rdf
 
-            print(
-                f"{iopt:>3} | {'Y' if _c else 'X'} | {OPT_CUT:>13} = {val:>7.2f} ({val0:>7.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})"
-            )
+        #     print(
+        #         f"{iopt:>3} | {'Y' if _c else 'X'} | {OPT_CUT:>13} = {val:>7.2f} ({val0:>7.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})"
+        #     )
 
-            OPT_SCORES.append(
-                [
-                    OPT_CUT,
-                    val,
-                    score,
-                    wmc,
-                    wr3,
-                    val0,
-                    score0,
-                    wmc0,
-                    wr30,
-                    {k: v for k, v in CUT_VALUES.items()},
-                ]
-            )
-            # with open(
-            #     f"loo_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl",
-            #     "wb",
-            # ) as fout:
-            #     pickle.dump(OPT_SCORES, fout)
+        #     OPT_SCORES.append(
+        #         [
+        #             OPT_CUT,
+        #             val,
+        #             score,
+        #             wmc,
+        #             wr3,
+        #             val0,
+        #             score0,
+        #             wmc0,
+        #             wr30,
+        #             {k: v for k, v in CUT_VALUES.items()},
+        #         ]
+        #     )
+        #     # with open(
+        #     #     f"loo_scores_cscdt{"OOT" if OOT else ""}_{CUTSET}_{MET_CATEGORY}.pkl",
+        #     #     "wb",
+        #     # ) as fout:
+        #     #     pickle.dump(OPT_SCORES, fout)
         if RAND:
-            _c = False
+            accepted_cut = False
             wmc = rdfs["mc"].Sum("weight").GetValue()
             wr3 = rdfs["r3"].Sum("weight").GetValue()
             score = wmc / (wr3**0.5) if wr3 else 0  # if b~1 then s2b explodes and falls into a false minimum
@@ -1465,15 +1468,15 @@ if __name__ == "__main__":
                 cv0_idx = np.searchsorted(CUT_OPT_PARS[OPT_CUT]["values"], val0)
                 # if wmc>0 and wr3>0 and limit <= limit0:# and wmc/wmc0 > 0.9:
                 if wmc > 0 and wr3 > 0 and (score > score0 or (score==score0 and cv_idx<cv0_idx)):  # and wmc/wmc0 > 0.9:
-                    _c = True
+                    accepted_cut = True
                     # CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val
-                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (wmc*val + wmc0*val0)/(wmc+wmc0)
+                    CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = (wmc*val + wmc0*val0) / (wmc + wmc0)
                 else:
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val0
 
             # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})")
             print(
-                f"{iopt:>3} | {'Y' if _c else ' '} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})"
+                f"{iopt:>3} | {'Y' if accepted_cut else ' '} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})"
             )
             # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {limit:>.2e} ({limit0:>.2e}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})")
 
@@ -1497,32 +1500,33 @@ if __name__ == "__main__":
             # ) as fout:
             #     pickle.dump(OPT_SCORES, fout)
 
-            if _c:
+            if accepted_cut:
                 score0, wmc0, wr30 = score, wmc, wr3
                 # limit0 = limit
             # score0 = 2*((wmc0*(2.16e-03**((iopt+1)/N_ITERATIONS))+wr30)**0.5 - wr30**0.5)
 
-    # **************** #
-    if LOO or RAND:
-        print("\nOptimized Cuts:")
-        print(f"    {MIN_CSC_TIME=:.2f}")
-        print(f"    {MAX_CSC_TIME=:.2f}")
-        print(f"    {MAX_CSC_TSPREAD=:.2f}")
-        print(f"    {MAX_RPC_BX=:.0f}")
-        print(f"    {MIN_RPC_HITS=:.0f}")
-        print(f"    {MAX_CSC_JET=:.0f}")
-        print(f"    {MAX_DT_JET=:.0f}")
-        print(f"    {MAX_CSC_MUON=:.0f}")
-        print(f"    {MAX_DT_MUON=:.0f}")
-        print(f"    {MAX_ME1=:.0f}")
-        print(f"    {MAX_MB1=:.0f}")
-        print(f"    {HALO_CUTOFF=:.2f}")
-        print(f"    {MIN_DPHI=:.2f}")
-        print(f"    {MIN_DETA=:.1f}")
-        print(f"    {MAX_DETA=:.1f}")
-        print(f"    {MIN_CSC_DNN=:.3f}")
-        # print(f"    {MIN_DT_DNN=:.2f}")
-        print("")
+        # **************** #
+        if (LOO or RAND) and (iopt%100 == 0 or iopt == N_ITERATIONS-1):
+            print("")
+            print(f"Cut Boundaries: {wmc=:.2f}, {wr3=:.2f}, {score=:.2f}")
+            print(f"    {MIN_CSC_TIME=:.2f}")
+            print(f"    {MAX_CSC_TIME=:.2f}")
+            print(f"    {MAX_CSC_TSPREAD=:.2f}")
+            print(f"    {MAX_RPC_BX=:.0f}")
+            print(f"    {MIN_RPC_HITS=:.0f}")
+            print(f"    {MAX_CSC_JET=:.2f}")
+            print(f"    {MAX_DT_JET=:.2f}")
+            print(f"    {MAX_CSC_MUON=:.2f}")
+            print(f"    {MAX_DT_MUON=:.2f}")
+            print(f"    {MAX_ME1=:.0f}")
+            print(f"    {MAX_MB1=:.0f}")
+            print(f"    {HALO_CUTOFF=:.2f}")
+            print(f"    {MIN_DPHI=:.2f}")
+            print(f"    {MIN_DETA=:.2f}")
+            print(f"    {MAX_DETA=:.2f}")
+            print(f"    {MIN_CSC_DNN=:.3f}")
+            # print(f"    {MIN_DT_DNN=:.3f}")
+            print("")
 
     # **************** #
     hname_pre = f"cscdt{'OOT' if OOT else ''}_{CUTSET}"
