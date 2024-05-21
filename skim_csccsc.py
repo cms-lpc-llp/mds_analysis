@@ -62,7 +62,7 @@ CUTS = [
     "L1",
     "0 DT",
     "1 CSC-CSC",
-    "dPhi $>$ 1.8",
+    #! Reset cutflow indices here
     "CSC0 IT",
     "CSC1 IT",
     "CSC0 ME1",
@@ -70,6 +70,7 @@ CUTS = [
     # "CSC1 not CSC0"
     "MET",
     #! Reset cutflow indices here
+    "dPhi $>$ 1.8",
     # "DT IT",
     # "n leptons",
     # "n jets",
@@ -1268,7 +1269,7 @@ if __name__ == "__main__":
                         f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
                     
                     # Only filter (reset indices) after the MET cut when printing cutflow
-                    if any([_cut in cut for _cut in ("MET","acceptance")]):
+                    if any([_cut in cut for _cut in ("MET","acceptance","1 CSC-CSC")]):
                         print(r"    \hline")
                         ec0, cc00, cc10, dc0 = ec, cc0, cc1, dc
                         
