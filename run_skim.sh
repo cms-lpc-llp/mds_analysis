@@ -2,109 +2,91 @@
 
 # pyroot=/home/psimmerl/.conda/envs/pyroot/bin/python
 # pyroot=/home/psimmerl/.miniconda3/envs/pyroot/bin/python
-pyroot=/home/psimmerl/mambaforge/envs/pyroot/bin/python
+# pyroot=/home/psimmerl/mambaforge/envs/pyroot/bin/python
+pyroot=/home/psimmerl/.miniforge3/envs/pyroot/bin/python
 
-# ###########
-# # CSC-CSC #
-# ###########
-# # L1
-# echo "################################"
-# echo "CSC-CSC - L1 Selections"
-# $pyroot skim_csccsc.py l1 it lt200
-# $pyroot skim_csccsc.py l1 it low
-# $pyroot skim_csccsc.py l1 it high
-
-# $pyroot skim_csccsc.py l1 oot lt200
-# $pyroot skim_csccsc.py l1 oot low
-# $pyroot skim_csccsc.py l1 oot high
+echo "###########"
+echo "# CSC-CSC #"
+echo "###########"
 # echo ""
-
-# # Standard Cuts
-# echo "################################"
-# echo "CSC-CSC - Standard Selections"
-# $pyroot skim_csccsc.py scs it lt200
-# $pyroot skim_csccsc.py scs it low
-# $pyroot skim_csccsc.py scs it high
-
-# $pyroot skim_csccsc.py scs oot lt200
-# $pyroot skim_csccsc.py scs oot low
-# $pyroot skim_csccsc.py scs oot high
+# echo "TIGHT CUTS"
 # echo ""
+# # $pyroot skim_csccsc.py tight it lt200 cutflow
+# $pyroot skim_csccsc.py tight it low cutflow
+# $pyroot skim_csccsc.py tight it high cutflow
 
-# # Randomly Optimized Cuts
-# echo "################################"
-# echo "CSC-CSC - Randomly Optimized Selections"
-# $pyroot skim_csccsc.py ropt it lt200
-# $pyroot skim_csccsc.py ropt it low
-# $pyroot skim_csccsc.py ropt it high
+# # $pyroot skim_csccsc.py tight oot lt200 cutflow
+# $pyroot skim_csccsc.py tight oot low cutflow
+# $pyroot skim_csccsc.py tight oot high cutflow
 
-# $pyroot skim_csccsc.py ropt oot lt200
-# $pyroot skim_csccsc.py ropt oot low
-# $pyroot skim_csccsc.py ropt oot high
+
+# # $pyroot skim_csccsc.py tightDNN it lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_csccsc.py tightDNN it low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_csccsc.py tightDNN it high bkgMC_plusBeamHalo cutflow
+
+# # $pyroot skim_csccsc.py tightDNN oot lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_csccsc.py tightDNN oot low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_csccsc.py tightDNN oot high bkgMC_plusBeamHalo cutflow
+
+echo ""
+echo "ROPT CUTS"
+echo ""
+# $pyroot skim_csccsc.py ropt it lt200 cutflow
+$pyroot skim_csccsc.py ropt it low cutflow
+$pyroot skim_csccsc.py ropt it high cutflow
+
+# $pyroot skim_csccsc.py ropt oot lt200 cutflow
+$pyroot skim_csccsc.py ropt oot low cutflow
+$pyroot skim_csccsc.py ropt oot high cutflow
+
+
+# $pyroot skim_csccsc.py roptDNN it lt200 bkgMC_plusBeamHalo cutflow
+$pyroot skim_csccsc.py roptDNN it low bkgMC_plusBeamHalo cutflow
+$pyroot skim_csccsc.py roptDNN it high bkgMC_plusBeamHalo cutflow
+
+# $pyroot skim_csccsc.py roptDNN oot lt200 bkgMC_plusBeamHalo cutflow
+$pyroot skim_csccsc.py roptDNN oot low bkgMC_plusBeamHalo cutflow
+$pyroot skim_csccsc.py roptDNN oot high bkgMC_plusBeamHalo cutflow
+
 # echo ""
-
-# ##########
-# # CSC-DT #
-# ##########
-# # L1
-# echo "################################"
-# echo "CSC-DT - L1 Selections"
-# $pyroot skim_cscdt.py l1 it lt200
-# $pyroot skim_cscdt.py l1 it low
-# $pyroot skim_cscdt.py l1 it high
-
-# $pyroot skim_cscdt.py l1 oot lt200
-# $pyroot skim_cscdt.py l1 oot low
-# $pyroot skim_cscdt.py l1 oot high
 # echo ""
-
-# # Standard Cuts
-# echo "################################"
-# echo "CSC-DT - Standard Selections"
-# $pyroot skim_cscdt.py scs it lt200
-# $pyroot skim_cscdt.py scs it low
-# $pyroot skim_cscdt.py scs it high
-
-# $pyroot skim_cscdt.py scs oot lt200
-# $pyroot skim_cscdt.py scs oot low
-# $pyroot skim_cscdt.py scs oot high
+# echo "##########"
+# echo "# CSC-DT #"
+# echo "##########"
 # echo ""
-
-# # Randomly Optimized Cuts
-# echo "################################"
-# echo "CSC-DT - Randomly Optimized Selections"
-# $pyroot skim_cscdt.py ropt it lt200
-$pyroot skim_cscdt.py ropt it low
-$pyroot skim_cscdt.py ropt it high
-
-# $pyroot skim_cscdt.py ropt oot lt200
-$pyroot skim_cscdt.py ropt oot low
-$pyroot skim_cscdt.py ropt oot high
+# echo "TIGHT CUTS"
 # echo ""
+# # $pyroot skim_cscdt.py tight it lt200 cutflow
+# $pyroot skim_cscdt.py tight it low cutflow
+# $pyroot skim_cscdt.py tight it high cutflow
 
-# ##############
-# # CSC-DT OPT #
-# ##############
-# # LOO without DNN
-# echo "################################"
-# echo "CSC-DT - Opt without DNN"
-# $pyroot skim_cscdt.py ropt oot lt200 rand
-# $pyroot skim_cscdt.py ropt oot low rand
-# $pyroot skim_cscdt.py ropt oot high rand
+# # $pyroot skim_cscdt.py tight oot lt200 cutflow
+# $pyroot skim_cscdt.py tight oot low cutflow
+# $pyroot skim_cscdt.py tight oot high cutflow
 
-# $pyroot skim_cscdt.py ropt it lt200 rand
-# $pyroot skim_cscdt.py ropt it low rand
-# $pyroot skim_cscdt.py ropt it high rand
+# # $pyroot skim_cscdt.py tightDNN it lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py tightDNN it low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py tightDNN it high bkgMC_plusBeamHalo cutflow
+
+# # $pyroot skim_cscdt.py tightDNN oot lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py tightDNN oot low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py tightDNN oot high bkgMC_plusBeamHalo cutflow
+
 # echo ""
-
-
-# echo "################################"
-# echo "CSC-DT - Opt with DNN"
-# $pyroot skim_cscdt.py roptDNN oot lt200 rand
-# $pyroot skim_cscdt.py roptDNN oot low rand
-# $pyroot skim_cscdt.py roptDNN oot high rand
-
-# $pyroot skim_cscdt.py roptDNN it lt200 rand
-# $pyroot skim_cscdt.py roptDNN it low rand
-# $pyroot skim_cscdt.py roptDNN it high rand
+# echo "ROPT CUTS"
 # echo ""
+# # $pyroot skim_cscdt.py ropt it lt200 cutflow
+# $pyroot skim_cscdt.py ropt it low cutflow
+# $pyroot skim_cscdt.py ropt it high cutflow
+
+# # $pyroot skim_cscdt.py ropt oot lt200 cutflow
+# $pyroot skim_cscdt.py ropt oot low cutflow
+# $pyroot skim_cscdt.py ropt oot high cutflow
+
+# # $pyroot skim_cscdt.py roptDNN it lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py roptDNN it low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py roptDNN it high bkgMC_plusBeamHalo cutflow
+
+# # $pyroot skim_cscdt.py roptDNN oot lt200 bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py roptDNN oot low bkgMC_plusBeamHalo cutflow
+# $pyroot skim_cscdt.py roptDNN oot high bkgMC_plusBeamHalo cutflow

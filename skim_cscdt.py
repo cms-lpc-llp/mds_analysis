@@ -55,12 +55,15 @@ CUTS = [
     "acceptance",
     "HLT",
     "L1",
-    "MET",
+    "1 CSC-DT",
     #! Reset cutflow indices here
     "CSC IT",
     "DT IT",
     # "ME1", # this usually hurts s/rt[B]
     "MB1",
+    "MET",
+    #! Reset cutflow indices here
+    "dPhi $>$ 0.4",
     # "n leptons",
     # "n jets",
     "CSC jet veto",
@@ -72,11 +75,10 @@ CUTS = [
     # "DT Avg Station",
     # "DT stn",
     # "BDT",
-    "DNN",
-    "1 CSC-DT",
+    "DNN $>$ 0.96",
     # "dR",
     # "dEta",
-    "dPhi",
+    # "dPhi $>$ 0.4",
     # "ABCD"
     # "DT size" # for ABCD?
 ]
@@ -880,6 +882,7 @@ if __name__ == "__main__":
         print("    Removing DNN from CUTS")
         CUTS = [c for c in CUTS if "DNN" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "DNN" not in c]
+        DNN_VERSION = None
     else:
         if RAND or LOO:
             print("        OPTIMIZING JUST DNN")
@@ -1216,6 +1219,8 @@ if __name__ == "__main__":
 
                 # **** #
                 if "1 CSC-DT" in cut:
+                    rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 1) && (nDtRechitClusters == 1)")
+
                     # if LOO:
                     #     icsc, idt = rng.random(2)
                     #     rdf = rdf.Redefine(f"{C}Flag", f"{C}Flag && ( {C}Size == {C}Size[int({icsc}*reduce({C}Flag.begin(),{C}Flag.end()))] )")
@@ -1226,12 +1231,18 @@ if __name__ == "__main__":
 
                     # Apply our cluster level selections to relevant columns
                     for col in COLUMNS_OUT:
-                        ocol = col.replace("RechitCluster", "")
                         if C in col[: len(C)]:
+                            ocol = col.replace("RechitCluster", "")
                             rdf = rdf.Define(ocol, f"{col}[{C}Flag][0]")
+                            if ocol not in columns_out:
+                                columns_out.append(ocol)
                         elif D in col[: len(D)]:
+                            ocol = col.replace("RechitCluster", "")
                             rdf = rdf.Define(ocol, f"{col}[{D}Flag][0]")
-                        columns_out.append(ocol)
+                            if ocol not in columns_out:
+                                columns_out.append(ocol)
+                        elif col not in columns_out:
+                            columns_out.append(col)
 
                     # rdf = rdf.Define("cscDNN", f"Take({C}DNN,nCscRechitClusters)[{C}Flag][0]")
                     # rdf = rdf.Define("dtDNN", f"Take({D}DNN,nDtRechitClusters)[{D}Flag][0]")
@@ -1532,7 +1543,7 @@ if __name__ == "__main__":
 
     # **************** #
     hname_pre = f"cscdt{'OOT' if OOT else ''}_{CUTSET}"
-    if DNN_VERSION is not None and "DNN" in CUTSET:
+    if DNN_VERSION is not None:# and "DNN" in CUTSET:
         hname_pre += f"_{DNN_VERSION}"
     hname_pre += f"_{MET_CATEGORY}"
     if LOO or RAND:
@@ -1548,7 +1559,7 @@ if __name__ == "__main__":
             continue
 
         name = f"{key}_cscdt{'OOT' if OOT else ''}_{CUTSET}"
-        if DNN_VERSION is not None and "DNN" in CUTSET:
+        if DNN_VERSION is not None:# and "DNN" in CUTSET:
             name += f"_{DNN_VERSION}"
         name += f"_{MET_CATEGORY}"
 

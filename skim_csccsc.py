@@ -63,10 +63,12 @@ CUTS = [
     "0 DT",
     "1 CSC-CSC",
     #! Reset cutflow indices here
+    # "CSC IT", # breaks oot
     "CSC0 IT",
     "CSC1 IT",
-    "CSC0 ME1",
-    "CSC1 ME1",
+    "ME1",
+    # "CSC0 ME1",
+    # "CSC1 ME1",
     # "CSC1 not CSC0"
     "MET",
     #! Reset cutflow indices here
@@ -78,7 +80,6 @@ CUTS = [
     # "DT muon veto",
     "CSC jet veto", 
     # "DT jet veto",
-    #!
     # "halo veto",
     # "MB1",
     # "DT stn",
@@ -86,6 +87,9 @@ CUTS = [
     "DNN $>$ 0.96",
     # "dR",
     # "dEta",
+    # "0 DT",
+    # "1 CSC-CSC",
+    # "dPhi $>$ 1.8",
 ]
 
 # **** #
@@ -706,6 +710,7 @@ if __name__ == "__main__":
         print("    Removing DNN from CUTS")
         CUTS = [c for c in CUTS if "DNN" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "DNN" not in c]
+        DNN_VERSION = None
     else:
         if RAND or LOO:
             print("        OPTIMIZING JUST DNN")
@@ -1008,18 +1013,19 @@ if __name__ == "__main__":
 
                 # **** #
                 # Cluster time requirements
-                if "CSC0 IT" in cut:
-                    rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( "
-                        + f"({MIN_CSC_TIME} < {C}TimeWeighted) && "
-                        + f"({C}TimeWeighted < {MAX_CSC_TIME}) && "
-                        +f"({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
-                    )
-                if "CSC1 IT" in cut:
-                    rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ( "
-                        + f"({MIN_CSC_TIME} < {C}TimeWeighted) && "
-                        + f"({C}TimeWeighted < {MAX_CSC_TIME}) && "
-                        +f"({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
-                    )
+                if "CSC" in cut and "IT" in cut:
+                    if "CSC0" in cut or ("0" not in cut and "1" not in cut):
+                        rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ( "
+                            + f"({MIN_CSC_TIME} < {C}TimeWeighted) && "
+                            + f"({C}TimeWeighted < {MAX_CSC_TIME}) && "
+                            +f"({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
+                        )
+                    if "CSC1" in cut or ("0" not in cut and "1" not in cut):
+                        rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ( "
+                            + f"({MIN_CSC_TIME} < {C}TimeWeighted) && "
+                            + f"({C}TimeWeighted < {MAX_CSC_TIME}) && "
+                            +f"({C}TimeSpreadWeightedAll < {MAX_CSC_TSPREAD}) )"
+                        )
                 
                 if "CSC0 OOT" in cut:
                     rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && !( "
@@ -1123,7 +1129,10 @@ if __name__ == "__main__":
 )
                 # **** #
                 if "0 DT" in cut:
-                    rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (reduce({D}Flag.begin(), {D}Flag.end()) == 0)")
+                    # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (reduce({D}Flag.begin(), {D}Flag.end()) == 0)")
+                    rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nDtRechitClusters == 0)")
+                if "2 CSC" in cut:
+                    rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 2)")
         
                 if "1 CSC-CSC" in cut:
                     rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 2)")
@@ -1377,7 +1386,7 @@ if __name__ == "__main__":
 
     # **************** #
     hname_pre = f"csccsc{'OOT' if OOT else ''}_{CUTSET}"
-    if DNN_VERSION is not None and "DNN" in CUTSET:
+    if DNN_VERSION is not None:# and "DNN" in CUTSET:
         hname_pre += f"_{DNN_VERSION}"
     hname_pre += f"_{MET_CATEGORY}"
     if LOO or RAND:
@@ -1397,7 +1406,7 @@ if __name__ == "__main__":
             continue
         
         name = f"{key}_csccsc{'OOT' if OOT else ''}_{CUTSET}"
-        if DNN_VERSION is not None and "DNN" in CUTSET:
+        if DNN_VERSION is not None:# and "DNN" in CUTSET:
             name += f"_{DNN_VERSION}"
         name += f"_{MET_CATEGORY}"
 
