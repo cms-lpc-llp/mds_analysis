@@ -11,9 +11,10 @@ from ROOT import RDataFrame
 from src.histo_utilities import std_color_list as SCL
 
 # **************************** #
-STAT = "pedro"
+STAT = "tight"
 LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
 RUN2_BR = 2.16e-03  # Adjust weights to Run 2 BR limit
+YEAR = "2023"
 
 NODENAME = os.uname().nodename
 if "fernanpe" in NODENAME:
@@ -24,12 +25,16 @@ elif "psimmerl-LAU248" in NODENAME:
     LOCAL_DIR = "/home/psimmerl/mds_analysis"
     FN_MC = f"{LOCAL_DIR}/data/processed/mc_pedro_hlt566.root"
     FN_R3 = f"{LOCAL_DIR}/data/processed/r3_pedro_hlt566.root"
+else:
+    LOCAL_DIR = "/home/psimmerl/mds_analysis"
+    FN_MC = f"{LOCAL_DIR}/data/processed/mc_pedro_hlt566.root"
+    FN_R3 = f"{LOCAL_DIR}/data/processed/r3_pedro_hlt566.root"
 
 OUT_DIR = f"{LOCAL_DIR}/reports/weekly/2024-04-15"
 
 
-# FN_MC = f"{LOCAL_DIR}/data/raw/mc_pedro.root"
-# FN_R3 = f"{LOCAL_DIR}/data/raw/data_pedro.root"
+FN_MC = f"{LOCAL_DIR}/data/raw/mc_2022.root"
+FN_R3 = f"{LOCAL_DIR}/data/raw/data_2022.root"
 
 
 # STAT = "raw"
@@ -254,7 +259,7 @@ CUT_VALUES = {
         "MAX_DT_JET": 999,
         "MAX_CSC_MUON": 999,
         "MAX_DT_MUON": 999,
-        "MAX_ME1": 0,
+        "MAX_ME1": 10,
         "MAX_MB1": 0,
         "HALO_CUTOFF": 0.4,
         "MIN_DPHI": 1.8,
@@ -596,7 +601,7 @@ if __name__ == "__main__":
     print("| Starting skim_csccsc.py |")
     print("+ ------------------------+")
 
-    rt.EnableImplicitMT(2)
+    rt.EnableImplicitMT(4)
     print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
 
     # **************************** #
@@ -642,6 +647,9 @@ if __name__ == "__main__":
         OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
+        print("        REMOVING DNN")
+        CUTS = [c for c in CUTS if "DNN" not in c]
+        OPT_CUTS = [c for c in OPT_CUTS if "DNN" not in c]
         MET_CATEGORY = "high"
     else:
         print("    No met categorization (only met<200)")
@@ -737,6 +745,20 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"no cutset associated with {CUTSET=} and {MET_CATEGORY=} found")
 
+    if " 2022 " in args:
+        YEAR, LUMI = "2022", 23.02
+        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
+        STAT += f"_{YEAR}"
+        print(f"    Setting {YEAR=}")
+    elif " 2023 " in args:
+        YEAR, LUMI = "2023", 27.82
+        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
+        STAT += f"_{YEAR}"
+        print(f"    Setting {YEAR=}")
+    print(f"    Luminosity = {f'{LUMI=:.3e}' if LUMI < 1 else f'{LUMI:.2f}'}")
+
     print("")
 
     # **** #
@@ -808,8 +830,10 @@ if __name__ == "__main__":
         for key, rdf in rdfs.items():
             # rdf = rdf.Range(0,100_000) # Skim a subset of events for debugging
 
-            if key == "mc": # fix weights
+            if key == "mc" and LUMI < 1: # fix weights
+                print(key, LUMI, rdf.Sum("weight").GetValue())
                 rdf = rdf.Redefine("weight", f"weight * {LUMI}")
+                print("\t", rdf.Sum("weight").GetValue())
 
             count, weight = rdf.Count().GetValue(), rdf.Sum("weight").GetValue()
             if iopt == 0:
@@ -1386,8 +1410,9 @@ if __name__ == "__main__":
 
     # **************** #
     hname_pre = f"csccsc{'OOT' if OOT else ''}_{CUTSET}"
-    if DNN_VERSION is not None:# and "DNN" in CUTSET:
-        hname_pre += f"_{DNN_VERSION}"
+    if DNN_VERSION is not None and "DNN" in CUTSET:
+        hname_pre += "DNN"
+        # hname_pre += f"_{DNN_VERSION}"
     hname_pre += f"_{MET_CATEGORY}"
     if LOO or RAND:
         hname_pre += f"_LOO" if LOO else f"_RAND"
@@ -1395,6 +1420,7 @@ if __name__ == "__main__":
         hname_pre += "_ITVal1"
     if ITVal2:
         hname_pre += "_ITVal2"
+    hname_pre += f"_{YEAR}"
 
     print("Events out:")
     hists = {}
@@ -1402,12 +1428,13 @@ if __name__ == "__main__":
         count, weight = rdf.Count(), rdf.Sum("weight")
         count, weight = count.GetValue(), weight.GetValue()
         if count == 0:
-            print(f"{key} is empty")
+            print(f"  {key} is empty")
             continue
         
         name = f"{key}_csccsc{'OOT' if OOT else ''}_{CUTSET}"
-        if DNN_VERSION is not None:# and "DNN" in CUTSET:
-            name += f"_{DNN_VERSION}"
+        if DNN_VERSION is not None and "DNN" in CUTSET:
+            name += "DNN"
+            # name += f"_{DNN_VERSION}"
         name += f"_{MET_CATEGORY}"
 
         if LOO or RAND:
@@ -1420,10 +1447,11 @@ if __name__ == "__main__":
         if ITVal2:
             name += "_ITVal2"
 
+        name += f"_{YEAR}"
+        print(f"  {key} = {count:,} ({weight:,.2f})")
         rdf = rdf.Snapshot("MuonSystem_flat", f"data/processed/{name}_rdf.root", columns_out)
         rdfs[key] = rdf
 
-        print(f"  {key} = {count:,} ({weight:,.2f})")
         for xx in (
             "met", 
             "csc0Size", 

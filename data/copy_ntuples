@@ -1,0 +1,43 @@
+#!/bin/bash
+
+RUSER="psimmerl"
+RHOST="lxplus.cern.ch"
+
+# LOCAL_DIR="$PWD"
+LOCAL_DIR="/home/psimmerl/mds_analysis/data"
+LXPLUS_DIR="/eos/user/f/fernanpe/displacedJetMuonAnalyzer_CA0p6_noMerging_240310_CSCOnly_DNNs/V1p19/hadd"
+
+echo "RUSER=$RUSER"
+echo "RHOST=$RHOST"
+echo "LOCAL_DIR=$LOCAL_DIR"
+echo "LXPLUS_DIR=$LXPLUS_DIR"
+echo ""
+
+# 2022 NTuples
+echo "scp $RUSER@$RHOST:$LXPLUS_DIR/mc.root $LOCAL_DIR/mc_2022.root"
+scp "$RUSER@$RHOST:$LXPLUS_DIR/mc.root" "$LOCAL_DIR/mc_2022.root"
+
+echo "scp $RUSER@$RHOST:$LXPLUS_DIR/data_2022_goodLumi.root $LOCAL_DIR/data_2022.root"
+scp "$RUSER@$RHOST:$LXPLUS_DIR/data_2022_goodLumi.root" "$LOCAL_DIR/data_2022.root"
+echo ""
+
+# 2023 NTuples
+echo "scp $RUSER@$RHOST:$LXPLUS_DIR/mc_2023.root $LOCAL_DIR/mc_2023.root"
+scp "$RUSER@$RHOST:$LXPLUS_DIR/mc_2023.root" "$LOCAL_DIR/mc_2023.root"
+
+echo "scp $RUSER@$RHOST:$LXPLUS_DIR/data_2023_goodLumi.root $LOCAL_DIR/data_2023.root"
+scp "$RUSER@$RHOST:$LXPLUS_DIR/data_2023_goodLumi.root" "$LOCAL_DIR/data_2023.root"
+echo ""
+
+echo "done"
+
+
+# # 2022 NTuples
+# scp psimmerl@lxplus.cern.ch:/eos/user/f/fernanpe/displacedJetMuonAnalyzer_CA0p6_noMerging_240310_CSCOnly_DNNs/V1p19/hadd/mc.root /home/psimmerl/mds_analysis/data/mc_2022.root
+
+# scp psimmerl@lxplus.cern.ch:/eos/user/f/fernanpe/displacedJetMuonAnalyzer_CA0p6_noMerging_240310_CSCOnly_DNNs/V1p19/hadd/data_2022_goodLumi.root /home/psimmerl/mds_analysis/data/data_2022.root
+
+# # 2023 NTuples
+# scp psimmerl@lxplus.cern.ch:/eos/user/f/fernanpe/displacedJetMuonAnalyzer_CA0p6_noMerging_240310_CSCOnly_DNNs/V1p19/hadd/mc_2023.root /home/psimmerl/mds_analysis/data/mc_2023.root
+
+# scp psimmerl@lxplus.cern.ch:/eos/user/f/fernanpe/displacedJetMuonAnalyzer_CA0p6_noMerging_240310_CSCOnly_DNNs/V1p19/hadd/data_2023_goodLumi.root /home/psimmerl/mds_analysis/data/data_2023.root
