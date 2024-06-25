@@ -66,15 +66,16 @@ CUTS = [
     "HLT",
     "L1",
     "0 DT",
-    "1 CSC-CSC",
+    "Exactly 1 CSC-CSC",
+    # "1 CSC-CSC",
     #! Reset cutflow indices here
     # "CSC IT", # breaks oot
     "CSC0 IT",
     "CSC1 IT",
-    "ME1",
-    # "CSC0 ME1",
-    # "CSC1 ME1",
-    # "CSC1 not CSC0"
+    # "ME1",
+    "CSC0 ME1",
+    "CSC1 ME1",
+    # "CSC1 not CSC0",
     "MET",
     #! Reset cutflow indices here
     "dPhi $>$ 1.8",
@@ -83,7 +84,10 @@ CUTS = [
     # "n jets",
     "CSC muon veto", 
     # "DT muon veto",
-    "CSC jet veto", 
+    # "CSC jet veto", 
+    # "CSC jet veto $<$ 50", 
+    "CSC jet veto $<$ 30", 
+    # "CSC jet veto $<$ 10", 
     # "DT jet veto",
     # "halo veto",
     # "MB1",
@@ -599,7 +603,7 @@ gc = []  # ROOT garbage collector
 if __name__ == "__main__":
     print("+-------------------------+")
     print("| Starting skim_csccsc.py |")
-    print("+ ------------------------+")
+    print("+-------------------------+")
 
     rt.EnableImplicitMT(4)
     print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
@@ -746,13 +750,15 @@ if __name__ == "__main__":
         raise ValueError(f"no cutset associated with {CUTSET=} and {MET_CATEGORY=} found")
 
     if " 2022 " in args:
-        YEAR, LUMI = "2022", 23.02
+        # YEAR, LUMI = "2022", 23.02
+        YEAR, LUMI = "2022", LUMI#23.02
         FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
         FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
         STAT += f"_{YEAR}"
         print(f"    Setting {YEAR=}")
     elif " 2023 " in args:
-        YEAR, LUMI = "2023", 27.82
+        # YEAR, LUMI = "2023", 27.82
+        YEAR, LUMI = "2023", LUMI#27.82
         FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
         FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
         STAT += f"_{YEAR}"
@@ -762,8 +768,8 @@ if __name__ == "__main__":
     print("")
 
     # **** #
-    if "1 CSC-CSC" not in CUTS:
-        raise NotImplementedError("cant handle multiple pairs yet")
+    # if "1 CSC-CSC" not in CUTS:
+    #     raise NotImplementedError("cant handle multiple pairs yet")
 
     # **************************** #
     for iopt in range(N_ITERATIONS):
@@ -1109,6 +1115,8 @@ if __name__ == "__main__":
 )
 
                 if "CSC jet veto" in cut: # and OPT_CUT != "CSC jet veto":
+                    if "$<$" in cut:
+                        MAX_CSC_JET = float(cut.split(" ")[-1])
                     rdf = rdf.Redefine(f"{C}0CutFlag", f"{C}0CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})")
                     rdf = rdf.Redefine(f"{C}1CutFlag", f"{C}1CutFlag && ({C}JetVetoPt < {MAX_CSC_JET})")
                 if "DT jet veto" in cut: # and OPT_CUT != "DT jet veto":
@@ -1159,7 +1167,8 @@ if __name__ == "__main__":
                     rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 2)")
         
                 if "1 CSC-CSC" in cut:
-                    rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 2)")
+                    if "Exactly" in cut:
+                        rdf = rdf.Redefine("evtCutFlag", "evtCutFlag && (nCscRechitClusters == 2)")
 
                     # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && evtFlag && "+
                     #                    f"(reduce({C}0Flag.begin(), {C}0Flag.end()) == 1) && "+
@@ -1291,27 +1300,31 @@ if __name__ == "__main__":
                     ec,cc0,cc1,dc = ec.GetValue(),cc0.GetValue(),cc1.GetValue(),dc.GetValue()
                     ecc,ccc0,ccc1,dcc = ecc.GetValue(),ccc0.GetValue(),ccc1.GetValue(),dcc.GetValue()
 
-                    c0_cum_eff = f"{100*cc0/cc00:.2f}" if cc0 != cc00 else "--"
-                    c0_cut_eff = f"{100*ccc0/cc00:.2f}" if ccc0 != cc00 else "--"
-                    c1_cum_eff = f"{100*cc1/cc10:.2f}" if cc1 != cc10 else "--"
-                    c1_cut_eff = f"{100*ccc1/cc10:.2f}" if ccc1 != cc10 else "--"
-                    d_cum_eff = f"{100*dc/dc0:.2f}" if dc != dc0 else "--"
-                    d_cut_eff = f"{100*dcc/dc0:.2f}" if dcc != dc0 else "--"
+                    c0_cum_eff = f"{100*cc0/cc00:.2g}" if cc0 != cc00 else "--"
+                    c0_cut_eff = f"{100*ccc0/cc00:.2g}" if ccc0 != cc00 else "--"
+                    c1_cum_eff = f"{100*cc1/cc10:.2g}" if cc1 != cc10 else "--"
+                    c1_cut_eff = f"{100*ccc1/cc10:.2g}" if ccc1 != cc10 else "--"
+                    d_cum_eff = f"{100*dc/dc0:.2g}" if dc != dc0 else "--"
+                    d_cut_eff = f"{100*dcc/dc0:.2g}" if dcc != dc0 else "--"
 
-                    print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2f} & {100*ec/ec0:.2f} & "+
+                    # print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2f} & {100*ec/ec0:.2f} & "+
+                    #     f"{cc0:,.0f} & {c0_cut_eff} & {c0_cum_eff} & "+
+                    #     f"{cc1:,.0f} & {c1_cut_eff} & {c1_cum_eff} & "+
+                    #     f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
+                    print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2g} & {100*ec/ec0:.2g} & "+
                         f"{cc0:,.0f} & {c0_cut_eff} & {c0_cum_eff} & "+
                         f"{cc1:,.0f} & {c1_cut_eff} & {c1_cum_eff} & "+
                         f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
                     
                     # Only filter (reset indices) after the MET cut when printing cutflow
-                    if any([_cut in cut for _cut in ("MET","acceptance","1 CSC-CSC")]):
-                        print(r"    \hline")
-                        ec0, cc00, cc10, dc0 = ec, cc0, cc1, dc
-                        
-                        rdf = rdf.Filter("evtFlag")
-                        rdf = rdf.Redefine(f"{C}0Size", f"{C}0Size * {C}0Flag")
-                        rdf = rdf.Redefine(f"{C}1Size", f"{C}1Size * {C}1Flag")
-                        rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
+                    # if any([_cut in cut for _cut in ("MET","acceptance","1 CSC-CSC")]):
+                    #     print(r"    \hline")
+                    #     ec0, cc00, cc10, dc0 = ec, cc0, cc1, dc
+                    
+                    rdf = rdf.Filter("evtFlag")
+                    rdf = rdf.Redefine(f"{C}0Size", f"{C}0Size * {C}0Flag")
+                    rdf = rdf.Redefine(f"{C}1Size", f"{C}1Size * {C}1Flag")
+                    rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
                 else:
                     rdf = rdf.Filter("evtFlag")
                     rdf = rdf.Redefine(f"{C}0Size", f"{C}0Size * {C}0Flag")
