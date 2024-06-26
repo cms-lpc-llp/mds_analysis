@@ -5,8 +5,9 @@ easier to understand."""
 
 import numpy as np
 import math
-import ROOT as rt
+# import ROOT as rt
 # import awkward as ak
+import colorama
 
 ###########################
 ####                   ####
@@ -103,71 +104,107 @@ def aabs(arg):
     return np.abs(arg)
 
 
-def canvas(nrows=1, ncols=1, width=None, height=None, name=None, grid=True):
-    if width is None:
-        width = ncols * 1000
-    if height is None:
-        height = nrows * 800
-    if name is None:
-        name = "c" + "_" + str(np.random.randint(0, 10000))
-    c = rt.TCanvas(name, name, width, height)
-    c.Clear()
-    if ncols * nrows > 1:
-        c.Divide(ncols, nrows)
-        if grid:
-            for i in range(nrows * ncols):
-                c.cd(i + 1).SetGrid()
-        c.cd(1)
-    else:
-        if grid:
-            c.SetGrid()
+# def canvas(nrows=1, ncols=1, width=None, height=None, name=None, grid=True):
+#     if width is None:
+#         width = ncols * 1000
+#     if height is None:
+#         height = nrows * 800
+#     if name is None:
+#         name = "c" + "_" + str(np.random.randint(0, 10000))
+#     c = rt.TCanvas(name, name, width, height)
+#     c.Clear()
+#     if ncols * nrows > 1:
+#         c.Divide(ncols, nrows)
+#         if grid:
+#             for i in range(nrows * ncols):
+#                 c.cd(i + 1).SetGrid()
+#         c.cd(1)
+#     else:
+#         if grid:
+#             c.SetGrid()
 
-    c.Draw()
-    return c
+#     c.Draw()
+#     return c
 
 
-def alert(msg: str, c: str = "w", form: str = ""):
-    # print('')
-    color_prefix = {
-        "w": "",  # White
-        "r": "\033[91m",  # Red
-        "g": "\033[92m",  # Green
-        "y": "\033[93m",  # Yellow
-        "b": "\033[94m",  # Blue
-        "m": "\033[95m",  # Purple/Magenta
-        "c": "\033[96m",  # Cyan
-        "lg": "\033[97m",  # LightGray
-        "k": "\033[98m",  # Black
+# def alert(msg: str, c: str = "w", form: str = ""):
+#     # print('')
+#     color_prefix = {
+#         "w": "",  # White
+#         "r": "\033[91m",  # Red
+#         "g": "\033[92m",  # Green
+#         "y": "\033[93m",  # Yellow
+#         "b": "\033[94m",  # Blue
+#         "m": "\033[95m",  # Purple/Magenta
+#         "c": "\033[96m",  # Cyan
+#         "lg": "\033[97m",  # LightGray
+#         "k": "\033[98m",  # Black
+#     }[c]
+#     print(color_prefix, end="")
+
+#     if len(form) > 1:
+#         raise NotImplementedError(f"Form length was too long, single character only! (form='{form}')")
+
+#     if form == "":
+#         print(msg, end="")
+#     elif form == "-":
+#         print("+" + ("-" * (len(msg) + 2)) + "+")
+#         print("| " + msg + " |")
+#         print("+" + ("-" * (len(msg) + 2)) + "+", end="")
+#     elif form == "=":
+#         print("#" + ("=" * (len(msg) + 2)) + "#")
+#         print("# " + msg + " #")
+#         print("#" + ("=" * (len(msg) + 2)) + "#", end="")
+#     elif form == "#":
+#         print("#" * (len(msg) + 4))
+#         print("# " + msg + " #")
+#         print("#" * (len(msg) + 4), end="")
+#     elif form == "!":
+#         print("!" * (len(msg) + 4))
+#         print("! " + msg + " !")
+#         print("!" * (len(msg) + 4), end="")
+#     else:  # form == '-':
+#         print(form * (len(msg) + 4))
+#         print(form + " " + msg + " " + form)
+#         print(form * (len(msg) + 4), end="")
+
+#     print("\033[0m" if c != "w" else "")
+def alert(*args, c="r", b="", s="", sep=" ", end="\n", reset=True):
+    c = {
+        "": "",
+        "k" : colorama.Fore.BLACK,
+        "r" : colorama.Fore.RED,
+        "g" : colorama.Fore.GREEN,
+        "y" : colorama.Fore.YELLOW,
+        "b" : colorama.Fore.BLUE,
+        "m" : colorama.Fore.MAGENTA,
+        "c" : colorama.Fore.CYAN,
+        "w" : colorama.Fore.WHITE,
+        "reset" : colorama.Fore.RESET,
     }[c]
-    print(color_prefix, end="")
-
-    if len(form) > 1:
-        raise NotImplementedError(f"Form length was too long, single character only! (form='{form}')")
-
-    if form == "":
-        print(msg, end="")
-    elif form == "-":
-        print("+" + ("-" * (len(msg) + 2)) + "+")
-        print("| " + msg + " |")
-        print("+" + ("-" * (len(msg) + 2)) + "+", end="")
-    elif form == "=":
-        print("#" + ("=" * (len(msg) + 2)) + "#")
-        print("# " + msg + " #")
-        print("#" + ("=" * (len(msg) + 2)) + "#", end="")
-    elif form == "#":
-        print("#" * (len(msg) + 4))
-        print("# " + msg + " #")
-        print("#" * (len(msg) + 4), end="")
-    elif form == "!":
-        print("!" * (len(msg) + 4))
-        print("! " + msg + " !")
-        print("!" * (len(msg) + 4), end="")
-    else:  # form == '-':
-        print(form * (len(msg) + 4))
-        print(form + " " + msg + " " + form)
-        print(form * (len(msg) + 4), end="")
-
-    print("\033[0m" if c != "w" else "")
+    b = {
+        "": "",
+        "k" : colorama.Back.BLACK,
+        "r" : colorama.Back.RED,
+        "g" : colorama.Back.GREEN,
+        "y" : colorama.Back.YELLOW,
+        "b" : colorama.Back.BLUE,
+        "m" : colorama.Back.MAGENTA,
+        "c" : colorama.Back.CYAN,
+        "w" : colorama.Back.WHITE,
+        "reset" : colorama.Back.RESET,
+    }[b]
+    s = {
+        "" : "",
+        "dim" : colorama.Style.DIM,
+        "normal" : colorama.Style.NORMAL,
+        "bright" : colorama.Style.BRIGHT,
+        "reset_all" : colorama.Style.RESET_ALL,
+    }[s]
+    msg = c + b + s + sep.join([str(arg) for arg in args])
+    if reset:
+        msg += colorama.Style.RESET_ALL
+    print(msg, end=end)
 
 
 class Table:
