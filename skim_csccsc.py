@@ -6,13 +6,14 @@ import numpy as np
 import pickle
 
 import ROOT as rt
-from ROOT import RDataFrame
+from ROOT import RDataFrame, TFile
 
 from src.histo_utilities import std_color_list as SCL
 
 # **************************** #
 STAT = "tight"
-LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
+# LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
+LUMI = 1#1.1328524540090597e-06 * 1000 # ???
 RUN2_BR = 2.16e-03  # Adjust weights to Run 2 BR limit
 YEAR = "2023"
 
@@ -62,9 +63,11 @@ CUTS_L1 = [
 ]
 
 CUTS = [
+    "MET",
     "acceptance",
-    "HLT",
+    "CSC0 ME1",
     "L1",
+    "HLT",
     "0 DT",
     "Exactly 1 CSC-CSC",
     # "1 CSC-CSC",
@@ -73,10 +76,8 @@ CUTS = [
     "CSC0 IT",
     "CSC1 IT",
     # "ME1",
-    "CSC0 ME1",
     "CSC1 ME1",
     # "CSC1 not CSC0",
-    "MET",
     #! Reset cutflow indices here
     "dPhi $>$ 1.8",
     # "DT IT",
@@ -86,8 +87,8 @@ CUTS = [
     # "DT muon veto",
     # "CSC jet veto", 
     # "CSC jet veto $<$ 50", 
-    "CSC jet veto $<$ 30", 
-    # "CSC jet veto $<$ 10", 
+    # "CSC jet veto $<$ 30", 
+    "CSC jet veto $<$ 10", 
     # "DT jet veto",
     # "halo veto",
     # "MB1",
@@ -605,8 +606,8 @@ if __name__ == "__main__":
     print("| Starting skim_csccsc.py |")
     print("+-------------------------+")
 
-    rt.EnableImplicitMT(4)
-    print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
+    # rt.EnableImplicitMT(16)
+    # print("    Enabled ROOT's implicit multithreading (sometimes causes a crash)")
 
     # **************************** #
     N_ITERATIONS = 1
@@ -643,7 +644,7 @@ if __name__ == "__main__":
         MET_CATEGORY = "low"
     elif " high " in args:
         print("    High met category")
-        print("        REMOVING HALO, JET, & MUON VETOS")
+        print("        REMOVING HALO, JET, MUON VETOS")
         CUTS = [c.replace("MET", "high MET") if "MET" == c else c for c in CUTS]
         CUTS = [c for c in CUTS if "halo" not in c]
         CUTS = [c for c in CUTS if "jet" not in c]
@@ -651,6 +652,8 @@ if __name__ == "__main__":
         OPT_CUTS = [c for c in OPT_CUTS if "halo" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "jet" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "muon" not in c]
+        print("        REMOVING CSC1 ME1")
+        CUTS = [c for c in CUTS if "CSC1 ME1" not in c]
         print("        REMOVING DNN")
         CUTS = [c for c in CUTS if "DNN" not in c]
         OPT_CUTS = [c for c in OPT_CUTS if "DNN" not in c]
@@ -749,23 +752,27 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"no cutset associated with {CUTSET=} and {MET_CATEGORY=} found")
 
+    # FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
+    # FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
     if " 2022 " in args:
-        # YEAR, LUMI = "2022", 23.02
-        YEAR, LUMI = "2022", LUMI#23.02
-        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
-        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
+        YEAR, LUMI = "2022", 48.58 * 23.02 * 1000
+        FN_MC = f"{LOCAL_DIR}/data/raw/mc_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/raw/data_{YEAR}.root"
         STAT += f"_{YEAR}"
         print(f"    Setting {YEAR=}")
+        with TFile(FN_MC, "read") as f:
+            LUMI /= f.Get("NEvents").GetBinContent(1)
     elif " 2023 " in args:
-        # YEAR, LUMI = "2023", 27.82
-        YEAR, LUMI = "2023", LUMI#27.82
-        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_{YEAR}.root"
-        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_{YEAR}.root"
+        YEAR, LUMI = "2023", 48.58 * 27.82 * 1000
+        FN_MC = f"{LOCAL_DIR}/data/raw/mc_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/raw/data_{YEAR}.root"
         STAT += f"_{YEAR}"
         print(f"    Setting {YEAR=}")
+        with TFile(FN_MC, "read") as f:
+            LUMI /= f.Get("NEvents").GetBinContent(1)
     print(f"    Luminosity = {f'{LUMI=:.3e}' if LUMI < 1 else f'{LUMI:.2f}'}")
 
-    print("")
+    print("", flush=True)
 
     # **** #
     # if "1 CSC-CSC" not in CUTS:
@@ -796,12 +803,12 @@ if __name__ == "__main__":
             # cv_history = [x[-1] for x in OPT_SCORES]
             # skip_vals = [val0]
             #     if np.prod([[CUT_VALUES[cv_k] == cv_v for cv_k, cv_v in cv.items()] for cv in cv_history], 1).any():
-            #         print("skipping already tested!", cn, val)
+            #         print("skipping already tested!", cn, val, flush=True)
             #         skip_vals.append(val)
             #     else:
             #         break
             # if len(skip_vals) == len(CUT_OPT_PARS[OPT_CUT]["values"]):
-            #     print("all test exhausted", cn)
+            #     print("all test exhausted", cn, flush=True)
             #     continue
 
         # **************************** #
@@ -832,18 +839,18 @@ if __name__ == "__main__":
         }
 
         if iopt == 0:
-            print("Events in:")
+            print("Events in:", flush=True)
         for key, rdf in rdfs.items():
             # rdf = rdf.Range(0,100_000) # Skim a subset of events for debugging
 
-            if key == "mc" and LUMI < 1: # fix weights
-                print(key, LUMI, rdf.Sum("weight").GetValue())
+            if key == "mc":# and LUMI < 1: # fix weights
+                # print(key, LUMI, rdf.Sum("weight").GetValue(), flush=True)
                 rdf = rdf.Redefine("weight", f"weight * {LUMI}")
                 print("\t", rdf.Sum("weight").GetValue())
 
             count, weight = rdf.Count().GetValue(), rdf.Sum("weight").GetValue()
             if iopt == 0:
-                print(f"  {key} = {count:,} ({weight:,.2f}) -- read")
+                print(f"  {key} = {count:,} ({weight:,.2f}) -- read", flush=True)
 
             # **** #
             # Create dummy columns to store what cluster indices pass our selections
@@ -882,25 +889,28 @@ if __name__ == "__main__":
         # wr3_nocuts = rdfs["r3"].Sum("weight").GetValue()
 
         if iopt == 0:
-            print("")
+            print("", flush=True)
 
         # **************** #
         for key, rdf in rdfs.items():
             if PRINT_CUTFLOW:
-                print(f"{key} cutflow:")
-                print(r"\begin{center}")
-                print(r"\begin{tabular}{c|ccc|ccc|ccc|ccc}")
+                print(f"{key} cutflow:", flush=True)
+                print(r"\begin{center}", flush=True)
+                # print(r"\begin{tabular}{c|ccc|ccc|ccc|ccc}", flush=True)
+                print(r"\begin{tabular}{c|cc|cc|cc|cc}", flush=True)
                 ec0,cc00,cc10,dc0 = rdf.Filter("evtFlag").Sum("weight"), rdf.Filter("evtFlag").Sum(f"{C}0Flag"), rdf.Filter("evtFlag").Sum(f"{C}1Flag"), rdf.Filter("evtFlag").Sum(f"{D}Flag")
                 ec0,cc00,cc10,dc0 = ec0.GetValue(),cc00.GetValue(),cc10.GetValue(),dc0.GetValue()
                 #fmt: off
-                print(r"    \hline")
+                print(r"    \hline", flush=True)
                 print(f"    \\textbf{{{'Signal' if 'mc' in key else 'Data'}}}"
-                      + r" & \multicolumn{3}{c}{CSC-CSC} & \multicolumn{3}{c}{First CSC} & \multicolumn{3}{c}{Second CSC} & \multicolumn{3}{c}{DT} \\")
-                print(r"    \hline")
-                # print(r"    Selection & N Events & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff \\")
-                print(r"    Selection & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff & N & Cut Eff & Cum Eff \\")
-                print(r"    \hline")
-                print(f"    sample & {ec0:,.0f} & -- & -- & {cc00:,.0f} & -- & -- & {cc10:,.0f} & -- & -- & {dc0:,.0f} & -- & -- \\\\")
+                    #   + r" & \multicolumn{3}{c}{CSC-CSC} & \multicolumn{3}{c}{First CSC} & \multicolumn{3}{c}{Second CSC} & \multicolumn{3}{c}{DT} \\", flush=True)
+                      + r" & \multicolumn{2}{c}{CSC-CSC} & \multicolumn{2}{c}{First CSC} & \multicolumn{2}{c}{Second CSC} & \multicolumn{2}{c}{DT} \\", flush=True)
+                print(r"    \hline", flush=True)
+                # print(r"    Selection & N Events & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff & N Clusters & Cut Eff & Cum Eff \\", flush=True)
+                print(r"    Selection & Weight & Eff. (\%) & Count & Eff. (\%) & Count & Eff. (\%) & Count & Eff. (\%) \\", flush=True)
+                print(r"    \hline", flush=True)
+                # print(f"    sample & {ec0:,.0f} & -- & -- & {cc00:,.0f} & -- & -- & {cc10:,.0f} & -- & -- & {dc0:,.0f} & -- & -- \\\\", flush=True)
+                print(f"    sample & {ec0:,.0f} & -- & {cc00:,.0f} & -- & {cc10:,.0f} & -- & {dc0:,.0f} & -- \\\\", flush=True)
                 #fmt: on
 
             columns_out = []
@@ -1111,8 +1121,7 @@ if __name__ == "__main__":
                 if "CSC jet req" in cut:
                     rdf = rdf.Redefine("evtCutFlag",
                     f"auto passJetMatch = ({C}0Flag || {C}1Flag) && ({C}JetVetoPt >= {MAX_CSC_JET});"
-                    f"return evtFlag && (reduce(passJetMatch.begin(), passJetMatch.end()) > 0)"
-)
+                    f"return evtFlag && (reduce(passJetMatch.begin(), passJetMatch.end()) > 0)")
 
                 if "CSC jet veto" in cut: # and OPT_CUT != "CSC jet veto":
                     if "$<$" in cut:
@@ -1157,8 +1166,7 @@ if __name__ == "__main__":
                 if "DNN $<$" in cut: 
                     rdf = rdf.Redefine("evtCutFlag",
                     f"auto invertDNN = ({C}0Flag || {C}1Flag) && (Take({C}DNN_{DNN_VERSION},nCscRechitClusters) <= {MIN_CSC_DNN});"
-                    f"return evtFlag && (reduce(invertDNN.begin(), invertDNN.end()) > 0)"
-)
+                    f"return evtFlag && (reduce(invertDNN.begin(), invertDNN.end()) > 0)")
                 # **** #
                 if "0 DT" in cut:
                     # rdf = rdf.Redefine("evtCutFlag", f"evtCutFlag && (reduce({D}Flag.begin(), {D}Flag.end()) == 0)")
@@ -1260,7 +1268,7 @@ if __name__ == "__main__":
                 #     rdf.Filter("evtFlag").Sum(f"{C}0Flag").GetValue(),
                 #     rdf.Filter("evtFlag").Sum(f"{C}1Flag").GetValue(),
                 #     rdf.Filter("evtFlag").Sum(f"{D}Flag").GetValue()
-                # )
+                # , flush=True)
 
                 rdf = rdf.Redefine("evtCutFlag", 
                     f"auto {C}01CutFlag = {C}0CutFlag || {C}1CutFlag;"
@@ -1310,15 +1318,19 @@ if __name__ == "__main__":
                     # print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2f} & {100*ec/ec0:.2f} & "+
                     #     f"{cc0:,.0f} & {c0_cut_eff} & {c0_cum_eff} & "+
                     #     f"{cc1:,.0f} & {c1_cut_eff} & {c1_cum_eff} & "+
-                    #     f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
-                    print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2g} & {100*ec/ec0:.2g} & "+
-                        f"{cc0:,.0f} & {c0_cut_eff} & {c0_cum_eff} & "+
-                        f"{cc1:,.0f} & {c1_cut_eff} & {c1_cum_eff} & "+
-                        f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\")
+                    #     f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\", flush=True)
+                    # print(f"    {cut.replace('_',' ')} & {ec:,.0f} & {100*ecc/ec0:.2g} & {100*ec/ec0:.2g} & "+
+                    #     f"{cc0:,.0f} & {c0_cut_eff} & {c0_cum_eff} & "+
+                    #     f"{cc1:,.0f} & {c1_cut_eff} & {c1_cum_eff} & "+
+                    #     f"{dc:,.0f} & {d_cut_eff} & {d_cum_eff} \\\\", flush=True)
+                    print(f"    {cut.replace('_',' ')} & {ec:,.2f} & {100*ec/ec0:.2g} & "+
+                        f"{cc0:,.0f} & {c0_cum_eff} & "+
+                        f"{cc1:,.0f} & {c1_cum_eff} & "+
+                        f"{dc:,.0f} & {d_cum_eff} \\\\", flush=True)
                     
                     # Only filter (reset indices) after the MET cut when printing cutflow
                     # if any([_cut in cut for _cut in ("MET","acceptance","1 CSC-CSC")]):
-                    #     print(r"    \hline")
+                    #     print(r"    \hline", flush=True)
                     #     ec0, cc00, cc10, dc0 = ec, cc0, cc1, dc
                     
                     rdf = rdf.Filter("evtFlag")
@@ -1336,10 +1348,10 @@ if __name__ == "__main__":
             rdfs[key] = rdf.Filter("evtFlag")
 
             if PRINT_CUTFLOW:
-                print(r"    \hline")
-                print(r"\end{tabular}")
-                print(r"\end{center}")
-                print("")
+                print(r"    \hline", flush=True)
+                print(r"\end{tabular}", flush=True)
+                print(r"\end{center}", flush=True)
+                print("", flush=True)
 
         # **************** #
         if RAND:
@@ -1366,11 +1378,11 @@ if __name__ == "__main__":
                 else:
                     CUT_VALUES[CUT_OPT_PARS[OPT_CUT]["cut"]] = val0
 
-            # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})")
+            # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {score:>3.0f} ({score0:>3.0f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})", flush=True)
             print(
                 f"{iopt:>3} | {'Y' if accepted_cut else ' '} | {OPT_CUT:>13} = {val:>8.3f} ({val0:>8.3f}) | {score:>4.2f} ({score0:>4.2f}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})"
-            )
-            # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {limit:>.2e} ({limit0:>.2e}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})")
+            , flush=True)
+            # print(f"{iopt:>3} | {"Y" if _c else "X"} | {OPT_CUT:>13} = {val:>6.2f} ({val0:>6.2f}) | {limit:>.2e} ({limit0:>.2e}), {wmc:>4.0f} ({wmc0:>4.0f}), {wr3:>5.0f} ({wr30:>5.0f})", flush=True)
 
             OPT_SCORES.append(
                 [
@@ -1399,26 +1411,26 @@ if __name__ == "__main__":
 
         # **************** #
         if (LOO or RAND) and (iopt%100 == 0 or iopt == N_ITERATIONS-1):
-            print("")
-            print(f"Cut Boundaries: {wmc=:.2f}, {wr3=:.2f}, {score=:.2f}")
-            print(f"    {MIN_CSC_TIME=:.2f}")
-            print(f"    {MAX_CSC_TIME=:.2f}")
-            print(f"    {MAX_CSC_TSPREAD=:.2f}")
-            print(f"    {MAX_RPC_BX=:.0f}")
-            print(f"    {MIN_RPC_HITS=:.0f}")
-            print(f"    {MAX_CSC_JET=:.2f}")
-            print(f"    {MAX_DT_JET=:.2f}")
-            print(f"    {MAX_CSC_MUON=:.2f}")
-            print(f"    {MAX_DT_MUON=:.2f}")
-            print(f"    {MAX_ME1=:.0f}")
-            print(f"    {MAX_MB1=:.0f}")
-            print(f"    {HALO_CUTOFF=:.2f}")
-            print(f"    {MIN_DPHI=:.2f}")
-            print(f"    {MIN_DETA=:.2f}")
-            print(f"    {MAX_DETA=:.2f}")
-            print(f"    {MIN_CSC_DNN=:.3f}")
-            # print(f"    {MIN_DT_DNN=:.3f}")
-            print("")
+            print("", flush=True)
+            print(f"Cut Boundaries: {wmc=:.2f}, {wr3=:.2f}, {score=:.2f}", flush=True)
+            print(f"    {MIN_CSC_TIME=:.2f}", flush=True)
+            print(f"    {MAX_CSC_TIME=:.2f}", flush=True)
+            print(f"    {MAX_CSC_TSPREAD=:.2f}", flush=True)
+            print(f"    {MAX_RPC_BX=:.0f}", flush=True)
+            print(f"    {MIN_RPC_HITS=:.0f}", flush=True)
+            print(f"    {MAX_CSC_JET=:.2f}", flush=True)
+            print(f"    {MAX_DT_JET=:.2f}", flush=True)
+            print(f"    {MAX_CSC_MUON=:.2f}", flush=True)
+            print(f"    {MAX_DT_MUON=:.2f}", flush=True)
+            print(f"    {MAX_ME1=:.0f}", flush=True)
+            print(f"    {MAX_MB1=:.0f}", flush=True)
+            print(f"    {HALO_CUTOFF=:.2f}", flush=True)
+            print(f"    {MIN_DPHI=:.2f}", flush=True)
+            print(f"    {MIN_DETA=:.2f}", flush=True)
+            print(f"    {MAX_DETA=:.2f}", flush=True)
+            print(f"    {MIN_CSC_DNN=:.3f}", flush=True)
+            # print(f"    {MIN_DT_DNN=:.3f}", flush=True)
+            print("", flush=True)
 
 
     # **************** #
@@ -1435,13 +1447,13 @@ if __name__ == "__main__":
         hname_pre += "_ITVal2"
     hname_pre += f"_{YEAR}"
 
-    print("Events out:")
+    print("Events out:", flush=True)
     hists = {}
     for key, rdf in rdfs.items():
         count, weight = rdf.Count(), rdf.Sum("weight")
         count, weight = count.GetValue(), weight.GetValue()
         if count == 0:
-            print(f"  {key} is empty")
+            print(f"  {key} is empty", flush=True)
             continue
         
         name = f"{key}_csccsc{'OOT' if OOT else ''}_{CUTSET}"
@@ -1461,7 +1473,7 @@ if __name__ == "__main__":
             name += "_ITVal2"
 
         name += f"_{YEAR}"
-        print(f"  {key} = {count:,} ({weight:,.2f})")
+        print(f"  {key} = {count:,} ({weight:,.2f})", flush=True)
         rdf = rdf.Snapshot("MuonSystem_flat", f"data/processed/{name}_rdf.root", columns_out)
         rdfs[key] = rdf
 
@@ -1517,4 +1529,4 @@ if __name__ == "__main__":
         canvas.Draw()
         canvas.Print(f"{OUT_DIR}/{hname_pre}_{xx}.png")
 
-    print("")
+    print("", flush=True)

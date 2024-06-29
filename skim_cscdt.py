@@ -12,7 +12,8 @@ from src.histo_utilities import std_color_list as SCL
 
 # **************************** #
 STAT = "tight"
-LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
+# LUMI = 1.1328524540090597e-06 * 27.82 * 1000 # ???
+LUMI = 1.1328524540090597e-06 * 1000 # ???
 RUN2_BR = 2.16e-03  # Adjust weights to Run 2 BR limit
 YEAR = "2023"
 
@@ -57,16 +58,15 @@ CUTS_L1 = [
 ]
 
 CUTS = [
+    "MET",
     "acceptance",
-    "HLT",
-    "L1",
     "1 CSC-DT",
-    #! Reset cutflow indices here
+    "L1",
+    "MB1",
+    "HLT",
     "CSC IT",
     "DT IT",
     # "ME1", # this usually hurts s/rt[B]
-    "MB1",
-    "MET",
     #! Reset cutflow indices here
     "dPhi $>$ 0.4",
     # "n leptons",
@@ -918,15 +918,19 @@ if __name__ == "__main__":
         raise ValueError(f"no cutset associated with {CUTSET=} and {MET_CATEGORY=} found")
 
     if " 2022 " in args:
-        YEAR, LUMI = "2022", 23.02
-        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt569_{YEAR}.root"
-        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt569_{YEAR}.root"
+        YEAR, LUMI = "2022", 23.02*LUMI
+        # FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt569_{YEAR}.root"
+        # FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt569_{YEAR}.root"
+        FN_MC = f"{LOCAL_DIR}/data/raw/mc_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/raw/data_{YEAR}.root"#_goodLumi.root"
         STAT += f"_{YEAR}"
         print(f"    Setting {YEAR=}")
     elif " 2023 " in args:
-        YEAR, LUMI = "2023", 27.82
-        FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt569_{YEAR}.root"
-        FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt569_{YEAR}.root"
+        YEAR, LUMI = "2023", 27.82*LUMI
+        # FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt569_{YEAR}.root"
+        # FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt569_{YEAR}.root"
+        FN_MC = f"{LOCAL_DIR}/data/raw/mc_{YEAR}.root"
+        FN_R3 = f"{LOCAL_DIR}/data/raw/data_{YEAR}.root"#_goodLumi.root"
         STAT += f"_{YEAR}"
         print(f"    Setting {YEAR=}")
     print(f"    Luminosity = {f'{LUMI=:.3e}' if LUMI < 1 else f'{LUMI:.2f}'}")
@@ -1370,13 +1374,13 @@ if __name__ == "__main__":
                     )
 
                     # Only filter (reset indices) after the MET cut when printing cutflow
-                    if "MET" in cut:
-                        print(r"    \hline")
-                        ec0, cc0, dc0 = ec, cc, dc
+                    # if "MET" in cut:
+                    #     print(r"    \hline")
+                    #     ec0, cc0, dc0 = ec, cc, dc
 
-                        rdf = rdf.Filter("evtFlag")
-                        rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
-                        rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
+                    rdf = rdf.Filter("evtFlag")
+                    rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
+                    rdf = rdf.Redefine(f"{D}Size", f"{D}Size * {D}Flag")
                 else:
                     rdf = rdf.Filter("evtFlag")
                     rdf = rdf.Redefine(f"{C}Size", f"{C}Size * {C}Flag")
