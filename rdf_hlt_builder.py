@@ -6,16 +6,17 @@ import ROOT as rt
 # FN_MC = f'/home/psimmerl/mds_analysis/data/raw/ggH_HToSSTobbbb_MH-125_MS-15_CTau1000_13p6TeV_1pb_weighted_v6.root'
 # FN_R3 = f'/home/psimmerl/mds_analysis/data/raw/DisplacedJet-EXOCSCCluster_Run2022EFG-PromptReco-v1_goodLumi_v6.root'
 
-ORIGINAL_WEIGHT_FROM_NTUPLES = 48.580953026775774  #! idk why the weights are different in pedro's ntuples and if this scales correctly between years
-
-YEAR, LUMI = 2022, 23.02 * 1000 * ORIGINAL_WEIGHT_FROM_NTUPLES  # 1.1328524540090597e-06 *  # ???
-# YEAR, LUMI = 2023, 27.82 * 1000 * ORIGINAL_WEIGHT_FROM_NTUPLES  # 1.1328524540090597e-06 *  # ???
+cross_section = 52.2 #pb for 13.6TeV
+#YEAR, LUMI = 2022, 23.02 * 1000 * cross_section  # 1.1328524540090597e-06 *  # ???
+YEAR, LUMI = 2023, 27.82 * 1000 * cross_section  # 1.1328524540090597e-06 *  # ???
 
 STAT = f"{YEAR}" #"pedro"
-
+base_path = "/storage/af/user/christiw/login-1/christiw/LLP/Run3/CMSSW_14_0_1/src/mds_analysis/data/raw/"
 FN_MC = f"/home/psimmerl/mds_analysis/data/raw/mc_{YEAR}.root"
-FN_R3 = f"/home/psimmerl/mds_analysis/data/raw/data_{YEAR}.root"
+FN_R3 = f"/home/psimmerl/mds_analysis/data/raw/data_{YEAR}_goodLumi.root"
 
+FN_MC = f"{base_path}/mc_{YEAR}.root"
+FN_R3 = f"{base_path}/data_{YEAR}_goodLumi.root"
 # LUMI = 27.82 * 1000 # 1.1328524540090597e-06 *  # ???
 # FN_MC = '/home/psimmerl/mds_analysis/data/raw/mc_2023.root'
 # FN_R3 = '/home/psimmerl/mds_analysis/data/raw/data_2023.root'
@@ -33,6 +34,7 @@ for rdfn in ("mc", "r3"):
     print(f"Loading RDF: {rdfn}")
     rdf = rt.RDataFrame("MuonSystem", FN_MC if rdfn == "mc" else FN_R3)
     count_raw, wtsum_raw = rdf.Count(), rdf.Sum("weight")
+    print(wtsum_raw)
 
     if rdfn == "mc":
         print(f"  Reweighting to LUMI (weight raw = {wtsum_raw.GetValue():,.3f})")

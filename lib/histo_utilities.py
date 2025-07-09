@@ -83,7 +83,8 @@ def create_TH1D(x, name='h', title=None, binning=[None, None, None], weights=Non
         h = h2clone.Clone(name)
         h.SetTitle(title)
         h.Reset()
-    counts, _ = np.histogram(x, bins=binning[0], range=np.array([binning[1], binning[2]]), weights = weights)
+    if len(binning)>3 or bin_list:counts, _ = np.histogram(x, bins=binning, weights = weights)
+    else: counts, _ = np.histogram(x, bins=binning[0], range=np.array([binning[1], binning[2]]), weights = weights)
     for i in range(1, h.GetXaxis().GetNbins()+1):
         h.SetBinContent(i,counts[i-1])
     h.SetXTitle(axis_title[0])

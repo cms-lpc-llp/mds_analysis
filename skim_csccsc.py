@@ -18,6 +18,7 @@ RUN2_BR = 2.16e-03  # Adjust weights to Run 2 BR limit
 YEAR = "2023"
 
 NODENAME = os.uname().nodename
+print(NODENAME)
 if "fernanpe" in NODENAME:
     LOCAL_DIR = "/eos/user/f/fernanpe/mds_analysis/"
     FN_MC = f"{LOCAL_DIR}/data/processed/mc_pedro_hlt566_2023.root"
@@ -27,15 +28,15 @@ elif "psimmerl-LAU248" in NODENAME:
     FN_MC = f"{LOCAL_DIR}/data/processed/mc_pedro_hlt566.root"
     FN_R3 = f"{LOCAL_DIR}/data/processed/r3_pedro_hlt566.root"
 else:
-    LOCAL_DIR = "/home/psimmerl/mds_analysis"
-    FN_MC = f"{LOCAL_DIR}/data/processed/mc_pedro_hlt566.root"
-    FN_R3 = f"{LOCAL_DIR}/data/processed/r3_pedro_hlt566.root"
+    LOCAL_DIR = "/storage/af/user/christiw/login-1/christiw/LLP/Run3/CMSSW_14_0_1/src/mds_analysis/"
+    FN_MC = f"{LOCAL_DIR}/data/processed/mc_hlt566_2023.root"
+    FN_R3 = f"{LOCAL_DIR}/data/processed/r3_hlt566_2023.root"
 
 OUT_DIR = f"{LOCAL_DIR}/reports/weekly/2024-04-15"
 
 
-FN_MC = f"{LOCAL_DIR}/data/raw/mc_2022.root"
-FN_R3 = f"{LOCAL_DIR}/data/raw/data_2022.root"
+#FN_MC = f"{LOCAL_DIR}/data/raw/mc_2023.root"
+#FN_R3 = f"{LOCAL_DIR}/data/raw/data_2023_goodLumi.root"
 
 
 # STAT = "raw"
@@ -764,6 +765,7 @@ if __name__ == "__main__":
             LUMI /= f.Get("NEvents").GetBinContent(1)
     elif " 2023 " in args:
         YEAR, LUMI = "2023", 48.58 * 27.82 * 1000
+        YEAR, LUMI = "2023", 1 
         FN_MC = f"{LOCAL_DIR}/data/raw/mc_{YEAR}.root"
         FN_R3 = f"{LOCAL_DIR}/data/raw/data_{YEAR}.root"
         STAT += f"_{YEAR}"
@@ -846,11 +848,8 @@ if __name__ == "__main__":
             if key == "mc":# and LUMI < 1: # fix weights
                 # print(key, LUMI, rdf.Sum("weight").GetValue(), flush=True)
                 rdf = rdf.Redefine("weight", f"weight * {LUMI}")
-                print("\t", rdf.Sum("weight").GetValue())
-
-            count, weight = rdf.Count().GetValue(), rdf.Sum("weight").GetValue()
-            if iopt == 0:
-                print(f"  {key} = {count:,} ({weight:,.2f}) -- read", flush=True)
+                print("\t", rdf.Sum("weight").GetValue(), LUMI)
+            weight =  rdf.Sum("weight").GetValue()
 
             # **** #
             # Create dummy columns to store what cluster indices pass our selections
